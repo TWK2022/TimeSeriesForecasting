@@ -28,8 +28,9 @@ class baseblock(torch.nn.Module):
         return x_odd_mix, x_even_mix
 
 
-class SCINet_Tree(torch.nn.Module):
-    def __init__(self, input_dim, input_size):
+
+class SCINet_Tree3(torch.nn.Module):
+    def __init__(self, input_dim):
         super().__init__()
         self.Tree_main = baseblock(input_dim=input_dim)
         self.Tree_odd = baseblock(input_dim=input_dim)
@@ -54,7 +55,55 @@ class SCINet_Tree(torch.nn.Module):
         # 交叉合并
         merge = self.stack([x_odd_odd_odd, x_odd_odd_even, x_odd_even_odd, x_odd_even_even, x_even_odd_odd,
                             x_even_odd_even, x_even_even_odd, x_even_even_even], dim=3).reshape(x.shape)
-        return merge
+        x = merge + x
+        return x
+
+
+class SCINet_Tree4(torch.nn.Module):
+    def __init__(self, input_dim):
+        super().__init__()
+        self.Tree_main = baseblock(input_dim=input_dim)
+        self.Tree_odd = baseblock(input_dim=input_dim)
+        self.Tree_even = baseblock(input_dim=input_dim)
+        self.Tree_odd_odd = baseblock(input_dim=input_dim)
+        self.Tree_odd_even = baseblock(input_dim=input_dim)
+        self.Tree_even_odd = baseblock(input_dim=input_dim)
+        self.Tree_even_even = baseblock(input_dim=input_dim)
+        self.Tree0 = baseblock(input_dim=input_dim)
+        self.Tree1 = baseblock(input_dim=input_dim)
+        self.Tree2 = baseblock(input_dim=input_dim)
+        self.Tree3 = baseblock(input_dim=input_dim)
+        self.Tree4 = baseblock(input_dim=input_dim)
+        self.Tree5 = baseblock(input_dim=input_dim)
+        self.Tree6 = baseblock(input_dim=input_dim)
+        self.Tree7 = baseblock(input_dim=input_dim)
+        self.stack = torch.stack
+
+    def forward(self, x):
+        # 第一层
+        x_odd, x_even = self.Tree_main(x)
+        # 第二层
+        x_odd_odd, x_odd_even = self.Tree_odd(x_odd)
+        x_even_odd, x_even_even = self.Tree_even(x_even)
+        # 第三层
+        x_odd_odd_odd, x_odd_odd_even = self.Tree_odd_odd(x_odd_odd)
+        x_odd_even_odd, x_odd_even_even = self.Tree_odd_even(x_odd_even)
+        x_even_odd_odd, x_even_odd_even = self.Tree_even_odd(x_even_odd)
+        x_even_even_odd, x_even_even_even = self.Tree_even_even(x_even_even)
+        # 第四层
+        x_0, x_1 = self.Tree0(x_odd_odd_odd)
+        x_2, x_3 = self.Tree1(x_odd_odd_even)
+        x_4, x_5 = self.Tree2(x_odd_even_odd)
+        x_6, x_7 = self.Tree3(x_odd_even_even)
+        x_8, x_9 = self.Tree4(x_even_odd_odd)
+        x_10, x_11 = self.Tree5(x_even_odd_even)
+        x_12, x_13 = self.Tree6(x_even_even_odd)
+        x_14, x_15 = self.Tree7(x_even_even_even)
+        # 交叉合并
+        merge = self.stack([x_0, x_1, x_2, x_3, x_4, x_5, x_6, x_7, x_8, x_9, x_10, x_11, x_12, x_13, x_14, x_15],
+                           dim=3).reshape(x.shape)
+        x = merge + x
+        return x
 
 
 class tsf(torch.nn.Module):
@@ -62,13 +111,16 @@ class tsf(torch.nn.Module):
         super().__init__()
         self.args = args
         assert args.input_size % 8 == 0, '输入的长度要为8的倍数'
-        dim_dict = {'s': 1, 'm': 2, 'l': 3}
-        dim = dim_dict[args.model_type]
+        n_dict = {'s': 2, 'm': 3, 'l': 4}
+        n = n_dict[args.model_type]
         input_dim = len(args.input_column)
         output_dim = len(args.output_column)
-        self.cbs = cbs(input_dim, input_dim * dim, 3, 1)
-        self.backbone = SCINet_Tree(input_dim=input_dim * dim, input_size=args.input_size)
-        self.conv0 = torch.nn.Conv1d(input_dim * dim, output_dim, kernel_size=1, stride=1)
+        self.cbs = cbs(input_dim, input_dim, 1, 1)
+        if n == 4:
+            self.backbone = SCINet_Tree4(input_dim=input_dim)
+        else:
+            self.backbone = SCINet_Tree3(input_dim=input_dim)
+        self.conv0 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
         self.conv1 = torch.nn.Conv1d(args.input_size, args.output_size, kernel_size=1, stride=1)
 
     def forward(self, x):
