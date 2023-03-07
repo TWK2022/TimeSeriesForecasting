@@ -11,7 +11,6 @@ def model_get(args):
         model = eval(choice_dict[args.model])
         model_dict = {}
         model_dict['model'] = model
-        model_dict['val_loss'] = 999
         model_dict['val_mse'] = 999
     model_dict['model'](torch.rand(args.batch, len(args.input_column), args.input_size))  # 检查
     return model_dict

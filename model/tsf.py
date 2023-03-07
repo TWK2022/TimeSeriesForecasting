@@ -1,4 +1,4 @@
-# 根据SCINet奇偶分离的思想改编
+# 根据SCINet奇偶分离的思想改编:https://github.com/cure-lab/SCINet
 # 预测长度要为输入长度的1/2以下
 import torch
 from model.layer import cbs
@@ -111,23 +111,21 @@ class tsf(torch.nn.Module):
         super().__init__()
         self.args = args
         assert args.input_size % 8 == 0, '输入的长度要为8的倍数'
-        n_dict = {'s': 2, 'm': 3, 'l': 4}
+        n_dict = {'s': 3, 'm': 4}
         n = n_dict[args.model_type]
         input_dim = len(args.input_column)
         output_dim = len(args.output_column)
-        self.cbs = cbs(input_dim, input_dim, 1, 1)
         if n == 4:
             self.backbone = SCINet_Tree4(input_dim=input_dim)
         else:
             self.backbone = SCINet_Tree3(input_dim=input_dim)
-        self.conv0 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
-        self.conv1 = torch.nn.Conv1d(args.input_size, args.output_size, kernel_size=1, stride=1)
+        self.conv1 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
+        self.conv2 = torch.nn.Conv1d(args.input_size, args.output_size, kernel_size=1, stride=1)
 
     def forward(self, x):
-        x = self.cbs(x)
-        x = self.backbone(x)
-        x = self.conv0(x).permute(0, 2, 1)
+        x = self.backbone0(x)
         x = self.conv1(x).permute(0, 2, 1)
+        x = self.conv2(x).permute(0, 2, 1)
         return x
 
 

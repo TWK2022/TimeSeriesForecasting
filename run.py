@@ -1,10 +1,3 @@
-# 数据需准备成以下格式
-# ├── 数据集路径：data_path.csv
-# data_path.csv内容如下:
-# column1,column2,...
-# 内容1,内容2,...
-# ...
-# -------------------------------------------------------------------------------------------------------------------- #
 import os
 import torch
 import argparse
@@ -16,7 +9,7 @@ from block.train_get import train_get
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
 parser = argparse.ArgumentParser(description='时间序列预测')
-parser.add_argument('--data_path', default=r'./dataset/demo.csv', type=str, help='|数据根目录路径|')
+parser.add_argument('--data_path', default=r'./dataset/ETTh.csv', type=str, help='|数据路径|')
 parser.add_argument('--divide', default='9,1', type=str, help='|训练集和验证集划分比例|')
 parser.add_argument('--weight', default='best.pt', type=str, help='|已有模型的位置，如果没找到模型则会创建新模型|')
 parser.add_argument('--save_name', default='best.pt', type=str, help='|保存模型的位置|')
@@ -25,13 +18,13 @@ parser.add_argument('--wandb_project', default='mask', type=str, help='|wandb项
 parser.add_argument('--wandb_name', default='train', type=str, help='|wandb项目中的训练名称|')
 parser.add_argument('--timm', default=False, type=bool, help='|是否使用timm模型|')
 parser.add_argument('--model', default='tsf', type=str, help='|模型选择，timm为True时为timm中的模型|')
-parser.add_argument('--model_type', default='l', type=str, help='|模型型号参数，部分模型有|')
-parser.add_argument('--input_column', default='1,3', type=str, help='|选择输入的变量|')
-parser.add_argument('--output_column', default='1,3', type=str, help='|选择预测的变量|')
+parser.add_argument('--model_type', default='m', type=str, help='|模型型号参数，部分模型有|')
+parser.add_argument('--input_column', default='1,2,3', type=str, help='|选择输入的变量|')
+parser.add_argument('--output_column', default='1,2,3', type=str, help='|选择预测的变量|')
 parser.add_argument('--input_size', default=160, type=int, help='|输入的长度|')
 parser.add_argument('--output_size', default=30, type=int, help='|输出的长度|')
 parser.add_argument('--epoch', default=20, type=int, help='|训练轮数|')
-parser.add_argument('--batch', default=32, type=int, help='|训练批量大小|')
+parser.add_argument('--batch', default=64, type=int, help='|训练批量大小|')
 parser.add_argument('--loss', default='mse', type=str, help='|损失函数|')
 parser.add_argument('--lr', default=0.005, type=int, help='|初始学习率，训练中采用adam算法|')
 parser.add_argument('--device', default='cuda', type=str, help='|训练设备|')
