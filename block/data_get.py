@@ -25,34 +25,28 @@ class data_prepare(object):
         train_output = output_data[0:boundary]  # 训练标签
         val_input = input_data[boundary:len(df)]  # 验证数据
         val_output = output_data[boundary:len(df)]  # 验证标签
-        # 记录输入数据的处理方式
-        input_mean = {}
-        input_std = {}
+        # 记录输入数据的处理方式(数据处理在模型中完成)
+        input_mean = np.zeros(len(input_column))
+        input_std = np.zeros(len(input_column))
         for i in range(len(input_column)):
             mean = np.mean(train_input[:, i])
             std = np.std(train_input[:, i])
-            train_input[:, i] = (train_input[:, i] - mean) / std
-            val_input[:, i] = (val_input[:, i] - mean) / std
-            input_mean[input_column[i]] = mean
-            input_std[input_column[i]] = std
-        # 记录输出数据的处理方式
-        output_mean = {}
-        output_std = {}
+            input_mean[i] = mean
+            input_std[i] = std
+        # 记录输出数据的处理方式(数据处理在模型中完成)
+        output_mean = np.zeros(len(output_column))
+        output_std = np.zeros(len(output_column))
         for i in range(len(output_column)):
             mean = np.mean(train_output[:, i])
             std = np.std(train_output[:, i])
-            train_output[:, i] = (train_output[:, i] - mean) / std
-            val_output[:, i] = (val_output[:, i] - mean) / std
-            output_mean[output_column[i]] = mean
-            output_std[output_column[i]] = std
+            output_mean[i] = mean
+            output_std[i] = std
         # 将所有数据存放到一个大字典中
         data_dict = {}
         data_dict['train_input'] = train_input
         data_dict['train_output'] = train_output
         data_dict['val_input'] = val_input
         data_dict['val_output'] = val_output
-        data_dict['input_column'] = input_column
-        data_dict['output_column'] = output_column
         data_dict['input_mean'] = input_mean
         data_dict['input_std'] = input_std
         data_dict['output_mean'] = output_mean

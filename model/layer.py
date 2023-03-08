@@ -1,6 +1,30 @@
 import torch
 
 
+class series_encode(torch.nn.Module):
+    def __init__(self, input_mean, input_std):
+        super().__init__()
+        self.input_mean = input_mean
+        self.input_std = input_std
+
+    def forward(self, x):
+        for i in range(len(self.input_mean)):
+            x[:, i] = (x[:, i] - self.input_mean[i]) / self.input_std[i]
+        return x
+
+
+class series_decode(torch.nn.Module):
+    def __init__(self, output_mean, output_std):
+        super().__init__()
+        self.output_mean = output_mean
+        self.output_std = output_std
+
+    def forward(self, x):
+        for i in range(len(self.output_mean)):
+            x[:, i] = x[:, i] * self.output_std[i] + self.output_mean[i]
+        return x
+
+
 class cbs(torch.nn.Module):
     def __init__(self, in_, out_, kernel_size, stride):
         super().__init__()

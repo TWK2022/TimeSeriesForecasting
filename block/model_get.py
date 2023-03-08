@@ -2,12 +2,12 @@ import os
 import torch
 
 
-def model_get(args):
+def model_get(args, data_dict):
     if os.path.exists(args.weight):
         model_dict = torch.load(args.weight, map_location='cpu')
     else:
-        choice_dict = {'tsf': 'model_prepare(args)._tsf()',
-                       'lstm': 'model_prepare(args)._lstm()'}
+        choice_dict = {'tsf': 'model_prepare(args,data_dict)._tsf()',
+                       'lstm': 'model_prepare(args,data_dict)._lstm()'}
         model = eval(choice_dict[args.model])
         model_dict = {}
         model_dict['model'] = model
@@ -17,17 +17,18 @@ def model_get(args):
 
 
 class model_prepare(object):
-    def __init__(self, args):
+    def __init__(self, args, data_dict):
         self.args = args
+        self.data_dict = data_dict
 
     def _tsf(self):
         from model.tsf import tsf
-        model = tsf(self.args)
+        model = tsf(self.args, self.data_dict)
         return model
 
     def _lstm(self):
         from model.lstm import lstm
-        model = lstm(self.args)
+        model = lstm(self.args, self.data_dict)
         return model
 
 

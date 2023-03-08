@@ -1,7 +1,7 @@
 # 根据SCINet奇偶分离的思想改编:https://github.com/cure-lab/SCINet
 # 预测长度要为输入长度的1/2以下
 import torch
-from model.layer import cbs
+from model.layer import series_encode, cbs, series_decode
 
 
 class Splitting(torch.nn.Module):
@@ -26,7 +26,6 @@ class baseblock(torch.nn.Module):
         x_odd_mix = torch.mul(self.odd(x_odd), x_even)
         x_even_mix = torch.mul(self.even(x_even), x_odd)
         return x_odd_mix, x_even_mix
-
 
 
 class SCINet_Tree3(torch.nn.Module):
@@ -107,31 +106,45 @@ class SCINet_Tree4(torch.nn.Module):
 
 
 class tsf(torch.nn.Module):
-    def __init__(self, args):
+    def __init__(self, args, data_dict):
         super().__init__()
-        self.args = args
-        assert args.input_size % 8 == 0, '输入的长度要为8的倍数'
+        self.input_column = args.input_column
+        self.output_column = args.output_column
+        self.input_size = args.input_size
+        self.output_size = args.output_size
+        self.input_mean = data_dict['input_mean']
+        self.input_std = data_dict['input_std']
+        self.output_mean = data_dict['output_mean']
+        self.output_std = data_dict['output_std']
+        assert self.input_size % 8 == 0, '输入的长度要为8的倍数'
         n_dict = {'s': 3, 'm': 4}
         n = n_dict[args.model_type]
-        input_dim = len(args.input_column)
-        output_dim = len(args.output_column)
+        input_dim = len(self.input_column)
+        output_dim = len(self.output_column)
+        # 网络结构
+        self.series_encode = series_encode(self.input_mean, self.input_std)
         if n == 4:
-            self.backbone = SCINet_Tree4(input_dim=input_dim)
+            self.backbone0 = SCINet_Tree4(input_dim=input_dim)
         else:
-            self.backbone = SCINet_Tree3(input_dim=input_dim)
+            self.backbone0 = SCINet_Tree3(input_dim=input_dim)
         self.conv1 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
-        self.conv2 = torch.nn.Conv1d(args.input_size, args.output_size, kernel_size=1, stride=1)
+        self.conv2 = torch.nn.Conv1d(self.input_size, self.output_size, kernel_size=1, stride=1)
+        self.series_decode = series_decode(self.output_mean, self.output_std)
 
     def forward(self, x):
+        # 输入(batch,input_dim,input_size)
+        x = self.series_encode(x)
         x = self.backbone0(x)
         x = self.conv1(x).permute(0, 2, 1)
         x = self.conv2(x).permute(0, 2, 1)
+        x = self.series_decode(x)
         return x
 
 
 if __name__ == '__main__':
     import argparse
-    from layer import cbs
+    import numpy as np
+    from layer import series_encode, cbs, series_decode
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_type', default='s', type=str)
@@ -142,7 +155,12 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.input_column = args.input_column.split(',')
     args.output_column = args.output_column.split(',')
-    model = tsf(args).to('cuda')
+    data_dict = {}
+    data_dict['input_mean'] = np.ones(len(args.input_column))
+    data_dict['input_std'] = np.ones(len(args.input_column))
+    data_dict['output_mean'] = np.ones(len(args.output_column))
+    data_dict['output_std'] = np.ones(len(args.output_column))
+    model = tsf(args, data_dict).to('cuda')
     print(model)
     tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32).to('cuda')
     print(model(tensor).shape)
