@@ -7,7 +7,8 @@ def val_get(args, data_dict, model, loss):
     with torch.no_grad():
         model.eval().to(args.device, non_blocking=args.latch)
         dataloader = torch.utils.data.DataLoader(torch_dataset(args, data_dict), batch_size=args.batch,
-                                                 shuffle=False, drop_last=False, pin_memory=args.latch)
+                                                 shuffle=False, drop_last=False, pin_memory=args.latch,
+                                                 num_workers=args.num_worker)
         pred = []
         true = []
         for item, (series_batch, true_batch) in enumerate(tqdm.tqdm(dataloader)):

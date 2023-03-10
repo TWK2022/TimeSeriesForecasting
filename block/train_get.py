@@ -12,7 +12,8 @@ def train_get(args, data_dict, model_dict, loss):
         model.train().to(args.device, non_blocking=args.latch)
         train_loss = 0  # 记录训练损失
         dataloader = torch.utils.data.DataLoader(torch_dataset(args, data_dict), batch_size=args.batch,
-                                                       shuffle=True, drop_last=True, pin_memory=args.latch)
+                                                 shuffle=True, drop_last=True, pin_memory=args.latch,
+                                                 num_workers=args.num_worker)
         for item, (series_batch, true_batch) in enumerate(tqdm.tqdm(dataloader)):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
             true_batch = true_batch.to(args.device, non_blocking=args.latch)

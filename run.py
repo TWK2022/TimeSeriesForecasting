@@ -29,6 +29,7 @@ parser.add_argument('--loss', default='mse', type=str, help='|损失函数|')
 parser.add_argument('--lr', default=0.002, type=int, help='|初始学习率，训练中采用adam算法|')
 parser.add_argument('--device', default='cuda', type=str, help='|训练设备|')
 parser.add_argument('--latch', default=True, type=bool, help='|模型和数据是否为锁存，True为锁存|')
+parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
 args = parser.parse_args()
 args.weight = args.weight.split('.')[0] + '.pt'
 args.save_name = args.save_name.split('.')[0] + '.pt'
