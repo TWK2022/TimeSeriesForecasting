@@ -15,8 +15,8 @@ if __name__ == '__main__':
     plt.title(name)
     plt.xlabel('x')
     plt.ylabel('y')
-    for i in df.columns[1:]:
-        x = df[i][-1000:]
-        plt.plot(x)
+    for column in df.columns[1:]:
+        y = df[column][-1000:]
+        plt.plot(y, label=column)
     plt.savefig(args.data_path.split('/')[-1].split('.')[0] + '.jpg')
     plt.show()
