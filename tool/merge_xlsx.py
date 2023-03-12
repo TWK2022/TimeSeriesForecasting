@@ -16,6 +16,6 @@ if __name__ == '__main__':
     data = []
     for key in key_all:
         data.append(df_dict[key][column].values)
-    data = np.concatenate(data, axis=0).astype(np.float32)
+    data = np.concatenate(data, axis=0)
     df = pd.DataFrame(data, columns=column)
     df.to_csv(args.data_path.split('.xlsx')[0] + '.csv', index=False)
