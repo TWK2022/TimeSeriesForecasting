@@ -1,4 +1,5 @@
 import os
+import wandb
 import torch
 import argparse
 from block.data_get import data_get
@@ -47,8 +48,6 @@ torch.backends.cudnn.enabled = True
 torch.backends.cudnn.benchmark = False
 # wandb可视化:https://wandb.ai
 if args.wandb:
-    import wandb
-
     args.wandb_run = wandb.init(project=args.wandb_project, name=args.wandb_name, config=args)
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
