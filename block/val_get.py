@@ -3,7 +3,7 @@ import torch
 from block.metric_get import metric
 
 
-def val_get(args, val_dataloader, model, loss):
+def val_get(args, val_dataloader, model, loss, data_dict):
     with torch.no_grad():
         model.eval()
         pred = []
@@ -16,12 +16,15 @@ def val_get(args, val_dataloader, model, loss):
         pred = torch.stack(pred, dim=0)
         true = torch.stack(true, dim=0)
         val_loss = loss(pred, true)
-        mae, mse = metric(pred, true)
-        print('\n| val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |'.format(val_loss, mae, mse))
-        # 分别计算每个输出的指标
+        # 计算各类别真实指标
+        print('\n')
         for i in range(pred.shape[1]):
             column = args.output_column[i]
             _mae, _mse = metric(pred[:, i], true[:, i])
-            print('| {} | val_mae:{:.4f} | val_mse:{:.4f} |'
-                  .format(column, _mae, _mse))
+            print('| {} | val_mae:{:.4f} | val_mse:{:.4f} |'.format(column, _mae, _mse))
+            pred[:, i] = (pred[:, i] - data_dict['output_mean'][i]) / data_dict['output_std'][i]
+            true[:, i] = (true[:, i] - data_dict['output_mean'][i]) / data_dict['output_std'][i]
+        # 计算总相对指标
+        mae, mse = metric(pred, true)
+        print('| all | val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |'.format(val_loss, mae, mse))
     return val_loss, mae, mse

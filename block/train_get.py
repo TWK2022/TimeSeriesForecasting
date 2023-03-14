@@ -34,9 +34,9 @@ def train_get(args, data_dict, model_dict, loss):
         del series_batch, true_batch, pred_batch, loss_batch
         torch.cuda.empty_cache()
         # 验证
-        val_loss, mae, mse = val_get(args, val_dataloader, model, loss)
+        val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict)
         # 保存
-        if mae < 3 and mse < model_dict['val_mse']:
+        if mae < 1 and mse < model_dict['val_mse']:
             model_dict['model'] = model
             model_dict['epoch'] = epoch
             model_dict['train_loss'] = train_loss
@@ -48,7 +48,9 @@ def train_get(args, data_dict, model_dict, loss):
                   .format(args.save_name, val_loss, mae, mse))
         # wandb
         if args.wandb:
-            args.wandb_run.log({'metric/train_loss': train_loss, 'metric/val_loss': val_loss, 'metric/val_mae': mae,
+            args.wandb_run.log({'metric/train_loss': train_loss,
+                                'metric/val_loss': val_loss,
+                                'metric/val_mae': mae,
                                 'metric/val_mse': mse})
     return model_dict
 
