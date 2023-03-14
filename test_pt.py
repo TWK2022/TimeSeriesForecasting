@@ -11,7 +11,6 @@ import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser(description='pt模型推理')
 parser.add_argument('--model_path', default='best.pt', type=str, help='|pt模型位置|')
 parser.add_argument('--data_path', default=r'./dataset/ETTh.csv', type=str, help='|数据路径|')
-parser.add_argument('--divide', default='9,1', type=str, help='|训练集和验证集划分比例|')
 parser.add_argument('--input_column', default='1,2,3', type=str, help='|选择输入的变量|')
 parser.add_argument('--output_column', default='1,2', type=str, help='|选择预测的变量|')
 parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
@@ -23,7 +22,6 @@ args = parser.parse_args()
 args.model_path = args.model_path.split('.')[0] + '.pt'
 args.input_column = args.input_column.split(',')
 args.output_column = args.output_column.split(',')
-args.divide = list(map(int, args.divide.split(',')))
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
 assert os.path.exists(args.model_path), f'没有找到模型{args.model_path}'
