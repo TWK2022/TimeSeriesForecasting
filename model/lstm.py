@@ -1,5 +1,5 @@
 import torch
-
+from model.layer import series_encode, series_decode
 
 class lstm(torch.nn.Module):
     def __init__(self, args, data_dict):
