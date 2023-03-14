@@ -29,16 +29,16 @@ class data_prepare(object):
         input_mean = np.zeros(len(self.input_column))
         input_std = np.zeros(len(self.input_column))
         for i in range(len(self.input_column)):
-            mean = np.mean(train_input[:, i])
-            std = np.std(train_input[:, i])
+            mean = np.mean(input_data[:, i])
+            std = np.std(input_data[:, i])
             input_mean[i] = mean
             input_std[i] = std
         # 记录输出数据的处理方式(数据处理在模型中完成)
         output_mean = np.zeros(len(self.output_column))
         output_std = np.zeros(len(self.output_column))
         for i in range(len(self.output_column)):
-            mean = np.mean(train_output[:, i])
-            std = np.std(train_output[:, i])
+            mean = np.mean(output_data[:, i])
+            std = np.std(output_data[:, i])
             output_mean[i] = mean
             output_std[i] = std
         # 将所有数据存放到一个大字典中

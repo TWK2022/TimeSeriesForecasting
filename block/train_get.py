@@ -36,7 +36,7 @@ def train_get(args, data_dict, model_dict, loss):
         # 验证
         val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict)
         # 保存
-        if mae < 2 and mse < model_dict['val_mse']:
+        if mae < 1 and mse < model_dict['val_mse']:
             model_dict['model'] = model
             model_dict['epoch'] = epoch
             model_dict['train_loss'] = train_loss
