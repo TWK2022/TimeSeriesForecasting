@@ -17,7 +17,6 @@ parser.add_argument('--save_name', default='best.pt', type=str, help='|保存模
 parser.add_argument('--wandb', default=False, type=bool, help='|是否使用wandb可视化|')
 parser.add_argument('--wandb_project', default='test', type=str, help='|wandb项目名称|')
 parser.add_argument('--wandb_name', default='train', type=str, help='|wandb项目中的训练名称|')
-parser.add_argument('--timm', default=False, type=bool, help='|是否使用timm模型|')
 parser.add_argument('--model', default='tsf', type=str, help='|模型选择，timm为True时为timm中的模型|')
 parser.add_argument('--model_type', default='m', type=str, help='|模型型号参数，部分模型有|')
 parser.add_argument('--input_column', default='1,2,3', type=str, help='|选择输入的变量|')
@@ -54,11 +53,6 @@ if args.wandb:
 assert os.path.exists(args.data_path), 'data_path不存在'
 if os.path.exists(args.weight):
     print('| 加载已有模型:{} |'.format(args.weight))
-elif args.timm:
-    import timm
-
-    assert timm.list_models(args.model) != [], 'timm中没有此模型{}'.format(args.model)
-    print('| 使用timm创建模型:{} |'.format(args.model))
 else:
     assert os.path.exists('model/' + args.model + '.py'), '没有此自定义模型'.format(args.model)
     print('| 创建自定义模型:{} | 型号:{} |'.format(args.model, args.model_type))
