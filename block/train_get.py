@@ -22,12 +22,22 @@ def train_get(args, data_dict, model_dict, loss):
         for item, (series_batch, true_batch) in enumerate(tqdm.tqdm(train_dataloader)):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
             true_batch = true_batch.to(args.device, non_blocking=args.latch)
-            pred_batch = model(series_batch)
-            loss_batch = loss(pred_batch, true_batch)
+            if args.scaler:
+                with torch.cuda.amp.autocast():
+                    pred_batch = model(series_batch)
+                    loss_batch = loss(pred_batch, true_batch)
+                optimizer.zero_grad()
+                args.scaler.scale(loss_batch).backward()
+                args.scaler.step(optimizer)
+                args.scaler.update()
+            else:
+                pred_batch = model(series_batch)
+                loss_batch = loss(pred_batch, true_batch)
+                optimizer.zero_grad()
+                loss_batch.backward()
+                optimizer.step()
+            # 记录损失
             train_loss += loss_batch.item()
-            optimizer.zero_grad()
-            loss_batch.backward()
-            optimizer.step()
         train_loss = train_loss / (item + 1)
         print('\n| train_loss:{:.4f} |\n'.format(train_loss))
         # 清理显存空间

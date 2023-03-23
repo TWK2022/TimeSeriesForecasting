@@ -20,16 +20,17 @@ parser.add_argument('--wandb_name', default='train', type=str, help='|wandb项�
 parser.add_argument('--model', default='tsf', type=str, help='|模型选择，timm为True时为timm中的模型|')
 parser.add_argument('--model_type', default='m', type=str, help='|模型型号参数，部分模型有|')
 parser.add_argument('--input_column', default='1,2,3', type=str, help='|选择输入的变量|')
-parser.add_argument('--output_column', default='1,2', type=str, help='|选择预测的变量|')
+parser.add_argument('--output_column', default='1,2,3', type=str, help='|选择预测的变量|')
 parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
 parser.add_argument('--output_size', default=32, type=int, help='|输出的长度|')
 parser.add_argument('--epoch', default=50, type=int, help='|训练轮数|')
 parser.add_argument('--batch', default=64, type=int, help='|训练批量大小|')
 parser.add_argument('--loss', default='mse', type=str, help='|损失函数|')
-parser.add_argument('--lr', default=0.002, type=int, help='|初始学习率，训练中采用adam算法|')
+parser.add_argument('--lr', default=0.001, type=int, help='|初始学习率，训练中采用adam算法|')
 parser.add_argument('--device', default='cuda', type=str, help='|训练设备|')
 parser.add_argument('--latch', default=True, type=bool, help='|模型和数据是否为锁存，True为锁存|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
+parser.add_argument('--scaler', default=True, type=bool, help='|混合float16精度训练|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
 args.input_column = args.input_column.split(',')
@@ -48,6 +49,9 @@ torch.backends.cudnn.benchmark = False
 # wandb可视化:https://wandb.ai
 if args.wandb:
     args.wandb_run = wandb.init(project=args.wandb_project, name=args.wandb_name, config=args)
+# 混合float16精度训练
+if args.scaler:
+    args.scaler = torch.cuda.amp.GradScaler()
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
 assert os.path.exists(args.data_path), 'data_path不存在'
@@ -71,8 +75,9 @@ if __name__ == '__main__':
     # 损失
     loss = loss_get(args)
     # 摘要
-    print('| 训练集:{} | 验证集:{} | 模型:{} | 损失函数:{} | 初始学习率:{} |'
-          .format(len(data_dict['train_input']), len(data_dict['val_input']), args.model, args.loss, args.lr))
+    print('| 训练集:{} | 验证集:{} | 模型:{} | 输入长度:{} | 输出长度:{} | 损失函数:{} | 初始学习率:{} |'
+          .format(len(data_dict['train_input']), len(data_dict['val_input']), args.model, args.input_size,
+                  args.output_size, args.loss, args.lr))
     # 训练(包括图片读取和预处理、训练、验证、保存模型)
     model_dict = train_get(args, data_dict, model_dict, loss)
     # 显示结果
@@ -80,4 +85,4 @@ if __name__ == '__main__':
         print('\n| 最佳结果 | train_loss:{:.4f} val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |\n'
               .format(model_dict['train_loss'], model_dict['val_loss'], model_dict['val_mae'], model_dict['val_mse']))
     except:
-        print('\n| !由于指标太低没有保存任何结果! |\n')
+        print('\n| !由于指标太低没有保存最佳模型! |\n')

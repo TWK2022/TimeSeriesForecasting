@@ -22,10 +22,13 @@ args = parser.parse_args()
 args.model_path = args.model_path.split('.')[0] + '.pt'
 args.input_column = args.input_column.split(',')
 args.output_column = args.output_column.split(',')
+args.save_path = 'save_image'
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
 assert os.path.exists(args.model_path), f'没有找到模型{args.model_path}'
 assert os.path.exists(args.data_path), f'没有找到预测数据{args.data_path}'
+if not os.path.exists(args.save_path):
+    os.makedirs(args.save_path)
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -40,11 +43,12 @@ def draw(pred, true, number):  # pred为模型输出，true为真实数据，pre
         y_pred[args.input_size + number - 1:] = pred[:, i]
         y_true = true[:, i]
         for j in range(n):
-            plt.title(args.output_column[i] + f':{300 * j}-{300 * (j + 1)}(number:{number}).jpg')
+            name = args.output_column[i] + f'_{300 * j}-{300 * (j + 1)}(number_{number})'
+            plt.title(name)
             plt.plot(y_pred[300 * j:300 * (j + 1)], color='cyan')
             plt.plot(y_true[300 * j:300 * (j + 1)], color='green')
-            plt.savefig(args.output_column[i] + f'_{300 * j}-{300 * (j + 1)}(number_{number}).jpg')
-            plt.show()
+            plt.savefig(args.save_path + '/' + name + '.jpg')
+            plt.close()
 
 
 def test_pt():
