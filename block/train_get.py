@@ -2,11 +2,16 @@ import tqdm
 import wandb
 import torch
 from block.val_get import val_get
+from block.ModelEMA import ModelEMA
 
 
 def train_get(args, data_dict, model_dict, loss):
     model = model_dict['model'].to(args.device, non_blocking=args.latch)
+    ema = ModelEMA(model) if args.ema else None  # 使用平均指数移动(EMA)调整参数，不能将ema放到args中，否则会导致模型保存出错
+    if args.ema:
+        ema.updates = model_dict['ema_updates']
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer.load_state_dict(model_dict['optimizer_state_dict']) if model_dict['optimizer_state_dict'] else None
     train_dataloader = torch.utils.data.DataLoader(torch_dataset(args, data_dict['train_input'],
                                                                  data_dict['train_output']),
                                                    batch_size=args.batch, shuffle=True, drop_last=True,
@@ -36,6 +41,8 @@ def train_get(args, data_dict, model_dict, loss):
                 optimizer.zero_grad()
                 loss_batch.backward()
                 optimizer.step()
+            # 调整参数，ema.updates会自动+1
+            ema.update(model) if args.ema else None
             # 记录损失
             train_loss += loss_batch.item()
         train_loss = train_loss / (item + 1)
@@ -44,17 +51,21 @@ def train_get(args, data_dict, model_dict, loss):
         del series_batch, true_batch, pred_batch, loss_batch
         torch.cuda.empty_cache()
         # 验证
-        val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict)
+        val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict, ema)
         # 保存
-        if mae < 1 and mse < model_dict['val_mse']:
-            model_dict['model'] = model
-            model_dict['epoch'] = epoch
-            model_dict['train_loss'] = train_loss
-            model_dict['val_loss'] = val_loss
-            model_dict['val_mae'] = mae
-            model_dict['val_mse'] = mse
-            torch.save(model_dict, args.save_name)
-            print('\n| 保存模型:{} | val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |\n'
+        model_dict['model'] = model.eval()
+        model_dict['epoch'] += 1
+        model_dict['optimizer_state_dict'] = optimizer.state_dict()
+        model_dict['ema_updates'] = ema.updates if args.ema else 0
+        model_dict['train_loss'] = train_loss
+        model_dict['val_loss'] = val_loss
+        model_dict['val_mae'] = mae
+        model_dict['val_mse'] = mse
+        torch.save(model_dict, 'last.pt')  # 保存最后一次训练的模型
+        if mae < 1 and mse < model_dict['standard']:
+            model_dict['standard'] = mse
+            torch.save(model_dict, args.save_name)  # 保存最佳模型
+            print('\n| 保存最佳模型:{} | val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |\n'
                   .format(args.save_name, val_loss, mae, mse))
         # wandb
         if args.wandb:

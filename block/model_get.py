@@ -11,6 +11,10 @@ def model_get(args, data_dict):
         model = eval(choice_dict[args.model])
         model_dict = {}
         model_dict['model'] = model
+        model_dict['epoch'] = 0
+        model_dict['optimizer_state_dict'] = None
+        model_dict['ema_updates'] = 0
+        model_dict['standard'] = 999
         model_dict['val_mse'] = 999
     model_dict['model'](torch.rand(args.batch, len(args.input_column), args.input_size))  # 检查
     return model_dict
@@ -30,13 +34,3 @@ class model_prepare(object):
         from model.lstm import lstm
         model = lstm(self.args, self.data_dict)
         return model
-
-
-if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--model', default='', type=str)
-    parser.add_argument('--weight', default='', type=str)
-    args = parser.parse_args()
-    model_get(args)

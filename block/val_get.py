@@ -3,9 +3,9 @@ import torch
 from block.metric_get import metric
 
 
-def val_get(args, val_dataloader, model, loss, data_dict):
+def val_get(args, val_dataloader, model, loss, data_dict, ema):
     with torch.no_grad():
-        model.eval()
+        model = ema.ema if args.ema else model.eval()
         pred = []
         true = []
         for item, (series_batch, true_batch) in enumerate(tqdm.tqdm(val_dataloader)):
