@@ -56,7 +56,7 @@ def train_get(args, data_dict, model_dict, loss):
         model_dict['model'] = model.eval()
         model_dict['epoch'] += 1
         model_dict['optimizer_state_dict'] = optimizer.state_dict()
-        model_dict['ema_updates'] = ema.updates if args.ema else 0
+        model_dict['ema_updates'] = ema.updates if args.ema else model_dict['ema_updates']
         model_dict['input_mean'] = data_dict['input_mean']
         model_dict['input_std'] = data_dict['input_std']
         model_dict['output_mean'] = data_dict['output_mean']
