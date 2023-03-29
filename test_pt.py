@@ -5,6 +5,7 @@ import argparse
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+from model.layer import deploy
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
@@ -37,16 +38,16 @@ def draw(pred, true, number):  # pred为模型输出，true为真实数据，pre
     # 画图
     x = np.arange(len(true) + number)
     y_pred = np.zeros(len(true) + number)
-    n = len(x) // 300
-    n += 1 if len(x) % 300 else 0
+    n = len(x) // 500
+    n += 1 if len(x) % 500 else 0
     for i in range(len(args.output_column)):
         y_pred[args.input_size + number - 1:] = pred[:, i]
         y_true = true[:, i]
         for j in range(n):
-            name = args.output_column[i] + f'_{300 * j}-{300 * (j + 1)}(number_{number})'
+            name = args.output_column[i] + f'_{500 * j}-{500 * (j + 1)}(number_{number})'
             plt.title(name)
-            plt.plot(y_pred[300 * j:300 * (j + 1)], color='cyan')
-            plt.plot(y_true[300 * j:300 * (j + 1)], color='green')
+            plt.plot(y_pred[500 * j:500 * (j + 1)], color='cyan')
+            plt.plot(y_true[500 * j:500 * (j + 1)], color='green')
             plt.savefig(args.save_path + '/' + name + '.jpg')
             plt.close()
 
@@ -55,12 +56,14 @@ def test_pt():
     # 加载模型
     model_dict = torch.load(args.model_path, map_location='cpu')
     model = model_dict['model']
+    model = deploy(model, model_dict['input_mean'], model_dict['input_std'], model_dict['output_mean'],
+                   model_dict['output_std'])
     model.float().eval().to(args.device)
     print('| 模型加载成功:{} |'.format(args.model_path))
     # 加载数据
     df = pd.read_csv(args.data_path)
-    input_data = np.array(df[args.input_column].astype(np.float32))[-600 + args.output_size:]  # 限定长度方便画图
-    output_data = np.array(df[args.output_column].astype(np.float32))[-600 + args.output_size:]  # 限定长度方便画图
+    input_data = np.array(df[args.input_column].astype(np.float32))[-1000 + args.output_size:]  # 限定长度方便画图
+    output_data = np.array(df[args.output_column].astype(np.float32))[-1000 + args.output_size:]  # 限定长度方便画图
     # 推理
     middle = args.output_size // 2
     last = args.output_size
@@ -84,6 +87,7 @@ def test_pt():
     # 画图
     draw(result_middle, output_data, middle)
     draw(result_last, output_data, last)
+    print(f'| 画图保存位置:{args.save_path} |')
 
 
 class torch_dataset(torch.utils.data.Dataset):

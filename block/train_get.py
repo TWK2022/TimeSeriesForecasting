@@ -57,12 +57,16 @@ def train_get(args, data_dict, model_dict, loss):
         model_dict['epoch'] += 1
         model_dict['optimizer_state_dict'] = optimizer.state_dict()
         model_dict['ema_updates'] = ema.updates if args.ema else 0
+        model_dict['input_mean'] = data_dict['input_mean']
+        model_dict['input_std'] = data_dict['input_std']
+        model_dict['output_mean'] = data_dict['output_mean']
+        model_dict['output_std'] = data_dict['output_std']
         model_dict['train_loss'] = train_loss
         model_dict['val_loss'] = val_loss
         model_dict['val_mae'] = mae
         model_dict['val_mse'] = mse
         torch.save(model_dict, 'last.pt')  # 保存最后一次训练的模型
-        if mae < 1 and mse < model_dict['standard']:
+        if mse < 1 and mse < model_dict['standard']:
             model_dict['standard'] = mse
             torch.save(model_dict, args.save_name)  # 保存最佳模型
             print('\n| 保存最佳模型:{} | val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |\n'

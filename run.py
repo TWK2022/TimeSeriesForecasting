@@ -72,7 +72,7 @@ if __name__ == '__main__':
     # 数据
     data_dict = data_get(args)
     # 模型
-    model_dict = model_get(args, data_dict)
+    model_dict = model_get(args)
     # 损失
     loss = loss_get(args)
     # 摘要

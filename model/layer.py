@@ -1,30 +1,6 @@
 import torch
 
 
-class series_encode(torch.nn.Module):
-    def __init__(self, input_mean, input_std):
-        super().__init__()
-        self.input_mean = input_mean
-        self.input_std = input_std
-
-    def forward(self, x):
-        for i in range(len(self.input_mean)):
-            x[:, i] = (x[:, i] - self.input_mean[i]) / self.input_std[i]
-        return x
-
-
-class series_decode(torch.nn.Module):
-    def __init__(self, output_mean, output_std):
-        super().__init__()
-        self.output_mean = output_mean
-        self.output_std = output_std
-
-    def forward(self, x):
-        for i in range(len(self.output_mean)):
-            x[:, i] = x[:, i] * self.output_std[i] + self.output_mean[i]
-        return x
-
-
 class cbs(torch.nn.Module):
     def __init__(self, in_, out_, kernel_size, stride):
         super().__init__()
@@ -91,4 +67,42 @@ class linear_head(torch.nn.Module):
         x = self.silu3(x)
         x = self.Dropout4(x)
         x = self.linear5(x)
+        return x
+
+
+class series_encode(torch.nn.Module):
+    def __init__(self, input_mean, input_std):
+        super().__init__()
+        self.input_mean = input_mean
+        self.input_std = input_std
+
+    def forward(self, x):
+        for i in range(len(self.input_mean)):
+            x[:, i] = (x[:, i] - self.input_mean[i]) / self.input_std[i]
+        return x
+
+
+class series_decode(torch.nn.Module):
+    def __init__(self, output_mean, output_std):
+        super().__init__()
+        self.output_mean = output_mean
+        self.output_std = output_std
+
+    def forward(self, x):
+        for i in range(len(self.output_mean)):
+            x[:, i] = x[:, i] * self.output_std[i] + self.output_mean[i]
+        return x
+
+
+class deploy(torch.nn.Module):
+    def __init__(self, model, input_mean, input_std, output_mean, output_std):
+        super().__init__()
+        self.series_encode = series_encode(input_mean, input_std)
+        self.model = model
+        self.series_decode = series_decode(output_mean, output_std)
+
+    def forward(self, x):
+        x = self.series_encode(x)
+        x = self.model(x)
+        x = self.series_decode(x)
         return x
