@@ -14,7 +14,7 @@ parser.add_argument('--data_path', default=r'./dataset/ETTh.csv', type=str, help
 parser.add_argument('--divide', default='9,1', type=str, help='|训练集和验证集划分比例|')
 parser.add_argument('--weight', default='last.pt', type=str, help='|已有模型的位置，如果没找到模型则会创建新模型|')
 parser.add_argument('--save_name', default='best.pt', type=str, help='|保存模型的位置|')
-parser.add_argument('--wandb', default=True, type=bool, help='|是否使用wandb可视化|')
+parser.add_argument('--wandb', default=False, type=bool, help='|是否使用wandb可视化|')
 parser.add_argument('--wandb_project', default='test', type=str, help='|wandb项目名称|')
 parser.add_argument('--wandb_name', default='train', type=str, help='|wandb项目中的训练名称|')
 parser.add_argument('--model', default='tsf', type=str, help='|模型选择，timm为True时为timm中的模型|')
