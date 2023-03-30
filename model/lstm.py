@@ -6,7 +6,7 @@ class lstm(torch.nn.Module):
         super().__init__()
         self.input_dim = len(args.input_column)
         self.output_dim = len(args.output_column)
-        n_dict = {'s': 1, 'm': 2}
+        n_dict = {'s': 1, 'm': 2, 'l': 3}
         n = n_dict[args.model_type]
         # 网络结构
         self.lstm0 = torch.nn.LSTM(input_size=args.input_size, hidden_size=args.output_size, num_layers=n, dropout=0.2)
