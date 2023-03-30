@@ -1,22 +1,24 @@
 import os
+import cv2
 import time
 import argparse
-import onnxruntime
+import tensorrt
 import numpy as np
 import pandas as pd
+import pycuda.autoinit
+import pycuda.driver as cuda
 import matplotlib.pyplot as plt
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
-parser = argparse.ArgumentParser(description='onnx推理')
-parser.add_argument('--model_path', default='best.onnx', type=str, help='|onnx模型位置|')
+parser = argparse.ArgumentParser(description='tensorrt推理')
+parser.add_argument('--model_path', default='best.trt', type=str, help='|trt模型位置|')
 parser.add_argument('--data_path', default=r'./dataset/ETTh.csv', type=str, help='|数据路径|')
 parser.add_argument('--input_column', default='1,2,3', type=str, help='|选择输入的变量|')
 parser.add_argument('--output_column', default='1,3', type=str, help='|选择预测的变量|')
 parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
 parser.add_argument('--output_size', default=32, type=int, help='|输出的长度|')
-parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，要与导出的模型对应|')
-parser.add_argument('--device', default='cuda', type=str, help='|用CPU/GPU推理|')
+parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，要与导出的模型对应，一般为1|')
 parser.add_argument('--float16', default=True, type=bool, help='|推理数据类型，要与导出的模型对应，False时为float32|')
 args = parser.parse_args()
 args.input_column = args.input_column.split(',')
@@ -50,13 +52,20 @@ def draw(pred, true, number):  # pred为模型输出，true为真实数据，pre
             plt.close()
 
 
-def test_onnx():
+def test_tensorrt():
     # 加载模型
-    provider = 'CUDAExecutionProvider' if args.device.lower() in ['gpu', 'cuda'] else 'CPUExecutionProvider'
-    session = onnxruntime.InferenceSession(args.model_path, providers=[provider])  # 加载模型和框架
-    input_name = session.get_inputs()[0].name  # 获取输入名称
-    output_name = session.get_outputs()[0].name  # 获取输出名称
-    print(f'| 模型加载成功:{args.model_path} |')
+    logger = tensorrt.Logger(tensorrt.Logger.WARNING)  # 创建日志记录信息
+    with tensorrt.Runtime(logger) as runtime, open(args.model_path, "rb") as f:
+        model = runtime.deserialize_cuda_engine(f.read())  # 读取模型并构建一个对象
+    np_type = tensorrt.nptype(model.get_tensor_dtype('input'))  # 获取接口的数据类型并转为np的字符串格式
+    h_input = np.zeros(tensorrt.volume(model.get_tensor_shape('input')), dtype=np_type)  # 获取输入的形状(一维)
+    h_output = np.zeros(tensorrt.volume(model.get_tensor_shape('output')), dtype=np_type)  # 获取输出的形状(一维)
+    d_input = cuda.mem_alloc(h_input.nbytes)  # 分配显存空间
+    d_output = cuda.mem_alloc(h_output.nbytes)  # 分配显存空间
+    bindings = [int(d_input), int(d_output)]  # 绑定显存输入输出
+    stream = cuda.Stream()  # 创建cuda流
+    context = model.create_execution_context()  # 创建模型推理器
+    print(f'| 加载模型成功:{args.model_path} |')
     # 加载数据
     start_time = time.time()
     df = pd.read_csv(args.data_path)
@@ -65,36 +74,27 @@ def test_onnx():
     input_data = input_data.astype(np.float16 if args.float16 else np.float32)
     input_len = len(input_data) - args.input_size + 1
     input_batch = [input_data[_:_ + args.input_size] for _ in range(input_len)]
-    input_batch = np.stack(input_batch, axis=0).transpose(0, 2, 1)
+    input_batch = np.stack(input_batch, axis=0).transpose(0, 2, 1).reshape(input_len, -1)
     end_time = time.time()
     print('| 数据加载成功:{} 耗时:{:.4f} |'.format(args.data_path, end_time - start_time))
     # 推理
     start_time = time.time()
     middle = args.output_size // 2
     last = args.output_size
-    result_middle = []
-    result_last = []
-    n = input_len // args.batch
-    if n > 0:  # 如果预测数量>=批量(分批预测)
-        for i in range(n):
-            batch = input_batch[i * args.batch:(i + 1) * args.batch]
-            pred_batch = session.run([output_name], {input_name: batch})[0]
-            result_middle.append(pred_batch[:, :, middle - 1])
-            result_last.append(pred_batch[:, :, last - 1])
-        if input_len % args.batch > 0:  # 如果图片数量没有刚好满足批量
-            batch = input_batch[(i + 1) * args.batch:]
-            pred_batch = session.run([output_name], {input_name: batch})[0]
-            result_middle.append(pred_batch[:, :, middle - 1])
-            result_last.append(pred_batch[:, :, last - 1])
-    else:  # 如果图片数量<批量(直接预测)
-        batch = input_batch
-        pred_batch = session.run([output_name], {input_name: batch})[0]
-        result_middle.append(pred_batch[:, :, middle - 1])
-        result_last.append(pred_batch[:, :, last - 1])
+    result_middle = [0 for _ in range(input_len)]
+    result_last = [0 for _ in range(input_len)]
+    for i in range(input_len):
+        cuda.memcpy_htod_async(d_input, input_batch[i], stream)  # 将输入数据从CPU锁存复制到GPU显存
+        context.execute_async_v2(bindings=bindings, stream_handle=stream.handle)  # 执行推理
+        cuda.memcpy_dtoh_async(h_output, d_output, stream)  # 将输出数据从GPU显存复制到CPU锁存
+        stream.synchronize()  # 同步线程
+        pred = h_output.copy().reshape(len(args.output_column), args.output_size)
+        result_middle[i] = pred[:, middle - 1][np.newaxis]
+        result_last[i] = pred[:, last - 1][np.newaxis]
     result_middle = np.concatenate(result_middle, axis=0)
     result_last = np.concatenate(result_last, axis=0)
     end_time = time.time()
-    print('| 数据:{} 批量:{} 每次预测耗时:{:.4f} |'.format(input_len, args.batch, (end_time - start_time) / input_len))
+    print('| 数据:{} 批量:{} 每张耗时:{:.4f} |'.format(input_len, args.batch, (end_time - start_time) / input_len))
     # 画图
     draw(result_middle, output_data, middle)
     draw(result_last, output_data, last)
@@ -102,4 +102,4 @@ def test_onnx():
 
 
 if __name__ == '__main__':
-    test_onnx()
+    test_tensorrt()

@@ -1,5 +1,4 @@
 import tqdm
-import wandb
 import torch
 from block.val_get import val_get
 from block.ModelEMA import ModelEMA
