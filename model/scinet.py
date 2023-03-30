@@ -108,21 +108,19 @@ class SCINet_Tree4(torch.nn.Module):
 class scinet(torch.nn.Module):
     def __init__(self, args):
         super().__init__()
-        self.input_column = args.input_column
-        self.output_column = args.output_column
+        self.input_dim = len(args.input_column)
+        self.output_dim = len(args.output_column)
         self.input_size = args.input_size
         self.output_size = args.output_size
         assert self.input_size % 8 == 0, '输入的长度要为8的倍数'
         n_dict = {'s': 3, 'm': 4}
         n = n_dict[args.model_type]
-        input_dim = len(self.input_column)
-        output_dim = len(self.output_column)
         # 网络结构
         if n == 3:
-            self.backbone0 = SCINet_Tree3(input_dim=input_dim)
+            self.backbone0 = SCINet_Tree3(input_dim=self.input_dim)
         elif n == 4:
-            self.backbone0 = SCINet_Tree4(input_dim=input_dim)
-        self.conv1 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
+            self.backbone0 = SCINet_Tree4(input_dim=self.input_dim)
+        self.conv1 = torch.nn.Conv1d(self.input_dim, self.output_dim, kernel_size=1, stride=1)
         self.conv2 = torch.nn.Conv1d(self.input_size, self.output_size, kernel_size=1, stride=1)
 
     def forward(self, x):
@@ -138,11 +136,11 @@ if __name__ == '__main__':
     from layer import cbs
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--model_type', default='s', type=str)
+    parser.add_argument('--model_type', default='m', type=str)
     parser.add_argument('--input_column', default='1,2,3', type=str)
     parser.add_argument('--output_column', default='1,3', type=str)
     parser.add_argument('--input_size', default=128, type=int)
-    parser.add_argument('--output_size', default=16, type=int)
+    parser.add_argument('--output_size', default=32, type=int)
     args = parser.parse_args()
     args.input_column = args.input_column.split(',')
     args.output_column = args.output_column.split(',')
