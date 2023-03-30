@@ -17,7 +17,7 @@ parser.add_argument('--save_name', default='best.pt', type=str, help='|保存模
 parser.add_argument('--wandb', default=False, type=bool, help='|是否使用wandb可视化|')
 parser.add_argument('--wandb_project', default='test', type=str, help='|wandb项目名称|')
 parser.add_argument('--wandb_name', default='train', type=str, help='|wandb项目中的训练名称|')
-parser.add_argument('--model', default='tsf', type=str, help='|模型选择，timm为True时为timm中的模型|')
+parser.add_argument('--model', default='scinet', type=str, help='|模型选择|')
 parser.add_argument('--model_type', default='m', type=str, help='|模型型号参数，部分模型有|')
 parser.add_argument('--input_column', default='1,2,3', type=str, help='|选择输入的变量|')
 parser.add_argument('--output_column', default='1,3', type=str, help='|选择预测的变量|')

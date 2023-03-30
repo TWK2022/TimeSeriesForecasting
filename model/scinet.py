@@ -105,7 +105,7 @@ class SCINet_Tree4(torch.nn.Module):
         return x
 
 
-class tsf(torch.nn.Module):
+class scinet(torch.nn.Module):
     def __init__(self, args):
         super().__init__()
         self.input_column = args.input_column
@@ -139,14 +139,14 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_type', default='s', type=str)
-    parser.add_argument('--input_column', default='1,3', type=str)
+    parser.add_argument('--input_column', default='1,2,3', type=str)
     parser.add_argument('--output_column', default='1,3', type=str)
     parser.add_argument('--input_size', default=128, type=int)
     parser.add_argument('--output_size', default=16, type=int)
     args = parser.parse_args()
     args.input_column = args.input_column.split(',')
     args.output_column = args.output_column.split(',')
-    model = tsf(args).to('cuda')
+    model = scinet(args).to('cuda')
     print(model)
     tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32).to('cuda')
     print(model(tensor).shape)
