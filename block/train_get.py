@@ -5,19 +5,29 @@ from block.ModelEMA import ModelEMA
 
 
 def train_get(args, data_dict, model_dict, loss):
+    # 加载模型
     model = model_dict['model'].to(args.device, non_blocking=args.latch)
-    ema = ModelEMA(model) if args.ema else None  # 使用平均指数移动(EMA)调整参数，不能将ema放到args中，否则会导致模型保存出错
+    # 分布式初始化
+    torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
+                                              output_device=args.local_rank) if args.distributed else None
+    # 使用平均指数移动(EMA)调整参数(不能将ema放到args中，否则会导致模型保存出错)
+    ema = ModelEMA(model) if args.ema else None
     if args.ema:
         ema.updates = model_dict['ema_updates']
+    # 学习率
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
     optimizer.load_state_dict(model_dict['optimizer_state_dict']) if model_dict['optimizer_state_dict'] else None
-    train_dataloader = torch.utils.data.DataLoader(torch_dataset(args, data_dict['train_input'],
-                                                                 data_dict['train_output']),
-                                                   batch_size=args.batch, shuffle=True, drop_last=True,
-                                                   pin_memory=args.latch, num_workers=args.num_worker)
-    val_dataloader = torch.utils.data.DataLoader(torch_dataset(args, data_dict['val_input'], data_dict['val_output']),
-                                                 batch_size=args.batch, shuffle=False,
-                                                 drop_last=False, pin_memory=args.latch, num_workers=args.num_worker)
+    # 数据集
+    train_dataset = torch_dataset(args, data_dict['train_input'], data_dict['train_output'])
+    train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset) if args.distributed else None
+    train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch, shuffle=True, drop_last=True,
+                                                   pin_memory=args.latch, num_workers=args.num_worker,
+                                                   sampler=train_sampler)
+    val_dataset = torch_dataset(args, data_dict['val_input'], data_dict['val_output'])
+    val_sampler = None  # 分布式时数据合在主GPU上进行验证
+    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch, shuffle=False, drop_last=False,
+                                                 pin_memory=args.latch, num_workers=args.num_worker,
+                                                 sampler=val_sampler)
     for epoch in range(args.epoch):
         # 训练
         print(f'\n-----------------------第{epoch + 1}轮-----------------------')
@@ -50,33 +60,35 @@ def train_get(args, data_dict, model_dict, loss):
         del series_batch, true_batch, pred_batch, loss_batch
         torch.cuda.empty_cache()
         # 验证
-        val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict, ema)
+        if args.local_rank == 0:  # 分布式时只验证一次
+            val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict, ema)
         # 保存
-        model_dict['model'] = model.eval()
-        model_dict['epoch'] += 1
-        model_dict['optimizer_state_dict'] = optimizer.state_dict()
-        model_dict['ema_updates'] = ema.updates if args.ema else model_dict['ema_updates']
-        model_dict['input_mean'] = data_dict['input_mean']
-        model_dict['input_std'] = data_dict['input_std']
-        model_dict['output_mean'] = data_dict['output_mean']
-        model_dict['output_std'] = data_dict['output_std']
-        model_dict['train_loss'] = train_loss
-        model_dict['val_loss'] = val_loss
-        model_dict['val_mae'] = mae
-        model_dict['val_mse'] = mse
-        torch.save(model_dict, 'last.pt')  # 保存最后一次训练的模型
-        if mse < 1 and mse < model_dict['standard']:
-            model_dict['standard'] = mse
-            torch.save(model_dict, args.save_name)  # 保存最佳模型
-            print('\n| 保存最佳模型:{} | val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |\n'
-                  .format(args.save_name, val_loss, mae, mse))
-        # wandb
-        if args.wandb:
-            args.wandb_run.log({'metric/train_loss': train_loss,
-                                'metric/val_loss': val_loss,
-                                'metric/val_mae': mae,
-                                'metric/val_mse': mse})
-    return model_dict
+        if args.local_rank == 0:  # 分布式时只保存一次
+            model_dict['model'] = model.eval()
+            model_dict['epoch'] += 1
+            model_dict['optimizer_state_dict'] = optimizer.state_dict()
+            model_dict['ema_updates'] = ema.updates if args.ema else model_dict['ema_updates']
+            model_dict['input_mean'] = data_dict['input_mean']
+            model_dict['input_std'] = data_dict['input_std']
+            model_dict['output_mean'] = data_dict['output_mean']
+            model_dict['output_std'] = data_dict['output_std']
+            model_dict['train_loss'] = train_loss
+            model_dict['val_loss'] = val_loss
+            model_dict['val_mae'] = mae
+            model_dict['val_mse'] = mse
+            torch.save(model_dict, 'last.pt')  # 保存最后一次训练的模型
+            if mse < 1 and mse < model_dict['standard']:
+                model_dict['standard'] = mse
+                torch.save(model_dict, args.save_name)  # 保存最佳模型
+                print('\n| 保存最佳模型:{} | val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |\n'
+                      .format(args.save_name, val_loss, mae, mse))
+            # wandb
+            if args.wandb:
+                args.wandb_run.log({'metric/train_loss': train_loss,
+                                    'metric/val_loss': val_loss,
+                                    'metric/val_mae': mae,
+                                    'metric/val_mse': mse})
+        torch.distributed.barrier() if args.distributed else None  # 分布式时每轮训练后让所有GPU进行同步，快的GPU会在此等待
 
 
 class torch_dataset(torch.utils.data.Dataset):

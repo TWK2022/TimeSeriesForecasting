@@ -8,6 +8,11 @@ from block.loss_get import loss_get
 from block.train_get import train_get
 
 # -------------------------------------------------------------------------------------------------------------------- #
+# 分布式训练:
+# python -m torch.distributed.launch --master_port 9999 --nproc_per_node n run.py --distributed True
+# master_port为GPU之间的通讯端口，空闲的即可
+# n为GPU数量
+# -------------------------------------------------------------------------------------------------------------------- #
 # 设置
 parser = argparse.ArgumentParser(description='时间序列预测')
 parser.add_argument('--data_path', default=r'./dataset/ETTh.csv', type=str, help='|数据路径|')
@@ -32,6 +37,8 @@ parser.add_argument('--latch', default=True, type=bool, help='|模型和数据�
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
 parser.add_argument('--ema', default=True, type=bool, help='|使用平均指数移动(EMA)调整参数|')
 parser.add_argument('--scaler', default=True, type=bool, help='|混合float16精度训练|')
+parser.add_argument('--distributed', default=False, type=bool, help='|单机多卡分布式训练|')
+parser.add_argument('--local_rank', default=0, type=int, help='|分布式训练使用命令后会自动传入的参数|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
 args.input_column = args.input_column.split(',')
@@ -48,11 +55,15 @@ torch.backends.cudnn.enabled = True
 # 训练前cuDNN会先搜寻每个卷积层最适合实现它的卷积算法，加速运行；但对于复杂变化的输入数据，可能会有过长的搜寻时间，对于训练比较快的网络建议设为False
 torch.backends.cudnn.benchmark = False
 # wandb可视化:https://wandb.ai
-if args.wandb:
+if args.wandb and args.local_rank == 0:  # 分布式时只记录一次wandb
     args.wandb_run = wandb.init(project=args.wandb_project, name=args.wandb_name, config=args)
 # 混合float16精度训练
 if args.scaler:
     args.scaler = torch.cuda.amp.GradScaler()
+# 分布式训练
+if args.distributed:
+    torch.distributed.init_process_group(backend="nccl")
+    args.device = torch.device("cuda", args.local_rank)
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
 assert os.path.exists(args.data_path), 'data_path不存在'
@@ -61,11 +72,6 @@ if os.path.exists(args.weight):
 else:
     assert os.path.exists('model/' + args.model + '.py'), '没有此自定义模型'.format(args.model)
     print('| 创建自定义模型:{} | 型号:{} |'.format(args.model, args.model_type))
-if args.device.lower() in ['cuda', 'gpu']:
-    assert torch.cuda.is_available(), 'GPU不可用'
-    args.device = 'cuda'
-else:
-    args.device = 'cpu'
 # -------------------------------------------------------------------------------------------------------------------- #
 # 程序
 if __name__ == '__main__':
@@ -80,10 +86,4 @@ if __name__ == '__main__':
           .format(len(data_dict['train_input']), len(data_dict['val_input']), args.model, args.input_size,
                   args.output_size, args.loss, args.lr))
     # 训练(包括图片读取和预处理、训练、验证、保存模型)
-    model_dict = train_get(args, data_dict, model_dict, loss)
-    # 显示结果
-    try:
-        print('\n| 最佳结果 | train_loss:{:.4f} val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |\n'
-              .format(model_dict['train_loss'], model_dict['val_loss'], model_dict['val_mae'], model_dict['val_mse']))
-    except:
-        print('\n| !由于指标太低没有保存最佳模型! |\n')
+    train_get(args, data_dict, model_dict, loss)
