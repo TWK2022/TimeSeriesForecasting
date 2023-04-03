@@ -33,7 +33,9 @@ def train_get(args, data_dict, model_dict, loss):
         print(f'\n-----------------------第{epoch + 1}轮-----------------------')
         model.train()
         train_loss = 0  # 记录训练损失
-        for item, (series_batch, true_batch) in enumerate(tqdm.tqdm(train_dataloader)):
+        tqdm_show = tqdm.tqdm(total=len(data_dict['train']) // args.batch, postfix=dict,
+                              mininterval=0.5) if args.local_rank == 0 else None  # tqdm
+        for item, (series_batch, true_batch) in enumerate(train_dataloader):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
             true_batch = true_batch.to(args.device, non_blocking=args.latch)
             if args.scaler:
@@ -54,6 +56,11 @@ def train_get(args, data_dict, model_dict, loss):
             ema.update(model) if args.ema else None
             # 记录损失
             train_loss += loss_batch.item()
+            # tqdm
+            if args.local_rank == 0:
+                tqdm_show.set_postfix({'当前loss': loss_batch.item()})
+                tqdm_show.update(1)
+        tqdm_show.close() if args.local_rank == 0 else None  # tqdm
         train_loss = train_loss / (item + 1)
         print('\n| train_loss:{:.4f} |\n'.format(train_loss))
         # 清理显存空间
