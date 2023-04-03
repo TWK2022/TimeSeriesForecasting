@@ -37,13 +37,13 @@ parser.add_argument('--latch', default=True, type=bool, help='|模型和数据�
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
 parser.add_argument('--ema', default=True, type=bool, help='|使用平均指数移动(EMA)调整参数|')
 parser.add_argument('--scaler', default=True, type=bool, help='|混合float16精度训练|')
-parser.add_argument('--distributed', default=False, type=bool, help='|单机多卡分布式训练|')
+parser.add_argument('--distributed', default=False, type=bool, help='|单机多卡分布式训练，分布式训练时batch为总batch|')
 parser.add_argument('--local_rank', default=0, type=int, help='|分布式训练使用命令后会自动传入的参数|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
 args.input_column = args.input_column.split(',')
 args.output_column = args.output_column.split(',')
-print('| args:{} |'.format(args))
+args.gpu_number = torch.cuda.device_count()  # 使用的GPU数
 # 为CPU设置随机种子
 torch.manual_seed(999)
 # 为所有GPU设置随机种子
@@ -66,12 +66,14 @@ if args.distributed:
     args.device = torch.device("cuda", args.local_rank)
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
-assert os.path.exists(args.data_path), 'data_path不存在'
-if os.path.exists(args.weight):
-    print('| 加载已有模型:{} |'.format(args.weight))
-else:
-    assert os.path.exists('model/' + args.model + '.py'), '没有此自定义模型'.format(args.model)
-    print('| 创建自定义模型:{} | 型号:{} |'.format(args.model, args.model_type))
+if args.local_rank == 0:
+    print('| args:{} |'.format(args))
+    assert os.path.exists(args.data_path), 'data_path不存在'
+    if os.path.exists(args.weight):
+        print('| 加载已有模型:{} |'.format(args.weight))
+    else:
+        assert os.path.exists('model/' + args.model + '.py'), '没有此自定义模型'.format(args.model)
+        print('| 创建自定义模型:{} | 型号:{} |'.format(args.model, args.model_type))
 # -------------------------------------------------------------------------------------------------------------------- #
 # 程序
 if __name__ == '__main__':
@@ -82,8 +84,8 @@ if __name__ == '__main__':
     # 损失
     loss = loss_get(args)
     # 摘要
-    print('| 训练集:{} | 验证集:{} | 模型:{} | 输入长度:{} | 输出长度:{} | 损失函数:{} | 初始学习率:{} |'
-          .format(len(data_dict['train_input']), len(data_dict['val_input']), args.model, args.input_size,
-                  args.output_size, args.loss, args.lr))
-    # 训练(包括图片读取和预处理、训练、验证、保存模型)
+    print('| 训练集:{} | 验证集:{} | 批量{} | 模型:{} | 输入长度:{} | 输出长度:{} | 损失函数:{} | 初始学习率:{} |'
+          .format(len(data_dict['train_input']), len(data_dict['val_input']), args.batch, args.model, args.input_size,
+                  args.output_size, args.loss, args.lr)) if args.local_rank == 0 else None
+    # 训练
     train_get(args, data_dict, model_dict, loss)
