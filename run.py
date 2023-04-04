@@ -15,7 +15,7 @@ from block.train_get import train_get
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
 parser = argparse.ArgumentParser(description='时间序列预测')
-parser.add_argument('--data_path', default=r'./dataset/ETTh.csv', type=str, help='|数据路径|')
+parser.add_argument('--data_path', default=r'./dataset/ETTh1.csv', type=str, help='|数据路径|')
 parser.add_argument('--divide', default='9,1', type=str, help='|训练集和验证集划分比例|')
 parser.add_argument('--weight', default='last.pt', type=str, help='|已有模型的位置，如果没找到模型则会创建新模型|')
 parser.add_argument('--save_name', default='best.pt', type=str, help='|保存模型的位置|')
@@ -24,8 +24,8 @@ parser.add_argument('--wandb_project', default='test', type=str, help='|wandb项
 parser.add_argument('--wandb_name', default='train', type=str, help='|wandb项目中的训练名称|')
 parser.add_argument('--model', default='lstm', type=str, help='|模型选择|')
 parser.add_argument('--model_type', default='m', type=str, help='|模型型号参数，部分模型有|')
-parser.add_argument('--input_column', default='1,2,3', type=str, help='|选择输入的变量|')
-parser.add_argument('--output_column', default='1,3', type=str, help='|选择预测的变量|')
+parser.add_argument('--input_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str, help='|选择输入的变量|')
+parser.add_argument('--output_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str, help='|选择预测的变量|')
 parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
 parser.add_argument('--output_size', default=32, type=int, help='|输出的长度|')
 parser.add_argument('--epoch', default=50, type=int, help='|训练轮数|')
