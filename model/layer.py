@@ -50,26 +50,6 @@ class elan(torch.nn.Module):
         return x
 
 
-class linear_head(torch.nn.Module):
-    def __init__(self, in_, out_):
-        super().__init__()
-        self.flatten0 = torch.nn.Flatten()
-        self.Dropout1 = torch.nn.Dropout(0.2)
-        self.linear2 = torch.nn.Linear(in_, in_ // 2)
-        self.silu3 = torch.nn.SiLU()
-        self.Dropout4 = torch.nn.Dropout(0.2)
-        self.linear5 = torch.nn.Linear(in_ // 2, out_)
-
-    def forward(self, x):
-        x = self.flatten0(x)
-        x = self.Dropout1(x)
-        x = self.linear2(x)
-        x = self.silu3(x)
-        x = self.Dropout4(x)
-        x = self.linear5(x)
-        return x
-
-
 class series_encode(torch.nn.Module):
     def __init__(self, input_mean, input_std):
         super().__init__()

@@ -7,7 +7,9 @@ def model_get(args):
         model_dict = torch.load(args.weight, map_location='cpu')
     else:
         choice_dict = {'lstm': 'model_prepare(args)._lstm()',
-                       'scinet': 'model_prepare(args)._scinet()'}
+                       'scinet': 'model_prepare(args)._scinet()',
+                       'nlinear': 'model_prepare(args)._nlinear()',
+                       }
         model = eval(choice_dict[args.model])
         model_dict = {}
         model_dict['model'] = model
@@ -31,4 +33,9 @@ class model_prepare(object):
     def _scinet(self):
         from model.scinet import scinet
         model = scinet(self.args)
+        return model
+
+    def _nlinear(self):
+        from model.nlinear import nlinear
+        model = nlinear(self.args)
         return model

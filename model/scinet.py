@@ -1,4 +1,4 @@
-# 根据SCINet奇偶分离的思想改编:https://github.com/cure-lab/SCINet
+# 根据SCINet改编:https://github.com/cure-lab/SCINet
 # 预测长度要为输入长度的1/2以下
 import torch
 from model.layer import cbs
