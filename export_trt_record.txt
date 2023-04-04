@@ -1,8 +1,8 @@
 # onnx转trt，需要安装tensorrt库
 # 需要压缩包中的bin、include、lib文件，然后添加lib文件路径到系统路径中
-# windows为：系统->高级系统设置->环境变量->系统变量->Path中加入
-# linux为：sudo ldconfig lib位置
-# 然后找到对应版本的whl文件使用pip install .whl。bin中是官方提供的onnx转trt程序
+# windows为:系统->高级系统设置->环境变量->系统变量->Path中加入
+# linux为:sudo ldconfig lib位置
+# 然后找到对应版本的whl文件使用pip install ....whl。bin中是官方提供的onnx转trt程序
 # -------------------------------------------------------------------------------------------------------------------- #
 这里的导出程序实际上是tensorrt安装包中的bin里的文件。windows为trtexec.exe。linux为trtexec
 windows:
