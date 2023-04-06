@@ -20,7 +20,7 @@ class lr_adjust:
             self.lr_adjust_item += 1
             x = self.lr_adjust_range[self.lr_adjust_item] / len(self.lr_adjust_range)
             lr = lr_base * self._decay(x)
-        else:
+        else:  # 当损失下降幅度比较大时暂时不更新学习率
             lr = optimizer.param_groups[0]['lr']
         self.loss_last = loss_now
         for i in range(len(optimizer.param_groups)):
