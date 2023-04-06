@@ -67,10 +67,13 @@ def train_get(args, data_dict, model_dict, loss):
             if args.local_rank == 0:
                 tqdm_show.set_postfix({'当前loss': loss_batch.item()})  # 添加loss显示
                 tqdm_show.update(args.gpu_number)  # 更新进度条
-        tqdm_show.close() if args.local_rank == 0 else None  # tqdm
+        # tqdm
+        tqdm_show.close() if args.local_rank == 0 else None
+        # 计算平均损失
         train_loss = train_loss / (item + 1)
         print('\n| train_loss:{:.4f} | lr:{:.6f} |\n'.format(train_loss, optimizer.param_groups[0]['lr']))
-        optimizer = optimizer_adjust(optimizer, args.lr, epoch + 1, train_loss)  # 调整学习率
+        # 调整学习率
+        optimizer = optimizer_adjust(optimizer, args.lr, epoch + 1, train_loss)
         # 清理显存空间
         del series_batch, true_batch, pred_batch, loss_batch
         torch.cuda.empty_cache()
