@@ -2,6 +2,7 @@ import tqdm
 import torch
 from block.val_get import val_get
 from block.ModelEMA import ModelEMA
+from block.lr_adjust import lr_adjust
 
 
 def train_get(args, data_dict, model_dict, loss):
@@ -15,8 +16,9 @@ def train_get(args, data_dict, model_dict, loss):
     if args.ema:
         ema.updates = model_dict['ema_updates']
     # 学习率
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, betas=(0.937, 0.999), weight_decay=0.0005)
     optimizer.load_state_dict(model_dict['optimizer_state_dict']) if model_dict['optimizer_state_dict'] else None
+    optimizer_adjust = lr_adjust(model_dict['lr_adjust_item'])
     # 数据集
     train_dataset = torch_dataset(args, data_dict['train_input'], data_dict['train_output'])
     train_shuffle = False if args.distributed else True  # 分布式设置sampler后shuffle要为False
@@ -30,9 +32,10 @@ def train_get(args, data_dict, model_dict, loss):
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=val_batch, shuffle=False,
                                                  drop_last=False, pin_memory=args.latch, num_workers=args.num_worker,
                                                  sampler=val_sampler)
-    for epoch in range(args.epoch):
+    epoch_base = model_dict['epoch'] + 1
+    for epoch in range(epoch_base, epoch_base + args.epoch):
         # 训练
-        print(f'\n-----------------------第{epoch + 1}轮-----------------------') if args.local_rank == 0 else None
+        print(f'\n-----------------------第{epoch}轮-----------------------') if args.local_rank == 0 else None
         model.train()
         train_loss = 0  # 记录训练损失
         tqdm_show = tqdm.tqdm(total=(len(data_dict['train_input']) - args.input_size - args.output_size + 1) //
@@ -41,14 +44,14 @@ def train_get(args, data_dict, model_dict, loss):
         for item, (series_batch, true_batch) in enumerate(train_dataloader):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
             true_batch = true_batch.to(args.device, non_blocking=args.latch)
-            if args.scaler:
+            if args.amp:
                 with torch.cuda.amp.autocast():
                     pred_batch = model(series_batch)
                     loss_batch = loss(pred_batch, true_batch)
                 optimizer.zero_grad()
-                args.scaler.scale(loss_batch).backward()
-                args.scaler.step(optimizer)
-                args.scaler.update()
+                args.amp.scale(loss_batch).backward()
+                args.amp.step(optimizer)
+                args.amp.update()
             else:
                 pred_batch = model(series_batch)
                 loss_batch = loss(pred_batch, true_batch)
@@ -65,7 +68,8 @@ def train_get(args, data_dict, model_dict, loss):
                 tqdm_show.update(args.gpu_number)  # 更新进度条
         tqdm_show.close() if args.local_rank == 0 else None  # tqdm
         train_loss = train_loss / (item + 1)
-        print('\n| train_loss:{:.4f} |\n'.format(train_loss))
+        print('\n| train_loss:{:.4f} | lr:{:.8f} |\n'.format(train_loss, optimizer.param_groups[0]['lr']))
+        optimizer = optimizer_adjust(optimizer, args.lr, epoch, train_loss)  # 调整学习率
         # 清理显存空间
         del series_batch, true_batch, pred_batch, loss_batch
         torch.cuda.empty_cache()
@@ -75,8 +79,9 @@ def train_get(args, data_dict, model_dict, loss):
         # 保存
         if args.local_rank == 0:  # 分布式时只保存一次
             model_dict['model'] = model.eval()
-            model_dict['epoch'] += 1
+            model_dict['epoch'] = epoch
             model_dict['optimizer_state_dict'] = optimizer.state_dict()
+            model_dict['lr_adjust_item'] = optimizer_adjust.lr_adjust_item
             model_dict['ema_updates'] = ema.updates if args.ema else model_dict['ema_updates']
             model_dict['input_mean'] = data_dict['input_mean']
             model_dict['input_std'] = data_dict['input_std']

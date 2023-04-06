@@ -31,12 +31,12 @@ parser.add_argument('--output_size', default=32, type=int, help='|输出的长�
 parser.add_argument('--epoch', default=50, type=int, help='|训练轮数|')
 parser.add_argument('--batch', default=64, type=int, help='|训练批量大小|')
 parser.add_argument('--loss', default='mse', type=str, help='|损失函数|')
-parser.add_argument('--lr', default=0.001, type=int, help='|初始学习率，训练中采用adam算法|')
+parser.add_argument('--lr', default=0.001, type=int, help='|初始学习率，训练中采用adam算法，最终会下降到0.1*lr|')
 parser.add_argument('--device', default='cuda', type=str, help='|训练设备|')
 parser.add_argument('--latch', default=True, type=bool, help='|模型和数据是否为锁存，True为锁存|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
 parser.add_argument('--ema', default=True, type=bool, help='|使用平均指数移动(EMA)调整参数|')
-parser.add_argument('--scaler', default=True, type=bool, help='|混合float16精度训练|')
+parser.add_argument('--amp', default=True, type=bool, help='|混合float16精度训练|')
 parser.add_argument('--distributed', default=False, type=bool, help='|单机多卡分布式训练，分布式训练时batch为总batch|')
 parser.add_argument('--local_rank', default=0, type=int, help='|分布式训练使用命令后会自动传入的参数|')
 args = parser.parse_args()
@@ -58,8 +58,8 @@ torch.backends.cudnn.benchmark = False
 if args.wandb and args.local_rank == 0:  # 分布式时只记录一次wandb
     args.wandb_run = wandb.init(project=args.wandb_project, name=args.wandb_name, config=args)
 # 混合float16精度训练
-if args.scaler:
-    args.scaler = torch.cuda.amp.GradScaler()
+if args.amp:
+    args.amp = torch.cuda.amp.GradScaler()
 # 分布式训练
 if args.distributed:
     torch.distributed.init_process_group(backend="nccl")

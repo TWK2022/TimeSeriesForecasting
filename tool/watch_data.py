@@ -4,8 +4,8 @@ import matplotlib.pyplot as plt
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
-parser = argparse.ArgumentParser(description='')
-parser.add_argument('--data_path', default=r'../dataset/ETTh.csv', type=str, help='|数据路径|')
+parser = argparse.ArgumentParser(description='查看数据')
+parser.add_argument('--data_path', default=r'../dataset/ETTh1.csv', type=str, help='|数据路径|')
 args = parser.parse_args()
 # -------------------------------------------------------------------------------------------------------------------- #
 # 程序
