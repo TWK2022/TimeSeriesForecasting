@@ -4,7 +4,7 @@ import math
 class lr_adjust:
     def __init__(self, lr_adjust_item):
         self.loss_last = 0
-        self.lr_adjust_range = [_ for _ in range(50)]  # 学习率调整次数
+        self.lr_adjust_range = [_ for _ in range(100)]  # 学习率调整次数
         self.lr_adjust_item = lr_adjust_item
 
     def _decay(self, x):  # 学习率最终下降为0.1*lr
