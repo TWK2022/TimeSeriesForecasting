@@ -19,6 +19,7 @@ def train_get(args, data_dict, model_dict, loss):
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, betas=(0.937, 0.999), weight_decay=0.0005)
     optimizer.load_state_dict(model_dict['optimizer_state_dict']) if model_dict['optimizer_state_dict'] else None
     optimizer_adjust = lr_adjust(model_dict['lr_adjust_item'])
+    optimizer = optimizer_adjust(optimizer, args.lr, model_dict['epoch'] + 1, 0)  # 初始化学习率
     # 数据集
     train_dataset = torch_dataset(args, data_dict['train_input'], data_dict['train_output'])
     train_shuffle = False if args.distributed else True  # 分布式设置sampler后shuffle要为False

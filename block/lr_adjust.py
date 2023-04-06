@@ -16,13 +16,12 @@ class lr_adjust:
             lr = lr_base * (0.2 + 0.3 * epoch)
         elif epoch < 5:  # 前5-warmup轮学习率不变
             lr = lr_base
+        elif loss_now > 0.8 * self.loss_last and self.lr_adjust_item < len(self.lr_adjust_range) - 1:  # 调整学习率
+            self.lr_adjust_item += 1
+            x = self.lr_adjust_range[self.lr_adjust_item] / len(self.lr_adjust_range)
+            lr = lr_base * self._decay(x)
         else:
-            if loss_now > 0.8 * self.loss_last and self.lr_adjust_item < len(self.lr_adjust_range) - 1:  # 调整学习率
-                self.lr_adjust_item += 1
-                x = self.lr_adjust_range[self.lr_adjust_item] / len(self.lr_adjust_range)
-                lr = lr_base * self._decay(x)
-            else:
-                lr = optimizer.param_groups[0]['lr']
+            lr = optimizer.param_groups[0]['lr']
         self.loss_last = loss_now
         for i in range(len(optimizer.param_groups)):
             optimizer.param_groups[i]['lr'] = lr
