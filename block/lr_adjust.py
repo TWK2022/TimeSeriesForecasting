@@ -18,7 +18,7 @@ class lr_adjust:
             lr = lr_base
         elif loss_now > 0.8 * self.loss_last and self.lr_adjust_item < len(self.lr_adjust_range) - 1:  # 调整学习率
             self.lr_adjust_item += 1
-            x = self.lr_adjust_range[self.lr_adjust_item] / len(self.lr_adjust_range)
+            x = (self.lr_adjust_range[self.lr_adjust_item] + 1) / len(self.lr_adjust_range)
             lr = lr_base * self._decay(x)
         else:  # 当损失下降幅度比较大时暂时不更新学习率
             lr = optimizer.param_groups[0]['lr']

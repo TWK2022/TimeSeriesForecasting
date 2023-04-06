@@ -30,7 +30,7 @@ def export_onnx():
     model = model_dict['model']
     model = deploy(model, model_dict['input_mean'], model_dict['input_std'], model_dict['output_mean'],
                    model_dict['output_std'])
-    model.eval().half().to(args.device) if args.float16 else model.eval().float().to(args.device)
+    model = model.eval().half().to(args.device) if args.float16 else model.eval().float().to(args.device)
     input_shape = torch.rand(1, args.input_column_num, args.input_size,
                              dtype=torch.float16 if args.float16 else torch.float32).to(args.device)
     torch.onnx.export(model, input_shape, args.save_name,
