@@ -69,8 +69,8 @@ def train_get(args, data_dict, model_dict, loss):
                 tqdm_show.update(args.gpu_number)  # 更新进度条
         tqdm_show.close() if args.local_rank == 0 else None  # tqdm
         train_loss = train_loss / (item + 1)
-        print('\n| train_loss:{:.4f} | lr:{:.8f} |\n'.format(train_loss, optimizer.param_groups[0]['lr']))
-        optimizer = optimizer_adjust(optimizer, args.lr, epoch, train_loss)  # 调整学习率
+        print('\n| train_loss:{:.4f} | lr:{:.6f} |\n'.format(train_loss, optimizer.param_groups[0]['lr']))
+        optimizer = optimizer_adjust(optimizer, args.lr, epoch + 1, train_loss)  # 调整学习率
         # 清理显存空间
         del series_batch, true_batch, pred_batch, loss_batch
         torch.cuda.empty_cache()
