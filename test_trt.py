@@ -13,9 +13,9 @@ import matplotlib.pyplot as plt
 # 设置
 parser = argparse.ArgumentParser(description='tensorrt推理')
 parser.add_argument('--model_path', default='best.trt', type=str, help='|trt模型位置|')
-parser.add_argument('--data_path', default=r'./dataset/ETTh.csv', type=str, help='|数据路径|')
-parser.add_argument('--input_column', default='1,2,3', type=str, help='|选择输入的变量|')
-parser.add_argument('--output_column', default='1,3', type=str, help='|选择预测的变量|')
+parser.add_argument('--data_path', default=r'./dataset/ETTh1.csv', type=str, help='|数据路径|')
+parser.add_argument('--input_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str, help='|选择输入的变量|')
+parser.add_argument('--output_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str, help='|选择预测的变量|')
 parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
 parser.add_argument('--output_size', default=32, type=int, help='|输出的长度|')
 parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，要与导出的模型对应，一般为1|')
