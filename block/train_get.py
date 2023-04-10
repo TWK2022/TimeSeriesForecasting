@@ -16,10 +16,10 @@ def train_get(args, data_dict, model_dict, loss):
     if args.ema:
         ema.updates = model_dict['ema_updates']
     # 学习率
-    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr, betas=(0.937, 0.999), weight_decay=0.0005)
+    optimizer = torch.optim.Adam(model.parameters(), lr=args.lr_start, betas=(0.937, 0.999), weight_decay=0.0005)
     optimizer.load_state_dict(model_dict['optimizer_state_dict']) if model_dict['optimizer_state_dict'] else None
-    optimizer_adjust = lr_adjust(model_dict['lr_adjust_item'])
-    optimizer = optimizer_adjust(optimizer, args.lr, model_dict['epoch'] + 1, 0)  # 初始化学习率
+    optimizer_adjust = lr_adjust(args, model_dict['lr_adjust_item'])
+    optimizer = optimizer_adjust(optimizer, model_dict['epoch'] + 1, 0)  # 初始化学习率
     # 数据集
     train_dataset = torch_dataset(args, data_dict['train_input'], data_dict['train_output'])
     train_shuffle = False if args.distributed else True  # 分布式设置sampler后shuffle要为False
@@ -33,7 +33,7 @@ def train_get(args, data_dict, model_dict, loss):
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=val_batch, shuffle=False,
                                                  drop_last=False, pin_memory=args.latch, num_workers=args.num_worker,
                                                  sampler=val_sampler)
-    epoch_base = model_dict['epoch'] + 1
+    epoch_base = model_dict['epoch'] + 1  # 新的一轮要+1
     for epoch in range(epoch_base, epoch_base + args.epoch):
         # 训练
         print(f'\n-----------------------第{epoch}轮-----------------------') if args.local_rank == 0 else None
@@ -73,7 +73,7 @@ def train_get(args, data_dict, model_dict, loss):
         train_loss = train_loss / (item + 1)
         print('\n| train_loss:{:.4f} | lr:{:.6f} |\n'.format(train_loss, optimizer.param_groups[0]['lr']))
         # 调整学习率
-        optimizer = optimizer_adjust(optimizer, args.lr, epoch + 1, train_loss)
+        optimizer = optimizer_adjust(optimizer, epoch + 1, train_loss)
         # 清理显存空间
         del series_batch, true_batch, pred_batch, loss_batch
         torch.cuda.empty_cache()
