@@ -16,10 +16,7 @@ class lstm(torch.nn.Module):
 
     def forward(self, x):
         # 输入(batch,input_dim,input_size)
-        series_last = x[:, :, -1:]
-        x = x - series_last
         x, (h_n, c_n) = self.lstm0(x)
-        x = x + series_last
         x = self.conv1(x)
         return x
 
