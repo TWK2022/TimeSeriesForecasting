@@ -11,6 +11,7 @@ __pycache__
 *.png
 *.txt
 *.xlsx
+*.json
 *.pt
 *.onnx
 *.trt
