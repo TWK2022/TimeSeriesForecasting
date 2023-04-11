@@ -69,13 +69,13 @@ if args.distributed:
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
 if args.local_rank == 0:
-    print('| args:{} |'.format(args))
-    assert os.path.exists(args.data_path), 'data_path不存在'
+    print(f'| args:{args} |')
+    assert os.path.exists(args.data_path), f'data_path不存在:{args.data_path}'
     if os.path.exists(args.weight):
-        print('| 加载已有模型:{} |'.format(args.weight))
+        print(f'| 加载已有模型:{args.weight} |')
     else:
-        assert os.path.exists('model/' + args.model + '.py'), '没有此自定义模型'.format(args.model)
-        print('| 创建自定义模型:{} | 型号:{} |'.format(args.model, args.model_type))
+        assert os.path.exists(f'model/{args.model}.py'), f'没有此自定义模型:{args.model}'
+        print(f'| 创建自定义模型:{args.model} | 型号:{args.model_type} |')
 # -------------------------------------------------------------------------------------------------------------------- #
 # 程序
 if __name__ == '__main__':
