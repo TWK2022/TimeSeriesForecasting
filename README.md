@@ -13,7 +13,7 @@
 >将pt模型导出为onnx模型
 ### 4，test_onnx.py
 >使用导出的onnx模型预测
-### 5，export_trt_record.txt
+### 5，export_trt_record
 >文档中有onnx模型导出为tensort模型的详细说明
 ### 6，test_trt.py
 >使用导出的trt模型预测
