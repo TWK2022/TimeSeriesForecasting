@@ -25,7 +25,7 @@ class data_prepare(object):
         train_output = output_data[0:boundary]  # 训练标签
         val_input = input_data[boundary:len(df)]  # 验证数据
         val_output = output_data[boundary:len(df)]  # 验证标签
-        # 记录输入数据的处理方式
+        # 输入数据处理
         input_mean = np.zeros(len(self.input_column))
         input_std = np.zeros(len(self.input_column))
         for i in range(len(self.input_column)):
@@ -35,7 +35,7 @@ class data_prepare(object):
             input_std[i] = std
             train_input[:, i] = (train_input[:, i] - mean) / std
             val_input[:, i] = (val_input[:, i] - mean) / std
-        # 记录输出数据的处理方式(数据处理在模型中完成)
+        # 输出数据处理
         output_mean = np.zeros(len(self.output_column))
         output_std = np.zeros(len(self.output_column))
         for i in range(len(self.output_column)):
