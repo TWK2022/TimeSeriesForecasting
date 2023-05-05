@@ -18,6 +18,6 @@
 ### 6，test_trt.py
 >使用导出的trt模型预测
 ### 其他
->github链接:https://github.com/TWK2022/TimeSeriesForecasting  
->学习笔记:https://github.com/TWK2022/notebook  
->邮箱:1024565378@qq.com
+>github链接：https://github.com/TWK2022/TimeSeriesForecasting  
+>学习笔记：https://github.com/TWK2022/notebook  
+>邮箱：1024565378@qq.com
