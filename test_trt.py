@@ -64,7 +64,7 @@ def test_tensorrt():
     d_output = cuda.mem_alloc(h_output.nbytes)  # 分配显存空间
     bindings = [int(d_input), int(d_output)]  # 绑定显存输入输出
     stream = cuda.Stream()  # 创建cuda流
-    context = model.create_execution_context()  # 创建模型推理器
+    model_context = model.create_execution_context()  # 创建模型推理器
     print(f'| 加载模型成功:{args.model_path} |')
     # 加载数据
     start_time = time.time()
@@ -85,7 +85,7 @@ def test_tensorrt():
     result_last = [0 for _ in range(input_len)]
     for i in range(input_len):
         cuda.memcpy_htod_async(d_input, input_batch[i], stream)  # 将输入数据从CPU锁存复制到GPU显存
-        context.execute_async_v2(bindings=bindings, stream_handle=stream.handle)  # 执行推理
+        model_context.execute_async_v2(bindings=bindings, stream_handle=stream.handle)  # 执行推理
         cuda.memcpy_dtoh_async(h_output, d_output, stream)  # 将输出数据从GPU显存复制到CPU锁存
         stream.synchronize()  # 同步线程
         pred = h_output.copy().reshape(len(args.output_column), args.output_size)
