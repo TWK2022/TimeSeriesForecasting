@@ -8,7 +8,7 @@ import matplotlib.pyplot as plt
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
-parser = argparse.ArgumentParser(description='onnx推理')
+parser = argparse.ArgumentParser(description='|onnx模型推理|')
 parser.add_argument('--model_path', default='best.onnx', type=str, help='|onnx模型位置|')
 parser.add_argument('--data_path', default=r'./dataset/ETTh1.csv', type=str, help='|数据路径|')
 parser.add_argument('--input_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str, help='|选择输入的变量|')
