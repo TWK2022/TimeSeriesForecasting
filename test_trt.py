@@ -20,6 +20,7 @@ parser.add_argument('--input_size', default=128, type=int, help='|输入的长�
 parser.add_argument('--output_size', default=32, type=int, help='|输出的长度|')
 parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，要与导出的模型对应，一般为1|')
 parser.add_argument('--float16', default=True, type=bool, help='|推理数据类型，要与导出的模型对应，False时为float32|')
+parser.add_argument('--plot_len', default=500, type=int, help='|画图长度|')
 args = parser.parse_args()
 args.input_column = args.input_column.split(',')
 args.output_column = args.output_column.split(',')
@@ -34,22 +35,21 @@ if not os.path.exists(args.save_path):
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 程序
-def draw(pred, true, number):  # pred为模型输出，true为真实数据，pred和true长度不相等
+def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true为真实值，pred和true长度不相等
     # 画图
-    x = np.arange(len(true) + number)
-    y_pred = np.zeros(len(true) + number)
-    n = len(x) // 500
-    n += 1 if len(x) % 500 else 0
+    middle_plot = np.zeros(true.shape)
+    last_plot = np.zeros(true.shape)
+    middle_plot[:, args.input_size + middle - 1:-middle] = pred_middle
+    last_plot[:, args.input_size + last - 1:] = pred_last
     for i in range(len(args.output_column)):
-        y_pred[args.input_size + number - 1:] = pred[:, i]
-        y_true = true[:, i]
-        for j in range(n):
-            name = args.output_column[i] + f'_{500 * j}-{500 * (j + 1)}(number_{number})'
-            plt.title(name)
-            plt.plot(y_pred[500 * j:500 * (j + 1)], color='cyan')
-            plt.plot(y_true[500 * j:500 * (j + 1)], color='green')
-            plt.savefig(args.save_path + '/' + name + '.jpg')
-            plt.close()
+        name = f'{args.output_column[i]}_{args.plot_len}'
+        plt.title(name)
+        plt.plot(true[i, :], color='green', label=f'{args.output_column[i]}_true')
+        plt.plot(middle_plot[i, :], color='orange', label=f'{args.output_column[i]}_{middle}')
+        plt.plot(last_plot[i, :], color='red', label=f'{args.output_column[i]}_{last}')
+        plt.legend()
+        plt.savefig(args.save_path + '/' + name + '.jpg')
+        plt.close()
 
 
 def test_tensorrt():
@@ -67,37 +67,39 @@ def test_tensorrt():
     model_context = model.create_execution_context()  # 创建模型推理器
     print(f'| 加载模型成功:{args.model_path} |')
     # 加载数据
-    start_time = time.time()
     df = pd.read_csv(args.data_path)
-    input_data = np.array(df[args.input_column].astype(np.float32))[-1000 + args.output_size:]  # 限定长度方便画图
-    output_data = np.array(df[args.output_column].astype(np.float32))[-1000 + args.output_size:]  # 限定长度方便画图
+    input_data = np.array(df[args.input_column].astype(np.float32)).transpose(1, 0)
+    input_data = input_data[:, - args.plot_len:]  # 限定长度方便画图
+    output_data = np.array(df[args.output_column].astype(np.float32)).transpose(1, 0)
+    output_data = output_data[:, - args.plot_len:]  # 限定长度方便画图
+    # 数据处理
+    start_time = time.time()
     input_data = input_data.astype(np.float16 if args.float16 else np.float32)
-    input_len = len(input_data) - args.input_size + 1
-    input_batch = [input_data[_:_ + args.input_size] for _ in range(input_len)]
-    input_batch = np.stack(input_batch, axis=0).transpose(0, 2, 1).reshape(input_len, -1)
+    input_len = input_data.shape[1] - args.input_size - args.output_size + 1
+    input_batch = [input_data[:, _:_ + args.input_size] for _ in range(input_len)]
+    input_batch = np.stack(input_batch, axis=0).reshape(input_len, -1)
     end_time = time.time()
-    print('| 数据加载成功:{} 耗时:{:.4f} |'.format(args.data_path, end_time - start_time))
+    print('| 数据处理成功:{} 耗时:{:.4f} |'.format(args.data_path, end_time - start_time))
     # 推理
     start_time = time.time()
     middle = args.output_size // 2
     last = args.output_size
-    result_middle = [0 for _ in range(input_len)]
-    result_last = [0 for _ in range(input_len)]
+    pred_middle = [0 for _ in range(input_len)]
+    pred_last = [0 for _ in range(input_len)]
     for i in range(input_len):
         cuda.memcpy_htod_async(d_input, input_batch[i], stream)  # 将输入数据从CPU锁存复制到GPU显存
         model_context.execute_async_v2(bindings=bindings, stream_handle=stream.handle)  # 执行推理
         cuda.memcpy_dtoh_async(h_output, d_output, stream)  # 将输出数据从GPU显存复制到CPU锁存
         stream.synchronize()  # 同步线程
         pred = h_output.copy().reshape(len(args.output_column), args.output_size)
-        result_middle[i] = pred[:, middle - 1][np.newaxis]
-        result_last[i] = pred[:, last - 1][np.newaxis]
-    result_middle = np.concatenate(result_middle, axis=0)
-    result_last = np.concatenate(result_last, axis=0)
+        pred_middle[i] = pred[:, middle - 1][np.newaxis]
+        pred_last[i] = pred[:, last - 1][np.newaxis]
+    pred_middle = np.concatenate(pred_middle, axis=0).transpose(1, 0)
+    pred_last = np.concatenate(pred_last, axis=0).transpose(1, 0)
     end_time = time.time()
-    print('| 数据:{} 批量:{} 每张耗时:{:.4f} |'.format(input_len, args.batch, (end_time - start_time) / input_len))
+    print('| 数据:{} 批量:{} 平均耗时:{:.4f} |'.format(input_len, args.batch, (end_time - start_time) / input_len))
     # 画图
-    draw(result_middle, output_data, middle)
-    draw(result_last, output_data, last)
+    draw(pred_middle, pred_last, output_data, middle, last)
     print(f'| 画图保存位置:{args.save_path} |')
 
 

@@ -23,8 +23,8 @@ def val_get(args, val_dataloader, model, loss, data_dict, ema):
         for i in range(pred.shape[1]):
             column = args.output_column[i]
             _mae, _mse = metric(pred[:, i], true[:, i])
-            pred[:, i] = pred[:, i] * data_dict['output_std'][i] + data_dict['output_mean'][i]
-            true[:, i] = true[:, i] * data_dict['output_std'][i] + data_dict['output_mean'][i]
+            pred[:, i] = pred[:, i] * data_dict['std_output'][i] + data_dict['mean_output'][i]
+            true[:, i] = true[:, i] * data_dict['std_output'][i] + data_dict['mean_output'][i]
             _mae_true, _mse_true = metric(pred[:, i], true[:, i])
             print('| {} | mae:{:.4f} | mse:{:.4f} | mae_true:{:.4f} | mse_true:{:.4f} |'
                   .format(column, _mae, _mse, _mae_true, _mse_true))

@@ -51,35 +51,35 @@ class elan(torch.nn.Module):
 
 
 class series_encode(torch.nn.Module):
-    def __init__(self, input_mean, input_std):
+    def __init__(self, mean_input, std_input):
         super().__init__()
-        self.input_mean = input_mean
-        self.input_std = input_std
+        self.mean_input = mean_input
+        self.std_input = std_input
 
     def forward(self, x):
-        for i in range(len(self.input_mean)):
-            x[:, i] = (x[:, i] - self.input_mean[i]) / self.input_std[i]
+        for i in range(len(self.mean_input)):
+            x[:, i] = (x[:, i] - self.mean_input[i]) / self.std_input[i]
         return x
 
 
 class series_decode(torch.nn.Module):
-    def __init__(self, output_mean, output_std):
+    def __init__(self, mean_output, std_output):
         super().__init__()
-        self.output_mean = output_mean
-        self.output_std = output_std
+        self.mean_output = mean_output
+        self.std_output = std_output
 
     def forward(self, x):
-        for i in range(len(self.output_mean)):
-            x[:, i] = x[:, i] * self.output_std[i] + self.output_mean[i]
+        for i in range(len(self.mean_output)):
+            x[:, i] = x[:, i] * self.std_output[i] + self.mean_output[i]
         return x
 
 
 class deploy(torch.nn.Module):
-    def __init__(self, model, input_mean, input_std, output_mean, output_std):
+    def __init__(self, model, mean_input, mean_output, std_input, std_output):
         super().__init__()
-        self.series_encode = series_encode(input_mean, input_std)
+        self.series_encode = series_encode(mean_input, std_input)
         self.model = model
-        self.series_decode = series_decode(output_mean, output_std)
+        self.series_decode = series_decode(mean_output, std_output)
 
     def forward(self, x):
         x = self.series_encode(x)

@@ -17,45 +17,40 @@ class data_prepare(object):
     def _load(self):
         # 读取数据
         df = pd.read_csv(self.data_path)
-        input_data = np.array(df[self.input_column].astype(np.float32))
-        output_data = np.array(df[self.output_column].astype(np.float32))
+        input_data = np.array(df[self.input_column].astype(np.float32)).transpose(1, 0)
+        output_data = np.array(df[self.output_column].astype(np.float32)).transpose(1, 0)
         # 划分数据集
         boundary = int(len(df) * self.divide[0] / (self.divide[0] + self.divide[1]))
-        train_input = input_data[0:boundary]  # 训练数据
-        train_output = output_data[0:boundary]  # 训练标签
-        val_input = input_data[boundary:len(df)]  # 验证数据
-        val_output = output_data[boundary:len(df)]  # 验证标签
-        # 输入数据处理
-        input_mean = np.zeros(len(self.input_column))
-        input_std = np.zeros(len(self.input_column))
-        for i in range(len(self.input_column)):
-            mean = np.mean(input_data[:, i])
-            std = np.std(input_data[:, i])
-            input_mean[i] = mean
-            input_std[i] = std
-            train_input[:, i] = (train_input[:, i] - mean) / std
-            val_input[:, i] = (val_input[:, i] - mean) / std
-        # 输出数据处理
-        output_mean = np.zeros(len(self.output_column))
-        output_std = np.zeros(len(self.output_column))
-        for i in range(len(self.output_column)):
-            mean = np.mean(output_data[:, i])
-            std = np.std(output_data[:, i])
-            output_mean[i] = mean
-            output_std[i] = std
-            train_output[:, i] = (train_output[:, i] - mean) / std
-            val_output[:, i] = (val_output[:, i] - mean) / std
+        train_input = input_data[:, 0:boundary]  # 训练数据
+        train_output = output_data[:, 0:boundary]  # 训练标签
+        val_input = input_data[:, boundary:len(df)]  # 验证数据
+        val_output = output_data[:, boundary:len(df)]  # 验证标签
+        # 数据处理
+        train_input, val_input, mean_input, std_input = self._z_score(train_input, val_input, self.input_column)
+        train_output, val_output, mean_output, std_output = self._z_score(train_output, val_output, self.output_column)
         # 将所有数据存放到一个大字典中
         data_dict = {}
         data_dict['train_input'] = train_input
         data_dict['train_output'] = train_output
         data_dict['val_input'] = val_input
         data_dict['val_output'] = val_output
-        data_dict['input_mean'] = input_mean
-        data_dict['input_std'] = input_std
-        data_dict['output_mean'] = output_mean
-        data_dict['output_std'] = output_std
+        data_dict['mean_input'] = mean_input
+        data_dict['mean_output'] = mean_output
+        data_dict['std_input'] = std_input
+        data_dict['std_output'] = std_output
         return data_dict
+
+    def _z_score(self, train_data, val_data, column):  # 减均值、除以方差
+        mean_all = np.zeros(len(column))
+        std_all = np.zeros(len(column))
+        for i in range(len(column)):
+            mean = np.mean(train_data[i, :])  # 以训练集为标准
+            std = np.std(train_data[i, :])
+            mean_all[i] = mean
+            std_all[i] = std
+            train_data[i, :] = (train_data[i, :] - mean) / std
+            val_data[i, :] = (val_data[i, :] - mean) / std
+        return train_data, val_data, mean_all, std_all
 
 
 if __name__ == '__main__':

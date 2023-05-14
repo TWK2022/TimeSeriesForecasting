@@ -87,10 +87,10 @@ def train_get(args, data_dict, model_dict, loss):
             model_dict['optimizer_state_dict'] = optimizer.state_dict()
             model_dict['lr_adjust_item'] = optimizer_adjust.lr_adjust_item
             model_dict['ema_updates'] = ema.updates if args.ema else model_dict['ema_updates']
-            model_dict['input_mean'] = data_dict['input_mean']
-            model_dict['input_std'] = data_dict['input_std']
-            model_dict['output_mean'] = data_dict['output_mean']
-            model_dict['output_std'] = data_dict['output_std']
+            model_dict['mean_input'] = data_dict['mean_input']
+            model_dict['mean_output'] = data_dict['mean_output']
+            model_dict['std_input'] = data_dict['std_input']
+            model_dict['std_output'] = data_dict['std_output']
             model_dict['train_loss'] = train_loss
             model_dict['val_loss'] = val_loss
             model_dict['val_mae'] = mae
@@ -111,19 +111,19 @@ def train_get(args, data_dict, model_dict, loss):
 
 
 class torch_dataset(torch.utils.data.Dataset):
-    def __init__(self, args, data_input, data_output):
-        self.data_input = data_input
+    def __init__(self, args, input_data, data_output):
+        self.input_data = input_data
         self.data_output = data_output
         self.input_size = args.input_size
         self.output_size = args.output_size
 
     def __len__(self):
-        return len(self.data_input) - self.input_size - self.output_size + 1
+        return self.input_data.shape[1] - self.input_size - self.output_size + 1
 
     def __getitem__(self, index):
         boundary = index + self.input_size
-        series = self.data_input[index:boundary]  # 输入数据
-        series = torch.tensor(series, dtype=torch.float32).permute(1, 0)  # 转换为tensor
-        label = self.data_output[boundary:boundary + self.output_size]  # 输出标签
-        label = torch.tensor(label, dtype=torch.float32).permute(1, 0)  # 转换为tensor
+        series = self.input_data[:, index:boundary]  # 输入数据
+        series = torch.tensor(series, dtype=torch.float32)  # 转换为tensor
+        label = self.data_output[:, boundary:boundary + self.output_size]  # 输出标签
+        label = torch.tensor(label, dtype=torch.float32)  # 转换为tensor
         return series, label
