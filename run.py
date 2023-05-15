@@ -29,7 +29,7 @@ parser.add_argument('--output_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT
 parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
 parser.add_argument('--output_size', default=64, type=int, help='|输出的长度|')
 parser.add_argument('--cycle', default=365 * 24, type=int, help='|数据周期长度|')
-parser.add_argument('--epoch', default=150, type=int, help='|训练轮数|')
+parser.add_argument('--epoch', default=120, type=int, help='|训练轮数|')
 parser.add_argument('--batch', default=64, type=int, help='|训练批量大小|')
 parser.add_argument('--loss', default='mse', type=str, help='|损失函数|')
 parser.add_argument('--lr_start', default=0.001, type=float, help='|初始学习率，训练中采用adam算法，前3轮有预热训练|')
