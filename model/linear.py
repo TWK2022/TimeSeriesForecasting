@@ -2,7 +2,7 @@
 import torch
 
 
-class nlinear(torch.nn.Module):
+class linear(torch.nn.Module):
     def __init__(self, args):
         super().__init__()
         self.input_dim = len(args.input_column)
@@ -15,10 +15,7 @@ class nlinear(torch.nn.Module):
 
     def forward(self, x):
         # 输入(batch,input_dim,input_size)
-        series_last = x[:, :, -1:]
-        x = x - series_last
         x = self.linear0(x)
-        x = x + series_last
         x = self.conv1(x)
         return x
 
@@ -34,7 +31,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.input_column = args.input_column.split(',')
     args.output_column = args.output_column.split(',')
-    model = nlinear(args).to('cuda')
+    model = linear(args).to('cuda')
     print(model)
     tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32).to('cuda')
     print(model(tensor).shape)

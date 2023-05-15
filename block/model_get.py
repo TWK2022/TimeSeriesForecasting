@@ -7,8 +7,9 @@ def model_get(args):
         model_dict = torch.load(args.weight, map_location='cpu')
     else:
         choice_dict = {'lstm': 'model_prepare(args)._lstm()',
-                       'scinet': 'model_prepare(args)._scinet()',
+                       'linear': 'model_prepare(args)._linear()',
                        'nlinear': 'model_prepare(args)._nlinear()',
+                       'scinet': 'model_prepare(args)._scinet()',
                        }
         model = eval(choice_dict[args.model])
         model_dict = {}
@@ -26,17 +27,22 @@ class model_prepare(object):
     def __init__(self, args):
         self.args = args
 
+    def _linear(self):
+        from model.linear import linear
+        model = linear(self.args)
+        return model
+
     def _lstm(self):
         from model.lstm import lstm
         model = lstm(self.args)
         return model
 
-    def _scinet(self):
-        from model.scinet import scinet
-        model = scinet(self.args)
-        return model
-
     def _nlinear(self):
         from model.nlinear import nlinear
         model = nlinear(self.args)
+        return model
+
+    def _scinet(self):
+        from model.scinet import scinet
+        model = scinet(self.args)
         return model

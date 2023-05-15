@@ -17,7 +17,7 @@ parser.add_argument('--data_path', default=r'./dataset/ETTh1.csv', type=str, hel
 parser.add_argument('--input_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str, help='|选择输入的变量|')
 parser.add_argument('--output_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str, help='|选择预测的变量|')
 parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
-parser.add_argument('--output_size', default=32, type=int, help='|输出的长度|')
+parser.add_argument('--output_size', default=64, type=int, help='|输出的长度|')
 parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，要与导出的模型对应，一般为1|')
 parser.add_argument('--float16', default=True, type=bool, help='|推理数据类型，要与导出的模型对应，False时为float32|')
 parser.add_argument('--plot_len', default=500, type=int, help='|画图长度|')
