@@ -69,9 +69,9 @@ def test_tensorrt():
     # 加载数据
     df = pd.read_csv(args.data_path)
     input_data = np.array(df[args.input_column].astype(np.float32)).transpose(1, 0)
-    input_data = input_data[:, 0:args.plot_len]  # 限定长度方便画图
+    input_data = input_data[:, -args.plot_len:]  # 限定长度方便画图
     output_data = np.array(df[args.output_column].astype(np.float32)).transpose(1, 0)
-    output_data = output_data[:, 0:args.plot_len]  # 限定长度方便画图
+    output_data = output_data[:, -args.plot_len:]  # 限定长度方便画图
     # 数据处理
     start_time = time.time()
     input_data = input_data.astype(np.float16 if args.float16 else np.float32)
