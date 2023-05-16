@@ -13,7 +13,6 @@ class data_prepare(object):
         self.output_column = args.output_column
         self.divide = args.divide
         self.data_path = args.data_path
-        self.cycle = args.cycle
 
     def _load(self):
         # 读取数据
@@ -26,9 +25,6 @@ class data_prepare(object):
         train_output = output_data[:, 0:boundary]  # 训练标签
         val_input = input_data[:, boundary:len(df)]  # 验证数据
         val_output = output_data[:, boundary:len(df)]  # 验证标签
-        # 周期
-        assert self.cycle <= train_input.shape[1], f'周期设置大于训练数据长度'
-        self.max_cycle = train_input.shape[1] // self.cycle * self.cycle  # 以训练集为标准的最大周期长度
         # 数据处理
         train_input, val_input, mean_input, std_input = self._z_score(train_input, val_input, self.input_column)
         train_output, val_output, mean_output, std_output = self._z_score(train_output, val_output, self.output_column)
