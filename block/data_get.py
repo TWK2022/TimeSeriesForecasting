@@ -28,7 +28,7 @@ class data_prepare(object):
         val_output = output_data[:, boundary:len(df)]  # 验证标签
         # 周期
         if self.z_score_cycle == -1:
-            self.max_cycle = train_input[1]
+            self.max_cycle = train_input.shape[1]
         else:
             assert self.z_score_cycle <= train_input.shape[1], f'周期设置不能大于训练集长度'
             self.max_cycle = train_input.shape[1] // self.z_score_cycle * self.z_score_cycle
