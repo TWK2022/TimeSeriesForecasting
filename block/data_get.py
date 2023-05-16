@@ -13,6 +13,7 @@ class data_prepare(object):
         self.output_column = args.output_column
         self.divide = args.divide
         self.data_path = args.data_path
+        self.z_score_cycle = args.z_score_cycle
 
     def _load(self):
         # 读取数据
@@ -25,6 +26,12 @@ class data_prepare(object):
         train_output = output_data[:, 0:boundary]  # 训练标签
         val_input = input_data[:, boundary:len(df)]  # 验证数据
         val_output = output_data[:, boundary:len(df)]  # 验证标签
+        # 周期
+        if self.z_score_cycle == -1:
+            self.max_cycle = train_input[1]
+        else:
+            assert self.z_score_cycle <= train_input.shape[1], f'周期设置不能大于训练集长度'
+            self.max_cycle = train_input.shape[1] // self.z_score_cycle * self.z_score_cycle
         # 数据处理
         train_input, val_input, mean_input, std_input = self._z_score(train_input, val_input, self.input_column)
         train_output, val_output, mean_output, std_output = self._z_score(train_output, val_output, self.output_column)
@@ -44,8 +51,8 @@ class data_prepare(object):
         mean_all = np.zeros(len(column))
         std_all = np.zeros(len(column))
         for i in range(len(column)):
-            mean = np.mean(train_data[i, :])
-            std = np.std(train_data[i, :])
+            mean = np.mean(train_data[i, 0:self.max_cycle])
+            std = np.std(train_data[i, 0:self.max_cycle])
             mean_all[i] = mean
             std_all[i] = std
             train_data[i, :] = (train_data[i, :] - mean) / std
