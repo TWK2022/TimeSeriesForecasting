@@ -11,15 +11,15 @@ from model.layer import deploy
 # 设置
 parser = argparse.ArgumentParser(description='|pt模型推理|')
 parser.add_argument('--model_path', default='best.pt', type=str, help='|pt模型位置|')
-parser.add_argument('--data_path', default=r'./dataset/ETTh1.csv', type=str, help='|数据路径|')
-parser.add_argument('--input_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str, help='|选择输入的变量|')
-parser.add_argument('--output_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str, help='|选择预测的变量|')
+parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据路径|')
+parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量|')
+parser.add_argument('--output_column', default='sin,cos', type=str, help='|选择预测的变量|')
 parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
 parser.add_argument('--output_size', default=64, type=int, help='|输出的长度|')
-parser.add_argument('--batch', default=64, type=int, help='|训练批量大小|')
+parser.add_argument('--batch', default=8, type=int, help='|训练批量大小|')
 parser.add_argument('--device', default='cuda', type=str, help='|用CPU/GPU推理|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
-parser.add_argument('--plot_len', default=500, type=int, help='|画图长度|')
+parser.add_argument('--plot_len', default=500, type=int, help='|画图长度，取数据的倒数plot_len个|')
 args = parser.parse_args()
 args.input_column = args.input_column.split(',')
 args.output_column = args.output_column.split(',')
@@ -41,7 +41,7 @@ def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true
     middle_plot[:, args.input_size + middle - 1:-middle] = pred_middle
     last_plot[:, args.input_size + last - 1:] = pred_last
     for i in range(len(args.output_column)):
-        name = f'{args.output_column[i]}_{args.plot_len}'
+        name = f'{args.output_column[i]}_last{args.plot_len}'
         plt.title(name)
         plt.plot(true[i, :], color='green', label=f'{args.output_column[i]}_true')
         plt.plot(middle_plot[i, :], color='orange', label=f'{args.output_column[i]}_{middle}')

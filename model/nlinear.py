@@ -1,4 +1,5 @@
 # 根据nlinear改编:https://github.com/cure-lab/LTSF-Linear
+# 单变量
 import torch
 
 
@@ -10,16 +11,14 @@ class nlinear(torch.nn.Module):
         self.input_size = args.input_size
         self.output_size = args.output_size
         # 网络结构
-        self.linear0 = torch.nn.Linear(self.input_size, self.output_size)
-        self.conv1 = torch.nn.Conv1d(self.input_dim, self.output_dim, kernel_size=1, stride=1)
+        self.linear = torch.nn.Linear(self.input_size, self.output_size)
 
     def forward(self, x):
         # 输入(batch,input_dim,input_size)
         series_last = x[:, :, -1:]
         x = x - series_last
-        x = self.linear0(x)
+        x = self.linear(x)  # 各dim之间是分开运算的
         x = x + series_last
-        x = self.conv1(x)
         return x
 
 

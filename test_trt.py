@@ -20,7 +20,7 @@ parser.add_argument('--input_size', default=128, type=int, help='|输入的长�
 parser.add_argument('--output_size', default=64, type=int, help='|输出的长度|')
 parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，要与导出的模型对应，一般为1|')
 parser.add_argument('--float16', default=True, type=bool, help='|推理数据类型，要与导出的模型对应，False时为float32|')
-parser.add_argument('--plot_len', default=500, type=int, help='|画图长度|')
+parser.add_argument('--plot_len', default=500, type=int, help='|画图长度，取数据的倒数plot_len个|')
 args = parser.parse_args()
 args.input_column = args.input_column.split(',')
 args.output_column = args.output_column.split(',')
@@ -42,7 +42,7 @@ def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true
     middle_plot[:, args.input_size + middle - 1:-middle] = pred_middle
     last_plot[:, args.input_size + last - 1:] = pred_last
     for i in range(len(args.output_column)):
-        name = f'{args.output_column[i]}_{args.plot_len}'
+        name = f'{args.output_column[i]}_last{args.plot_len}'
         plt.title(name)
         plt.plot(true[i, :], color='green', label=f'{args.output_column[i]}_true')
         plt.plot(middle_plot[i, :], color='orange', label=f'{args.output_column[i]}_{middle}')

@@ -8,6 +8,7 @@ def model_get(args):
     else:
         choice_dict = {'lstm': 'model_prepare(args)._lstm()',
                        'linear': 'model_prepare(args)._linear()',
+                       'linear_multi': 'model_prepare(args)._linear_multi()',
                        'nlinear': 'model_prepare(args)._nlinear()',
                        'scinet': 'model_prepare(args)._scinet()',
                        }
@@ -30,6 +31,11 @@ class model_prepare(object):
     def _linear(self):
         from model.linear import linear
         model = linear(self.args)
+        return model
+
+    def _linear_multi(self):
+        from model.linear_multi import linear_multi
+        model = linear_multi(self.args)
         return model
 
     def _lstm(self):
