@@ -15,11 +15,10 @@ args = parser.parse_args()
 if __name__ == '__main__':
     data_base = np.ones(args.len) * args.multiple
     index = np.arange(args.len)
-    sin = data_base * np.sin(2 * np.pi / args.cycle * index)
-    cos = data_base * np.cos(2 * np.pi / args.cycle * index)
+    sin = data_base * np.sin(2 * np.pi / args.cycle * index) + args.add
+    cos = data_base * np.cos(2 * np.pi / args.cycle * index) + args.add
     sin_add_cos = sin - cos
     sin_multiply_cos = sin * cos
-
     data = np.stack([sin, cos, sin_add_cos, sin_multiply_cos], axis=1)
     column = ['sin', 'cos', 'sin_add_cos', 'sin_multiply_cos']
     df = pd.DataFrame(data, columns=column)

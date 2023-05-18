@@ -44,6 +44,7 @@ parser.add_argument('--amp', default=True, type=bool, help='|混合float16精度
 parser.add_argument('--distributed', default=False, type=bool, help='|单机多卡分布式训练，分布式训练时batch为总batch|')
 parser.add_argument('--local_rank', default=0, type=int, help='|分布式训练使用命令后会自动传入的参数|')
 args = parser.parse_args()
+print(f'| args:{args} |')
 args.divide = list(map(int, args.divide.split(',')))
 args.input_column = args.input_column.split(',')
 args.output_column = args.output_column.split(',')
@@ -71,7 +72,6 @@ if args.distributed:
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
 if args.local_rank == 0:
-    print(f'| args:{args} |')
     assert os.path.exists(args.data_path), f'data_path不存在:{args.data_path}'
     if os.path.exists(args.weight):
         print(f'| 加载已有模型:{args.weight} |')

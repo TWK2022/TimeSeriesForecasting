@@ -13,7 +13,7 @@ class lr_adjust:
     def __call__(self, optimizer, epoch, loss_now):
         threshold = self.lr_adjust_threshold * self.loss_last
         if epoch < 3:  # 预热阶段学习率减少为0.1,0.3,0.5
-            lr = self.lr_start * (0.1 + 0.2 * epoch)
+            lr = max(self.lr_start * (0.1 + 0.2 * epoch), 0.00001)
         elif epoch == 3:  # 正式训练时第1轮学习率不变
             lr = self.lr_start
         elif loss_now > threshold and self.lr_adjust_item < self.lr_adjust_num:  # 调整学习率
