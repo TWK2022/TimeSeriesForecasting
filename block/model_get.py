@@ -48,6 +48,11 @@ class model_prepare(object):
         model = nlinear(self.args)
         return model
 
+    def _nlinear_plus(self):
+        from model.nlinear import nlinear
+        model = nlinear(self.args)
+        return model
+
     def _scinet(self):
         from model.scinet import scinet
         model = scinet(self.args)

@@ -1,3 +1,4 @@
+# 单变量自标签
 import torch
 
 

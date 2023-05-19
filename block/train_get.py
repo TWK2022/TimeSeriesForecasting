@@ -111,9 +111,9 @@ def train_get(args, data_dict, model_dict, loss):
 
 
 class torch_dataset(torch.utils.data.Dataset):
-    def __init__(self, args, input_data, data_output):
+    def __init__(self, args, input_data, output_data):
         self.input_data = input_data
-        self.data_output = data_output
+        self.output_data = output_data
         self.input_size = args.input_size
         self.output_size = args.output_size
 
@@ -124,6 +124,6 @@ class torch_dataset(torch.utils.data.Dataset):
         boundary = index + self.input_size
         series = self.input_data[:, index:boundary]  # 输入数据
         series = torch.tensor(series, dtype=torch.float32)  # 转换为tensor
-        label = self.data_output[:, boundary:boundary + self.output_size]  # 输出标签
+        label = self.output_data[:, boundary:boundary + self.output_size]  # 输出标签
         label = torch.tensor(label, dtype=torch.float32)  # 转换为tensor
         return series, label

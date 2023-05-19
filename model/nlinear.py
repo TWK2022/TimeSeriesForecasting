@@ -1,5 +1,5 @@
 # 根据nlinear改编:https://github.com/cure-lab/LTSF-Linear
-# 单变量
+# 单变量自标签
 import torch
 
 

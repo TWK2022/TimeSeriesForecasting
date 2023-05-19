@@ -22,7 +22,7 @@ parser.add_argument('--save_name', default='best.pt', type=str, help='|保存模
 parser.add_argument('--wandb', default=False, type=bool, help='|是否使用wandb可视化|')
 parser.add_argument('--wandb_project', default='test', type=str, help='|wandb项目名称|')
 parser.add_argument('--wandb_name', default='train', type=str, help='|wandb项目中的训练名称|')
-parser.add_argument('--model', default='nlinear', type=str, help='|模型选择，注意是单变量还是互相关的多变量|')
+parser.add_argument('--model', default='nlinear', type=str, help='|模型选择，注意是单变量自标签/单变量异标签/多变量异标签|')
 parser.add_argument('--model_type', default='m', type=str, help='|模型型号参数，部分模型有|')
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量|')
 parser.add_argument('--output_column', default='sin,cos', type=str, help='|选择预测的变量|')
