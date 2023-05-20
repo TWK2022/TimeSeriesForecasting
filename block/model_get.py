@@ -8,8 +8,9 @@ def model_get(args):
     else:
         choice_dict = {'lstm': 'model_prepare(args)._lstm()',
                        'linear': 'model_prepare(args)._linear()',
-                       'linear_multi': 'model_prepare(args)._linear_multi()',
                        'nlinear': 'model_prepare(args)._nlinear()',
+                       'nlinear_multi': 'model_prepare(args)._nlinear_multi()',
+                       'nlinear_plus': 'model_prepare(args)._nlinear_plus()',
                        'scinet': 'model_prepare(args)._scinet()',
                        }
         model = eval(choice_dict[args.model])
@@ -33,9 +34,9 @@ class model_prepare(object):
         model = linear(self.args)
         return model
 
-    def _linear_multi(self):
-        from model.linear_multi import linear_multi
-        model = linear_multi(self.args)
+    def _nlinear_multi(self):
+        from model.nlinear_multi import nlinear_multi
+        model = nlinear_multi(self.args)
         return model
 
     def _lstm(self):
@@ -49,8 +50,8 @@ class model_prepare(object):
         return model
 
     def _nlinear_plus(self):
-        from model.nlinear import nlinear
-        model = nlinear(self.args)
+        from model.nlinear_plus import nlinear_plus
+        model = nlinear_plus(self.args)
         return model
 
     def _scinet(self):

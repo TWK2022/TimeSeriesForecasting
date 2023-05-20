@@ -9,6 +9,7 @@ class linear(torch.nn.Module):
         self.output_dim = len(args.output_column)
         self.input_size = args.input_size
         self.output_size = args.output_size
+        assert self.input_dim == self.output_dim, f'单变量自标签'
         # 网络结构
         self.linear = torch.nn.Linear(self.input_size, self.output_size)
 

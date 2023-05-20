@@ -11,14 +11,13 @@ class lstm(torch.nn.Module):
         self.output_size = args.output_size
         n_dict = {'s': 1, 'm': 2, 'l': 3}
         n = n_dict[args.model_type]
+        assert self.input_dim == self.output_dim, f'输入的变量要和预测的变量一致'
         # 网络结构
         self.lstm0 = torch.nn.LSTM(input_size=self.input_size, hidden_size=self.output_size, num_layers=n, dropout=0.2)
-        self.conv1 = torch.nn.Conv1d(self.input_dim, self.output_dim, kernel_size=1, stride=1)
 
     def forward(self, x):
         # 输入(batch,input_dim,input_size)
         x, (h_n, c_n) = self.lstm0(x)
-        x = self.conv1(x)
         return x
 
 
