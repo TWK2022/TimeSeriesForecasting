@@ -16,12 +16,12 @@ class cbs(torch.nn.Module):
         return x
 
 
-class residual(torch.nn.Module):
+class residual(torch.nn.Module):  # in_->in_，len->len
     def __init__(self, in_):
         super().__init__()
-        self.cbs0 = cbs(in_, in_ // 2, kernel_size=1, stride=1)
-        self.cbs1 = cbs(in_ // 2, in_ // 2, kernel_size=3, stride=1)
-        self.cbs2 = cbs(in_ // 2, in_, kernel_size=1, stride=1)
+        self.cbs0 = cbs(in_, in_, kernel_size=3, stride=1)
+        self.cbs1 = cbs(in_, in_, kernel_size=3, stride=1)
+        self.cbs2 = cbs(in_, in_, kernel_size=3, stride=1)
 
     def forward(self, x):
         x0 = self.cbs0(x)

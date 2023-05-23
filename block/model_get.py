@@ -9,7 +9,7 @@ def model_get(args):
         choice_dict = {'lstm': 'model_prepare(args)._lstm()',
                        'linear': 'model_prepare(args)._linear()',
                        'nlinear': 'model_prepare(args)._nlinear()',
-                       'nlinear_multi': 'model_prepare(args)._nlinear_multi()',
+                       'nlinear_conv': 'model_prepare(args)._nlinear_conv()',
                        'nlinear_plus': 'model_prepare(args)._nlinear_plus()',
                        'scinet': 'model_prepare(args)._scinet()',
                        }
@@ -34,11 +34,6 @@ class model_prepare(object):
         model = linear(self.args)
         return model
 
-    def _nlinear_multi(self):
-        from model.nlinear_multi import nlinear_multi
-        model = nlinear_multi(self.args)
-        return model
-
     def _lstm(self):
         from model.lstm import lstm
         model = lstm(self.args)
@@ -47,6 +42,11 @@ class model_prepare(object):
     def _nlinear(self):
         from model.nlinear import nlinear
         model = nlinear(self.args)
+        return model
+
+    def _nlinear_conv(self):
+        from model.nlinear_conv import nlinear_conv
+        model = nlinear_conv(self.args)
         return model
 
     def _nlinear_plus(self):

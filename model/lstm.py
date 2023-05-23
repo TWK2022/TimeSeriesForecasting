@@ -26,8 +26,8 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_type', default='m', type=str)
-    parser.add_argument('--input_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str)
-    parser.add_argument('--output_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str)
+    parser.add_argument('--input_column', default='1,2,3', type=str)
+    parser.add_argument('--output_column', default='1,2,3', type=str)
     parser.add_argument('--input_size', default=128, type=int)
     parser.add_argument('--output_size', default=64, type=int)
     args = parser.parse_args()

@@ -21,8 +21,9 @@ if __name__ == '__main__':
     cos = (data_base * np.cos(2 * np.pi / args.cos_cycle * index) + args.add) + noise
     add = sin + cos
     multiply = sin * cos
-    data = np.stack([sin, cos, add, multiply], axis=1)
-    column = ['sin', 'cos', 'add', 'multiply']
+    mix = (sin + cos) * (sin - cos)
+    data = np.stack([sin, cos, add, multiply, mix], axis=1)
+    column = ['sin', 'cos', 'add', 'multiply', 'mix']
     df = pd.DataFrame(data, columns=column)
     save_path = '../dataset/sin_cos.csv'
     df.to_csv(save_path, index=True, header=True)
