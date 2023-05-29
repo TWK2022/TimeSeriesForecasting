@@ -8,6 +8,7 @@ import pandas as pd
 import pycuda.autoinit
 import pycuda.driver as cuda
 import matplotlib.pyplot as plt
+from block.util import read_column
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
@@ -22,8 +23,8 @@ parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，
 parser.add_argument('--float16', default=True, type=bool, help='|推理数据类型，要与导出的模型对应，False时为float32|')
 parser.add_argument('--plot_len', default=500, type=int, help='|画图长度，取数据的倒数plot_len个|')
 args = parser.parse_args()
-args.input_column = args.input_column.split(',')
-args.output_column = args.output_column.split(',')
+args.input_column = read_column(args.input_column)  # column处理
+args.output_column = read_column(args.output_column)  # column处理
 args.save_path = 'save_image'
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查

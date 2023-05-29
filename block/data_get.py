@@ -53,6 +53,7 @@ class data_prepare(object):
         for i in range(len(column)):
             mean = np.mean(train_data[i, 0:self.max_cycle])
             std = np.std(train_data[i, 0:self.max_cycle])
+            std = max(std, 0.01)
             mean_all[i] = mean
             std_all[i] = std
             train_data[i, :] = (train_data[i, :] - mean) / std

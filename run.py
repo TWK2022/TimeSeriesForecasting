@@ -17,7 +17,7 @@ from block.train_get import train_get
 # 设置
 parser = argparse.ArgumentParser(description='|时间序列预测|')
 parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据路径|')
-parser.add_argument('--divide', default='9,1', type=str, help='|训练集和验证集划分比例|')
+parser.add_argument('--divide', default='9,1', type=str, help='|训练1集和验证集划分比例|')
 parser.add_argument('--weight', default='last.pt', type=str, help='|已有模型的位置，如果没找到模型则会创建新模型|')
 parser.add_argument('--save_name', default='best.pt', type=str, help='|保存模型的位置|')
 parser.add_argument('--wandb', default=False, type=bool, help='|是否使用wandb可视化|')

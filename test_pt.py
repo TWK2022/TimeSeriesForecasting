@@ -6,23 +6,24 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from model.layer import deploy
+from block.util import read_column
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
 parser = argparse.ArgumentParser(description='|pt模型推理|')
 parser.add_argument('--model_path', default='best.pt', type=str, help='|pt模型位置|')
-parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据路径|')
-parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量|')
-parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量|')
-parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
-parser.add_argument('--output_size', default=64, type=int, help='|输出的长度|')
+parser.add_argument('--data_path', default=r'./dataset/economy_month.csv', type=str, help='|数据路径|')
+parser.add_argument('--input_column', default='input_column.txt', type=str, help='|选择输入的变量|')
+parser.add_argument('--output_column', default='output_column.txt', type=str, help='|选择预测的变量|')
+parser.add_argument('--input_size', default=24, type=int, help='|输入的长度|')
+parser.add_argument('--output_size', default=12, type=int, help='|输出的长度|')
 parser.add_argument('--batch', default=8, type=int, help='|批量大小|')
 parser.add_argument('--device', default='cuda', type=str, help='|用CPU/GPU推理|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
 parser.add_argument('--plot_len', default=500, type=int, help='|画图长度，取数据的倒数plot_len个|')
 args = parser.parse_args()
-args.input_column = args.input_column.split(',')
-args.output_column = args.output_column.split(',')
+args.input_column = read_column(args.input_column)  # column处理
+args.output_column = read_column(args.output_column)  # column处理
 args.save_path = 'save_image'
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
