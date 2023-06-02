@@ -15,6 +15,7 @@ class nlinear_plus(torch.nn.Module):
         self.linear0 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
         self.linear1 = torch.nn.Linear(self.output_size, self.output_size, bias=False)
         self.linear2 = torch.nn.Linear(self.output_size, self.output_size, bias=False)
+        self.linear3 = torch.nn.Linear(self.output_size, self.output_size, bias=False)
 
     def forward(self, x):
         # 输入(batch,input_dim,input_size)
@@ -23,7 +24,8 @@ class nlinear_plus(torch.nn.Module):
         x = self.linear0(x)  # 各dim之间是分开运算的
         x_multiply = self.linear1(x)  # 各dim之间是分开运算的
         x_add = self.linear2(x)  # 各dim之间是分开运算的
-        x = x * x_multiply + x_add + series_last
+        x = x * x_multiply
+        x = self.linear3(x) + x_add + series_last
         return x
 
 

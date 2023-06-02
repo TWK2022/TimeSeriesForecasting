@@ -17,7 +17,7 @@ parser.add_argument('--input_column', default='input_column.txt', type=str, help
 parser.add_argument('--output_column', default='output_column.txt', type=str, help='|选择预测的变量|')
 parser.add_argument('--input_size', default=24, type=int, help='|输入的长度|')
 parser.add_argument('--output_size', default=12, type=int, help='|输出的长度|')
-parser.add_argument('--batch', default=8, type=int, help='|批量大小|')
+parser.add_argument('--batch', default=64, type=int, help='|批量大小|')
 parser.add_argument('--device', default='cuda', type=str, help='|用CPU/GPU推理|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
 parser.add_argument('--plot_len', default=500, type=int, help='|画图长度，取数据的倒数plot_len个|')

@@ -5,11 +5,11 @@ import pandas as pd
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
 parser = argparse.ArgumentParser(description='|将excel的sheet合到一起，并转为.csv|')
-parser.add_argument('--data_path', default=r'../dataset/金融机构本外币信贷收支表.xlsx', type=str, help='|数据路径|')
+parser.add_argument('--data_path', default=r'../dataset/汇率.xlsx', type=str, help='|数据路径|')
 args = parser.parse_args()
 args.sheet_name = ['2008', '2009', '2010', '2011', '2012', '2013', '2014', '2015', '2016', '2017', '2018', '2019',
                    '2020', '2021', '2022']  # args.sheet_name为读取sheet名称，填None读取所有sheet
-args.column = ['month', '各项存款', '对国际金融机构负债', '各项贷款', '在国际金融机构资产', '资金运用总计']  # 取出的数据列名
+args.column = ['month', '一特别提款权单位折合人民币(期末数)', '一美元折合人民币(期末数)']  # 取出的数据列名
 # -------------------------------------------------------------------------------------------------------------------- #
 # 程序
 if __name__ == '__main__':

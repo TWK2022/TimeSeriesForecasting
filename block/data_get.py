@@ -11,6 +11,8 @@ class data_prepare(object):
     def __init__(self, args):
         self.input_column = args.input_column
         self.output_column = args.output_column
+        self.input_size = args.input_size
+        self.output_size = args.output_size
         self.divide = args.divide
         self.data_path = args.data_path
         self.z_score_cycle = args.z_score_cycle
@@ -21,11 +23,12 @@ class data_prepare(object):
         input_data = np.array(df[self.input_column].astype(np.float32)).transpose(1, 0)
         output_data = np.array(df[self.output_column].astype(np.float32)).transpose(1, 0)
         # 划分数据集
-        boundary = int(len(df) * self.divide[0] / (self.divide[0] + self.divide[1]))
+        data_len = len(df) - self.input_size - self.output_size + 1
+        boundary = int(data_len * self.divide[0] / (self.divide[0] + self.divide[1]))
         train_input = input_data[:, 0:boundary]  # 训练数据
         train_output = output_data[:, 0:boundary]  # 训练标签
-        val_input = input_data[:, boundary:len(df)]  # 验证数据
-        val_output = output_data[:, boundary:len(df)]  # 验证标签
+        val_input = input_data[:, boundary:len(df)].copy()  # 验证数据
+        val_output = output_data[:, boundary:len(df)].copy()  # 验证标签
         # 周期
         if self.z_score_cycle == -1:
             self.max_cycle = train_input.shape[1]

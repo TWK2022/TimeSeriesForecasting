@@ -15,8 +15,9 @@ class nlinear_conv(torch.nn.Module):
         self.linear0 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
         self.linear1 = torch.nn.Linear(self.output_size, self.output_size, bias=False)
         self.linear2 = torch.nn.Linear(self.output_size, self.output_size, bias=False)
-        self.conv3 = cbs(self.input_dim, 16 * self.input_dim, 1, 1)
-        self.conv4 = torch.nn.Conv1d(16 * self.input_dim, self.output_dim, kernel_size=1, stride=1)
+        self.linear3 = torch.nn.Linear(self.output_size, self.output_size, bias=False)
+        self.conv4 = cbs(self.input_dim, 16 * self.input_dim, 1, 1)
+        self.conv5 = torch.nn.Conv1d(16 * self.input_dim, self.output_dim, kernel_size=1, stride=1)
 
     def forward(self, x):
         # 输入(batch,input_dim,input_size)
@@ -25,9 +26,10 @@ class nlinear_conv(torch.nn.Module):
         x = self.linear0(x)  # 各dim之间是分开运算的
         x_multiply = self.linear1(x)  # 各dim之间是分开运算的
         x_add = self.linear2(x)  # 各dim之间是分开运算的
-        x = x * x_multiply + x_add + series_last
-        x = self.conv3(x)
+        x = x * x_multiply
+        x = self.linear3(x) + x_add + series_last
         x = self.conv4(x)
+        x = self.conv5(x)
         return x
 
 
