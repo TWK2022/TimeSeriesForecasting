@@ -6,7 +6,7 @@ import pandas as pd
 # 设置
 parser = argparse.ArgumentParser(description='|将所有.csv合并，除了第一列的日期|')
 parser.add_argument('--mark', default=True, type=bool, help='|为防止.csv中有重名，column前加上序号|')
-parser.add_argument('--save_path', default=r'../dataset/economy_month.csv', type=str, help='|保存路径|')
+parser.add_argument('--save_path', default=r'../dataset/z.csv', type=str, help='|保存路径|')
 args = parser.parse_args()
 args.data_dir = '../dataset/'
 args.data_path = ['企业商品价格指数.csv', '其他存款性公司资产负债表.csv', '存款性公司概览.csv', '汇率.csv', '货币供应量.csv',

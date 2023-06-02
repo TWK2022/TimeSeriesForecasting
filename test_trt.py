@@ -68,7 +68,10 @@ def test_tensorrt():
     model_context = model.create_execution_context()  # 创建模型推理器
     print(f'| 加载模型成功:{args.model_path} |')
     # 加载数据
-    df = pd.read_csv(args.data_path)
+    try:
+        df = pd.read_csv(args.data_path, encoding='utf-8')
+    except:
+        df = pd.read_csv(args.data_path, encoding='gbk')
     input_data = np.array(df[args.input_column].astype(np.float32)).transpose(1, 0)
     input_data = input_data[:, -args.plot_len:]  # 限定长度方便画图
     output_data = np.array(df[args.output_column].astype(np.float32)).transpose(1, 0)

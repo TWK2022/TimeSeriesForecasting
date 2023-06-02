@@ -19,7 +19,10 @@ class data_prepare(object):
 
     def _load(self):
         # 读取数据
-        df = pd.read_csv(self.data_path)
+        try:
+            df = pd.read_csv(self.data_path, encoding='utf-8')
+        except:
+            df = pd.read_csv(self.data_path, encoding='gbk')
         input_data = np.array(df[self.input_column].astype(np.float32)).transpose(1, 0)
         output_data = np.array(df[self.output_column].astype(np.float32)).transpose(1, 0)
         # 划分数据集
