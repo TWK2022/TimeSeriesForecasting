@@ -12,15 +12,15 @@ from block.util import read_column
 # 设置
 parser = argparse.ArgumentParser(description='|pt模型推理|')
 parser.add_argument('--model_path', default='best.pt', type=str, help='|pt模型位置|')
-parser.add_argument('--data_path', default=r'./dataset/economy_month.csv', type=str, help='|数据路径|')
+parser.add_argument('--data_path', default=r'./dataset/all.csv', type=str, help='|数据路径|')
 parser.add_argument('--input_column', default='input_column.txt', type=str, help='|选择输入的变量|')
 parser.add_argument('--output_column', default='output_column.txt', type=str, help='|选择预测的变量|')
-parser.add_argument('--input_size', default=24, type=int, help='|输入的长度|')
-parser.add_argument('--output_size', default=12, type=int, help='|输出的长度|')
+parser.add_argument('--input_size', default=1024, type=int, help='|输入的长度|')
+parser.add_argument('--output_size', default=256, type=int, help='|输出的长度|')
 parser.add_argument('--batch', default=64, type=int, help='|批量大小|')
 parser.add_argument('--device', default='cuda', type=str, help='|用CPU/GPU推理|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
-parser.add_argument('--plot_len', default=500, type=int, help='|画图长度，取数据的倒数plot_len个|')
+parser.add_argument('--plot_len', default=2000, type=int, help='|画图长度，取数据的倒数plot_len个|')
 args = parser.parse_args()
 args.input_column = read_column(args.input_column)  # column处理
 args.output_column = read_column(args.output_column)  # column处理
@@ -36,17 +36,33 @@ if not os.path.exists(args.save_path):
 # -------------------------------------------------------------------------------------------------------------------- #
 # 程序
 def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true为真实值，pred和true长度不相等
-    # 画图
+    # 画图(所有预测中值和预测末值)
     middle_plot = np.zeros(true.shape)
     last_plot = np.zeros(true.shape)
     middle_plot[:, args.input_size + middle - 1:-middle] = pred_middle
     last_plot[:, args.input_size + last - 1:] = pred_last
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last{args.plot_len}'
+        plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
         plt.title(name)
         plt.plot(true[i, :], color='green', label=f'{args.output_column[i]}_true')
         plt.plot(middle_plot[i, :], color='orange', label=f'{args.output_column[i]}_{middle}')
         plt.plot(last_plot[i, :], color='red', label=f'{args.output_column[i]}_{last}')
+        plt.legend()
+        plt.savefig(args.save_path + '/' + name + '.jpg')
+        plt.close()
+
+
+def draw_predict(last_data, last_output):
+    # 画图(对最后一组数据预测)
+    pred = np.zeros(last_data.shape)
+    pred[:, -args.output_size:] = last_output
+    for i in range(len(args.output_column)):
+        name = f'{args.output_column[i]}_last_predict'
+        plt.title(name)
+        plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
+        plt.plot(last_data[i, :], color='green', label=f'{args.output_column[i]}_true')
+        plt.plot(pred[i, :], color='red', label=f'{args.output_column[i]}_pred')
         plt.legend()
         plt.savefig(args.save_path + '/' + name + '.jpg')
         plt.close()
@@ -68,6 +84,7 @@ def test_pt():
     input_data = np.array(df[args.input_column].astype(np.float32)).transpose(1, 0)
     input_data = input_data[:, -args.plot_len:]  # 限定长度方便画图
     output_data = np.array(df[args.output_column].astype(np.float32)).transpose(1, 0)
+    last_data = output_data[:, -args.input_size - args.output_size:]
     output_data = output_data[:, -args.plot_len:]  # 限定长度方便画图
     # 推理
     start_time = time.time()
@@ -81,16 +98,18 @@ def test_pt():
     with torch.no_grad():
         for item, batch in enumerate(dataloader):
             batch = batch.to(args.device)
-            pred_batch = model(batch).detach().cpu().numpy()
+            pred_batch = model(batch).cpu().numpy()
             pred_middle.append(pred_batch[:, :, middle - 1])
             pred_last.append(pred_batch[:, :, last - 1])
         pred_middle = np.concatenate(pred_middle, axis=0).transpose(1, 0)
         pred_last = np.concatenate(pred_last, axis=0).transpose(1, 0)
+        last_output = pred_batch[-1]
     end_time = time.time()
     print('| 数据:{} 批量:{} 平均耗时:{:.4f} |'
           .format(args.data_path, args.batch, (end_time - start_time) / len(pred_middle)))
     # 画图
     draw(pred_middle, pred_last, output_data, middle, last)
+    draw_predict(last_data, last_output)
     print(f'| 画图保存位置:{args.save_path} |')
 
 

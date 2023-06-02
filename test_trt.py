@@ -37,7 +37,7 @@ if not os.path.exists(args.save_path):
 # -------------------------------------------------------------------------------------------------------------------- #
 # 程序
 def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true为真实值，pred和true长度不相等
-    # 画图
+    # 画图(所有预测中值和预测末值)
     middle_plot = np.zeros(true.shape)
     last_plot = np.zeros(true.shape)
     middle_plot[:, args.input_size + middle - 1:-middle] = pred_middle
