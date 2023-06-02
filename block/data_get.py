@@ -26,10 +26,11 @@ class data_prepare(object):
         input_data = np.array(df[self.input_column].astype(np.float32)).transpose(1, 0)
         output_data = np.array(df[self.output_column].astype(np.float32)).transpose(1, 0)
         # 划分数据集
-        data_len = len(df) - self.input_size - self.output_size + 1
-        boundary = int(data_len * self.divide[0] / (self.divide[0] + self.divide[1]))
-        train_input = input_data[:, 0:boundary]  # 训练数据
-        train_output = output_data[:, 0:boundary]  # 训练标签
+        add = self.input_size + self.output_size - 1  # 输入数据后面的补足
+        data_len = len(df) - add  # 输入数据的真实数量
+        boundary = int(data_len * self.divide[0] / (self.divide[0] + self.divide[1]))  # 数据划分
+        train_input = input_data[:, 0:boundary + add]  # 训练数据
+        train_output = output_data[:, 0:boundary + add]  # 训练标签
         val_input = input_data[:, boundary:len(df)].copy()  # 验证数据
         val_output = output_data[:, boundary:len(df)].copy()  # 验证标签
         # 周期
