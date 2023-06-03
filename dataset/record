@@ -49,7 +49,11 @@ parser.add_argument('--save_path', default=r'../dataset/hushen300_fill.csv', typ
 # -------------------------------------------------------------------------------------------------------------------- #
 5，merge_csv.py
 parser.add_argument('--mark', default=False, type=bool, help='|为防止.csv中有重名，column前加上序号|')
-parser.add_argument('--save_path', default=r'../dataset/all.csv', type=str, help='|保存路径|')
+parser.add_argument('--save_path', default=r'../dataset/merge.csv', type=str, help='|保存路径|')
 args = parser.parse_args()
 args.data_dir = '../dataset/'
-args.data_path = ['hushen300_fill', 'economy_day']  # 合并的所有.csv路径
+args.data_path = ['hushen300_fill.csv', 'economy_day.csv']  # 合并的所有.csv路径
+# -------------------------------------------------------------------------------------------------------------------- #
+6，add_date.py
+parser.add_argument('--data_path', default=r'../dataset/merge.csv', type=str, help='|数据路径|')
+parser.add_argument('--save_path', default=r'../dataset/all.csv', type=str, help='|保存路径|')

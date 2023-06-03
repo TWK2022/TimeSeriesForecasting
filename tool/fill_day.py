@@ -4,7 +4,7 @@ import pandas as pd
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
-parser = argparse.ArgumentParser(description='|将月指标简单补充成日指标，月指标当成该月的最后一天|')
+parser = argparse.ArgumentParser(description='|将日指标中缺失的数据简单补充|')
 parser.add_argument('--data_path', default=r'../dataset/hushen300.csv', type=str, help='|数据路径|')
 parser.add_argument('--save_path', default=r'../dataset/hushen300_fill.csv', type=str, help='|保存路径|')
 args = parser.parse_args()

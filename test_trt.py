@@ -58,11 +58,13 @@ def draw_predict(last_data, last_output):
     # 画图(对最后一组数据预测)
     pred = np.zeros(last_data.shape)
     pred[:, -args.output_size:] = last_output
+    true = last_data[:, -args.output_size - 10:]
+    pred = pred[:, -args.output_size - 10:]
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last_predict'
         plt.title(name)
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
-        plt.plot(last_data[i, :], color='green', label=f'{args.output_column[i]}_true')
+        plt.plot(true[i, :], color='green', label=f'{args.output_column[i]}_true')
         plt.plot(pred[i, :], color='cyan', label=f'{args.output_column[i]}_pred')
         plt.legend()
         plt.savefig(args.save_path + '/' + name + '.jpg')
