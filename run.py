@@ -33,7 +33,7 @@ parser.add_argument('--z_score_cycle', default=-1, type=int, help='|以训练集
 parser.add_argument('--epoch', default=100, type=int, help='|训练轮数|')
 parser.add_argument('--batch', default=64, type=int, help='|训练批量大小|')
 parser.add_argument('--loss', default='mse', type=str, help='|损失函数|')
-parser.add_argument('--lr_start', default=0.001, type=float, help='|初始学习率，训练中采用adam算法，前3轮有预热训练|')
+parser.add_argument('--lr_start', default=0.0001, type=float, help='|初始学习率，训练中采用adam算法，前3轮有预热训练|')
 parser.add_argument('--lr_end', default=0.00001, type=float, help='|最终学习率|')
 parser.add_argument('--lr_adjust_num', default=50, type=int, help='|从初始学习率到最终学习率经过的调整次数，余玄下降法|')
 parser.add_argument('--lr_adjust_threshold', default=0.97, type=float, help='|本轮训练损失大于上一轮损失的比例时才调整|')

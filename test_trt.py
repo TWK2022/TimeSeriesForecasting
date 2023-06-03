@@ -44,10 +44,26 @@ def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true
     last_plot[:, args.input_size + last - 1:] = pred_last
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last{args.plot_len}'
+        plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
         plt.title(name)
         plt.plot(true[i, :], color='green', label=f'{args.output_column[i]}_true')
         plt.plot(middle_plot[i, :], color='orange', label=f'{args.output_column[i]}_{middle}')
         plt.plot(last_plot[i, :], color='red', label=f'{args.output_column[i]}_{last}')
+        plt.legend()
+        plt.savefig(args.save_path + '/' + name + '.jpg')
+        plt.close()
+
+
+def draw_predict(last_data, last_output):
+    # 画图(对最后一组数据预测)
+    pred = np.zeros(last_data.shape)
+    pred[:, -args.output_size:] = last_output
+    for i in range(len(args.output_column)):
+        name = f'{args.output_column[i]}_last_predict'
+        plt.title(name)
+        plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
+        plt.plot(last_data[i, :], color='green', label=f'{args.output_column[i]}_true')
+        plt.plot(pred[i, :], color='cyan', label=f'{args.output_column[i]}_pred')
         plt.legend()
         plt.savefig(args.save_path + '/' + name + '.jpg')
         plt.close()
@@ -75,6 +91,7 @@ def test_tensorrt():
     input_data = np.array(df[args.input_column].astype(np.float32)).transpose(1, 0)
     input_data = input_data[:, -args.plot_len:]  # 限定长度方便画图
     output_data = np.array(df[args.output_column].astype(np.float32)).transpose(1, 0)
+    last_data = output_data[:, -args.input_size - args.output_size:]
     output_data = output_data[:, -args.plot_len:]  # 限定长度方便画图
     # 数据处理
     start_time = time.time()
@@ -95,15 +112,17 @@ def test_tensorrt():
         model_context.execute_async_v2(bindings=bindings, stream_handle=stream.handle)  # 执行推理
         cuda.memcpy_dtoh_async(h_output, d_output, stream)  # 将输出数据从GPU显存复制到CPU锁存
         stream.synchronize()  # 同步线程
-        pred = h_output.copy().reshape(len(args.output_column), args.output_size)
-        pred_middle[i] = pred[:, middle - 1][np.newaxis]
-        pred_last[i] = pred[:, last - 1][np.newaxis]
+        pred_batch = h_output.copy().reshape(len(args.output_column), args.output_size)
+        pred_middle[i] = pred_batch[:, middle - 1][np.newaxis]
+        pred_last[i] = pred_batch[:, last - 1][np.newaxis]
     pred_middle = np.concatenate(pred_middle, axis=0).transpose(1, 0)
     pred_last = np.concatenate(pred_last, axis=0).transpose(1, 0)
+    last_output = pred_batch[-1]
     end_time = time.time()
     print('| 数据:{} 批量:{} 平均耗时:{:.4f} |'.format(input_len, args.batch, (end_time - start_time) / input_len))
     # 画图
     draw(pred_middle, pred_last, output_data, middle, last)
+    draw_predict(last_data, last_output)
     print(f'| 画图保存位置:{args.save_path} |')
 
 

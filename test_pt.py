@@ -20,7 +20,7 @@ parser.add_argument('--output_size', default=256, type=int, help='|输出的长�
 parser.add_argument('--batch', default=64, type=int, help='|批量大小|')
 parser.add_argument('--device', default='cuda', type=str, help='|用CPU/GPU推理|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
-parser.add_argument('--plot_len', default=2000, type=int, help='|画图长度，取数据的倒数plot_len个|')
+parser.add_argument('--plot_len', default=2500, type=int, help='|画图长度，取数据的倒数plot_len个|')
 args = parser.parse_args()
 args.input_column = read_column(args.input_column)  # column处理
 args.output_column = read_column(args.output_column)  # column处理
@@ -62,7 +62,7 @@ def draw_predict(last_data, last_output):
         plt.title(name)
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
         plt.plot(last_data[i, :], color='green', label=f'{args.output_column[i]}_true')
-        plt.plot(pred[i, :], color='red', label=f'{args.output_column[i]}_pred')
+        plt.plot(pred[i, :], color='cyan', label=f'{args.output_column[i]}_pred')
         plt.legend()
         plt.savefig(args.save_path + '/' + name + '.jpg')
         plt.close()
