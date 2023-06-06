@@ -19,7 +19,7 @@ parser.add_argument('--output_size', default=64, type=int, help='|输出的长�
 parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，要与导出的模型对应|')
 parser.add_argument('--device', default='cuda', type=str, help='|用CPU/GPU推理|')
 parser.add_argument('--float16', default=True, type=bool, help='|推理数据类型，要与导出的模型对应，False时为float32|')
-parser.add_argument('--plot_len', default=2000, type=int, help='|画图长度，取数据的倒数plot_len个|')
+parser.add_argument('--plot_len', default=1000, type=int, help='|画图长度，取数据的倒数plot_len个|')
 args = parser.parse_args()
 args.input_column = read_column(args.input_column)  # column处理
 args.output_column = read_column(args.output_column)  # column处理
@@ -56,8 +56,11 @@ def draw_predict(last_data, last_output):
     # 画图(对最后一组数据预测)
     pred = np.zeros(last_data.shape)
     pred[:, -args.output_size:] = last_output
-    true = last_data[:, -args.output_size - 10:]
-    pred = pred[:, -args.output_size - 10:]
+    true = last_data[:, -args.output_size - args.input_size:]
+    pred = pred[:, -args.output_size - args.input_size:]
+    input_cut = max(args.input_size - 200, 0)  # 防止输入序列太长时画图不好看
+    true = true[input_cut:]
+    pred = pred[input_cut:]
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last_predict'
         plt.title(name)

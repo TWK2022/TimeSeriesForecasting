@@ -12,15 +12,15 @@ from block.util import read_column
 # 设置
 parser = argparse.ArgumentParser(description='|pt模型推理|')
 parser.add_argument('--model_path', default='best.pt', type=str, help='|pt模型位置|')
-parser.add_argument('--data_path', default=r'./dataset/all.csv', type=str, help='|数据路径|')
-parser.add_argument('--input_column', default='input_column.txt', type=str, help='|选择输入的变量|')
-parser.add_argument('--output_column', default='output_column.txt', type=str, help='|选择预测的变量|')
-parser.add_argument('--input_size', default=1024, type=int, help='|输入的长度|')
-parser.add_argument('--output_size', default=128, type=int, help='|输出的长度|')
+parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据路径|')
+parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量|')
+parser.add_argument('--output_column', default='multiply,mix', type=str, help='|选择预测的变量|')
+parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
+parser.add_argument('--output_size', default=64, type=int, help='|输出的长度|')
 parser.add_argument('--batch', default=64, type=int, help='|批量大小|')
 parser.add_argument('--device', default='cuda', type=str, help='|用CPU/GPU推理|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
-parser.add_argument('--plot_len', default=2000, type=int, help='|画图长度，取数据的倒数plot_len个|')
+parser.add_argument('--plot_len', default=1000, type=int, help='|画图长度，取数据的倒数plot_len个|')
 args = parser.parse_args()
 args.input_column = read_column(args.input_column)  # column处理
 args.output_column = read_column(args.output_column)  # column处理
@@ -57,8 +57,11 @@ def draw_predict(last_data, last_output):
     # 画图(对最后一组数据预测)
     pred = np.zeros(last_data.shape)
     pred[:, -args.output_size:] = last_output
-    true = last_data[:, -args.output_size - 10:]
-    pred = pred[:, -args.output_size - 10:]
+    true = last_data[:, -args.output_size - args.input_size:]
+    pred = pred[:, -args.output_size - args.input_size:]
+    input_cut = max(args.input_size - 200, 0)  # 防止输入序列太长时画图不好看
+    true = true[:, input_cut:]
+    pred = pred[:, input_cut:]
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last_predict'
         plt.title(name)
