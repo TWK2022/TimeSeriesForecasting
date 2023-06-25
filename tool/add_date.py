@@ -4,7 +4,7 @@ import pandas as pd
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
-parser = argparse.ArgumentParser(description='|添加时间指标|')
+parser = argparse.ArgumentParser(description='|添加时间戳变量|')
 parser.add_argument('--data_path', default=r'../dataset/merge.csv', type=str, help='|数据路径|')
 parser.add_argument('--save_path', default=r'../dataset/all.csv', type=str, help='|保存路径|')
 args = parser.parse_args()

@@ -10,9 +10,15 @@ __pycache__
 *.jpg
 *.png
 *.txt
+*.csv
 *.xlsx
 *.json
+*.xml
 *.pt
 *.onnx
 *.trt
 # -------------------------------------------------------------------------------------------------------------------- #
+!dataset/ETTh1.csv
+!dataset/ETTh2.csv
+!dataset/ETTm1.csv
+!dataset/ETTm2.csv

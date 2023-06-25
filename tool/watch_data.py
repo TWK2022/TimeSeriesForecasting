@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置
 parser = argparse.ArgumentParser(description='|查看数据|')
-parser.add_argument('--data_path', default=r'../dataset/沪深300_day.csv', type=str, help='|数据路径|')
+parser.add_argument('--data_path', default=r'../dataset/ETTh1.csv', type=str, help='|数据路径|')
 parser.add_argument('--show_len', default=2000, type=int, help='|显示的数据长度|')
 args = parser.parse_args()
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -14,6 +14,7 @@ if __name__ == '__main__':
     df = pd.read_csv(args.data_path)
     name = args.data_path.split('/')[-1].split('.')[0] + '.jpg'
     plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
+    plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
     plt.title(name)
     plt.xlabel('time')
     plt.ylabel('value')
