@@ -82,7 +82,7 @@ def train_get(args, data_dict, model_dict, loss):
             val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict, ema)
         # 保存
         if args.local_rank == 0:  # 分布式时只保存一次
-            model_dict['model'] = model.module.eval() if args.distributed else model.eval()
+            model_dict['model'] = model.module if args.distributed else model
             model_dict['epoch'] = epoch
             model_dict['optimizer_state_dict'] = optimizer.state_dict()
             model_dict['lr_adjust_item'] = optimizer_adjust.lr_adjust_item
