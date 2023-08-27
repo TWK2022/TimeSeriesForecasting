@@ -2,7 +2,7 @@ import tqdm
 import torch
 from block.val_get import val_get
 from block.ModelEMA import ModelEMA
-from block.lr_adjust import lr_adjust
+from block.lr_get import adam, lr_adjust
 
 
 def train_get(args, data_dict, model_dict, loss):
@@ -10,6 +10,7 @@ def train_get(args, data_dict, model_dict, loss):
     model = model_dict['model'].to(args.device, non_blocking=args.latch)
     # 学习率
     optimizer = torch.optim.Adam(model.parameters(), lr=args.lr_start, betas=(0.937, 0.999), weight_decay=0.0005)
+    optimizer = adam(args.regularization, args.r_value, model.parameters(), lr=args.lr_start, betas=(0.937, 0.999))
     optimizer.load_state_dict(model_dict['optimizer_state_dict']) if model_dict['optimizer_state_dict'] else None
     optimizer_adjust = lr_adjust(args, model_dict['lr_adjust_item'])  # 学习率调整函数
     optimizer = optimizer_adjust(optimizer, model_dict['epoch'] + 1, 0)  # 初始化学习率

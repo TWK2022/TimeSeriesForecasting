@@ -7,6 +7,7 @@ import pandas as pd
 
 # 股票数据使用前复权，只获取交易日数据
 # wind试用版调用一次函数大概只能获取2500个数据，多了会报错
+# 除此之外每日和每周都有总额限定，超了之后会报错，要等一段时间再试
 # 数据精度为float64
 # -------------------------------------------------------------------------------------------------------------------- #
 # 设置已是最新数据
@@ -15,13 +16,18 @@ parser.add_argument('--save_path', default='dataset', type=str, help='|数据保
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
 parser.add_argument('--variable', default='variable.yaml', type=str, help='|选用的变量|')
 parser.add_argument('--start_time', default='2010-01-01', type=str, help='|开始时间|')
-parser.add_argument('--end_time', default='2011-01-01', type=str, help='|结束时间，不超过当前日期的前一天|')
+parser.add_argument('--end_time', default='2023-08-26', type=str, help='|结束时间，不超过当前日期的前一天|')
 parser.add_argument('--max_data', default=2500, type=int, help='|wind函数每次的获取上限，用于将数据划分为多次获取|')
 args = parser.parse_args()
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
 assert os.path.exists(args.save_path), f'| os.path.exists(args.save_path) = {os.path.exists(args.save_path)} |'
 print(f'| {args.start_time} --> {args.end_time} |')
+# -------------------------------------------------------------------------------------------------------------------- #
+# 测试
+# WindPy.w.start()  # 默认命令超时时间为120秒，如需设置超时时间可以加入waitTime参数，例如waitTime=60,即设置命令超时时间为60秒
+# assert WindPy.w.isconnected(), f'| WindPy.w.isconnected()={WindPy.w.isconnected()} |'
+# wind_data = WindPy.w.wsd('600000.SH', 'open', '2010-01-01', '2010-02-01', 'Currency=CNY;PriceAdj=F')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #

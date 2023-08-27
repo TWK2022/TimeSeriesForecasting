@@ -37,6 +37,8 @@ parser.add_argument('--lr_start', default=0.0005, type=float, help='|初始学�
 parser.add_argument('--lr_end', default=0.00001, type=float, help='|最终学习率|')
 parser.add_argument('--lr_adjust_num', default=50, type=int, help='|从初始学习率到最终学习率经过的调整次数，余玄下降法|')
 parser.add_argument('--lr_adjust_threshold', default=0.97, type=float, help='|本轮训练损失大于上一轮损失的比例时才调整|')
+parser.add_argument('--regularization', default='L2', type=str, help='|正则化，有L1、L2、None|')
+parser.add_argument('--r_value', default=0.0001, type=float, help='|正则化的权重系数|')
 parser.add_argument('--device', default='cuda', type=str, help='|训练设备|')
 parser.add_argument('--latch', default=True, type=bool, help='|模型和数据是否为锁存，True为锁存|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
@@ -86,6 +88,9 @@ if __name__ == '__main__':
     data_dict = data_get(args)
     # 模型
     model_dict = model_get(args)
+    a = model_dict['model'].modules()
+    for layer in a:
+        layer
     # 损失
     loss = loss_get(args)
     # 摘要

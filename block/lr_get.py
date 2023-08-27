@@ -1,4 +1,13 @@
 import math
+import torch
+
+
+def adam(regularization, r_value, param, lr, betas):
+    if regularization == 'L2':
+        optimizer = torch.optim.Adam(param, lr=lr, betas=betas, weight_decay=r_value)
+    else:
+        optimizer = torch.optim.Adam(param, lr=lr, betas=betas)
+    return optimizer
 
 
 class lr_adjust:
