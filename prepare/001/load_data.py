@@ -23,6 +23,8 @@ args = parser.parse_args()
 # 初步检查
 assert os.path.exists(args.save_path), f'| os.path.exists(args.save_path) = {os.path.exists(args.save_path)} |'
 print(f'| {args.start_time} --> {args.end_time} |')
+
+
 # -------------------------------------------------------------------------------------------------------------------- #
 # 测试
 # WindPy.w.start()  # 默认命令超时时间为120秒，如需设置超时时间可以加入waitTime参数，例如waitTime=60,即设置命令超时时间为60秒
@@ -49,19 +51,27 @@ def deal(number_dict, variable_dict):
     return name_list, number_list, column_list, variable, option
 
 
+def wind_request(number, variable, start, end, option):
+    wind_data = WindPy.w.wsd(number, variable, start, end, option)
+    error = wind_data.ErrorCode
+    if error == -40522017:
+        assert False, '数据提取量超限'
+    return wind_data
+
+
 def wind_to_df(number, column, variable, option, start_time, end_time, divide):
     date = pd.date_range(start_time, end_time, freq='D')
     df_list = []
     for i in range(len(date) // divide):
         start = date[i * divide]
         end = date[(i + 1) * divide - 1]
-        wind_data = WindPy.w.wsd(number, variable, start, end, f'{option};Currency=CNY;PriceAdj=F')
+        wind_data = wind_request(number, variable, start, end, f'{option};Currency=CNY;PriceAdj=F')
         data = np.array(wind_data.Data, dtype=np.float64).T
         index = wind_data.Times
         df_list.append(pd.DataFrame(data, columns=column, index=index, dtype=np.float64))
     start = date[len(date) - len(date) % divide]
     end = end_time
-    wind_data = WindPy.w.wsd(number, variable, start, end, f'{option};Currency=CNY;PriceAdj=F')
+    wind_data = wind_request(number, variable, start, end, f'{option};Currency=CNY;PriceAdj=F')
     data = np.array(wind_data.Data, dtype=np.float64).T
     index = wind_data.Times
     df_list.append(pd.DataFrame(data, columns=column, index=index, dtype=np.float64))
