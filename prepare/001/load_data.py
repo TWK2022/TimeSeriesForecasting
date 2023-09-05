@@ -10,7 +10,7 @@ import pandas as pd
 # 除此之外每日和每周都有总额限定，超了之后会报错，要等一段时间再试
 # 数据精度为float64
 # -------------------------------------------------------------------------------------------------------------------- #
-# 设置已是最新数据
+# 设置
 parser = argparse.ArgumentParser(description='|从WindPy获取最新股票数据以补全数据库|')
 parser.add_argument('--save_path', default='dataset', type=str, help='|数据保存的位置|')
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
