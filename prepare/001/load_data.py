@@ -16,7 +16,7 @@ parser.add_argument('--save_path', default='dataset', type=str, help='|数据保
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
 parser.add_argument('--variable', default='variable.yaml', type=str, help='|选用的变量|')
 parser.add_argument('--start_time', default='2010-01-01', type=str, help='|开始时间|')
-parser.add_argument('--end_time', default='2023-08-26', type=str, help='|结束时间，不超过当前日期的前一天|')
+parser.add_argument('--end_time', default='2023-09-1', type=str, help='|结束时间，不超过当前日期的前一天|')
 parser.add_argument('--max_data', default=2500, type=int, help='|wind函数每次的获取上限，用于将数据划分为多次获取|')
 args = parser.parse_args()
 # -------------------------------------------------------------------------------------------------------------------- #

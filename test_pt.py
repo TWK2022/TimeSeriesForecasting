@@ -12,11 +12,11 @@ from block.util import read_column
 # 设置
 parser = argparse.ArgumentParser(description='|pt模型推理|')
 parser.add_argument('--model_path', default='best.pt', type=str, help='|pt模型位置|')
-parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据路径|')
-parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量|')
-parser.add_argument('--output_column', default='multiply,mix', type=str, help='|选择预测的变量|')
-parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
-parser.add_argument('--output_size', default=64, type=int, help='|输出的长度|')
+parser.add_argument('--data_path', default=r'./prepare/001/check.csv', type=str, help='|数据路径|')
+parser.add_argument('--input_column', default='input_column.txt', type=str, help='|选择输入的变量|')
+parser.add_argument('--output_column', default='output_column.txt', type=str, help='|选择预测的变量|')
+parser.add_argument('--input_size', default=512, type=int, help='|输入的长度|')
+parser.add_argument('--output_size', default=256, type=int, help='|输出的长度|')
 parser.add_argument('--batch', default=64, type=int, help='|批量大小|')
 parser.add_argument('--device', default='cuda', type=str, help='|用CPU/GPU推理|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
@@ -41,6 +41,10 @@ def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true
     last_plot = np.zeros(true.shape)
     middle_plot[:, args.input_size + middle - 1:-middle] = pred_middle
     last_plot[:, args.input_size + last - 1:] = pred_last
+    input_cut = max(args.input_size, 0)  # 防止输入序列太长时画图不好看
+    true = true[:, input_cut:]
+    middle_plot = middle_plot[:, input_cut:]
+    last_plot = last_plot[:, input_cut:]
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last{args.plot_len}'
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
@@ -59,7 +63,7 @@ def draw_predict(last_data, last_output):
     pred[:, -args.output_size:] = last_output
     true = last_data[:, -args.output_size - args.input_size:]
     pred = pred[:, -args.output_size - args.input_size:]
-    input_cut = max(args.input_size - 200, 0)  # 防止输入序列太长时画图不好看
+    input_cut = max(args.input_size - 50, 0)  # 防止输入序列太长时画图不好看
     true = true[:, input_cut:]
     pred = pred[:, input_cut:]
     for i in range(len(args.output_column)):
@@ -87,10 +91,10 @@ def test_pt():
     except:
         df = pd.read_csv(args.data_path, encoding='gbk')
     input_data = np.array(df[args.input_column].astype(np.float32)).transpose(1, 0)
-    input_data = input_data[:, -args.plot_len:]  # 限定长度方便画图
+    input_data = input_data[:, -args.plot_len - args.input_size:]  # 限定长度方便画图
     output_data = np.array(df[args.output_column].astype(np.float32)).transpose(1, 0)
     last_data = output_data[:, -args.input_size - args.output_size:]
-    output_data = output_data[:, -args.plot_len:]  # 限定长度方便画图
+    output_data = output_data[:, -args.plot_len - args.input_size:]  # 限定长度方便画图
     # 推理
     start_time = time.time()
     middle = args.output_size // 2

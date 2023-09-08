@@ -40,6 +40,10 @@ def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true
     last_plot = np.zeros(true.shape)
     middle_plot[:, args.input_size + middle - 1:-middle] = pred_middle
     last_plot[:, args.input_size + last - 1:] = pred_last
+    input_cut = max(args.input_size, 0)  # 防止输入序列太长时画图不好看
+    true = true[:, input_cut:]
+    middle_plot = middle_plot[:, input_cut:]
+    last_plot = last_plot[:, input_cut:]
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last{args.plot_len}'
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
@@ -58,7 +62,7 @@ def draw_predict(last_data, last_output):
     pred[:, -args.output_size:] = last_output
     true = last_data[:, -args.output_size - args.input_size:]
     pred = pred[:, -args.output_size - args.input_size:]
-    input_cut = max(args.input_size - 200, 0)  # 防止输入序列太长时画图不好看
+    input_cut = max(args.input_size - 50, 0)  # 防止输入序列太长时画图不好看
     true = true[input_cut:]
     pred = pred[input_cut:]
     for i in range(len(args.output_column)):
