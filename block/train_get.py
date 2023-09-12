@@ -105,7 +105,6 @@ def train_get(args, data_dict, model_dict, loss):
             # 特殊保存
             mse_decay = max((1 - epoch / 500), 0.8) * mse
             if mse_decay < 1 and mse_decay < model_dict['standard']:
-                model_dict['standard'] = mse
                 torch.save(model_dict, 'relative_best.pt')
             # wandb
             if args.wandb:
