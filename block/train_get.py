@@ -18,18 +18,18 @@ def train_get(args, data_dict, model_dict, loss):
     if args.ema:
         ema.updates = model_dict['ema_updates']
     # 数据集
-    train_dataset = torch_dataset(args, data_dict['train_input'], data_dict['train_output'])
+    train_dataset = dataset_class(args, data_dict['train_input'], data_dict['train_output'])
     train_shuffle = False if args.distributed else True  # 分布式设置sampler后shuffle要为False
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset) if args.distributed else None
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch, shuffle=train_shuffle,
-                                                   drop_last=True, pin_memory=args.latch, num_workers=args.num_worker,
-                                                   sampler=train_sampler)
-    val_dataset = torch_dataset(args, data_dict['val_input'], data_dict['val_output'])
+                                                   drop_last=True, num_workers=args.num_worker, sampler=train_sampler,
+                                                   collate_fn=train_dataset.collate_fn)
+    val_dataset = dataset_class(args, data_dict['val_input'], data_dict['val_output'])
     val_sampler = None  # 分布式时数据合在主GPU上进行验证
     val_batch = args.batch // args.gpu_number  # 分布式验证时batch要减少为一个GPU的量
-    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=val_batch, shuffle=False,
-                                                 drop_last=False, pin_memory=args.latch, num_workers=args.num_worker,
-                                                 sampler=val_sampler)
+    val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=val_batch, shuffle=False, drop_last=False,
+                                                 num_workers=args.num_worker, sampler=val_sampler,
+                                                 collate_fn=val_dataset.collate_fn)
     # 分布式初始化
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
                                                       output_device=args.local_rank) if args.distributed else model
@@ -43,8 +43,6 @@ def train_get(args, data_dict, model_dict, loss):
                                     args.batch // args.gpu_number * args.gpu_number,
                               postfix=dict, mininterval=0.2) if args.local_rank == 0 else None  # tqdm
         for item, (series_batch, true_batch) in enumerate(train_dataloader):
-            series_batch = series_batch.to(args.device, non_blocking=args.latch)
-            true_batch = true_batch.to(args.device, non_blocking=args.latch)
             if args.amp:
                 with torch.cuda.amp.autocast():
                     pred_batch = model(series_batch)
@@ -101,6 +99,11 @@ def train_get(args, data_dict, model_dict, loss):
                 torch.save(model_dict, args.save_name)  # 保存最佳模型
                 print('\n| 保存最佳模型:{} | val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |\n'
                       .format(args.save_name, val_loss, mae, mse))
+            # 特殊保存
+            mse_decay = max((1 - epoch / 500), 0.8) * mse
+            if mse_decay < 1 and mse_decay < model_dict['standard']:
+                model_dict['standard'] = mse
+                torch.save(model_dict, 'relative_best.pt')
             # wandb
             if args.wandb:
                 args.wandb_run.log({'metric/train_loss': train_loss,
@@ -110,12 +113,14 @@ def train_get(args, data_dict, model_dict, loss):
         torch.distributed.barrier() if args.distributed else None  # 分布式时每轮训练后让所有GPU进行同步，快的GPU会在此等待
 
 
-class torch_dataset(torch.utils.data.Dataset):
+class dataset_class(torch.utils.data.Dataset):
     def __init__(self, args, input_data, output_data):
         self.input_data = input_data
         self.output_data = output_data
         self.input_size = args.input_size
         self.output_size = args.output_size
+        self.device = args.device
+        self.latch = args.latch
 
     def __len__(self):
         return self.input_data.shape[1] - self.input_size - self.output_size + 1
@@ -127,3 +132,10 @@ class torch_dataset(torch.utils.data.Dataset):
         label = self.output_data[:, boundary:boundary + self.output_size]  # 输出标签
         label = torch.tensor(label, dtype=torch.float32)  # 转换为tensor
         return series, label
+
+    def collate_fn(self, getitem_batch):
+        series_list = [_[0] for _ in getitem_batch]
+        true_list = [_[1] for _ in getitem_batch]
+        series_batch = torch.stack(series_list, dim=0).to(self.device, non_blocking=self.latch)
+        true_batch = torch.stack(true_list, dim=0).to(self.device, non_blocking=self.latch)
+        return series_batch, true_batch
