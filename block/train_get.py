@@ -22,8 +22,8 @@ def train_get(args, data_dict, model_dict, loss):
     train_shuffle = False if args.distributed else True  # 分布式设置sampler后shuffle要为False
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset) if args.distributed else None
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch, shuffle=train_shuffle,
-                                                   drop_last=True, num_workers=args.num_worker, sampler=train_sampler,
-                                                   collate_fn=train_dataset.collate_fn)
+                                                   drop_last=True, num_workers=args.num_worker,
+                                                   sampler=train_sampler, collate_fn=train_dataset.collate_fn)
     val_dataset = dataset_class(args, data_dict['val_input'], data_dict['val_output'])
     val_sampler = None  # 分布式时数据合在主GPU上进行验证
     val_batch = args.batch // args.gpu_number  # 分布式验证时batch要减少为一个GPU的量
