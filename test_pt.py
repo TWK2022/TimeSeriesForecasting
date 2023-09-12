@@ -84,7 +84,8 @@ def test_pt():
     model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
                    model_dict['std_output'])
     model.float().eval().to(args.device)
-    print('| 模型加载成功:{} |'.format(args.model_path))
+    mse = round(model_dict['standard'], 3)
+    print(f'| 模型加载成功:{args.model_path} | mse:{mse}|')
     # 加载数据
     try:
         df = pd.read_csv(args.data_path, encoding='utf-8')
