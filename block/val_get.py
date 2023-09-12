@@ -10,6 +10,7 @@ def val_get(args, val_dataloader, model, loss, data_dict, ema):
         true = []
         for item, (series_batch, true_batch) in enumerate(tqdm.tqdm(val_dataloader)):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
+            true_batch = true_batch.to(args.device, non_blocking=args.latch)
             pred.extend(model(series_batch))
             true.extend(true_batch)
         # 计算指标
