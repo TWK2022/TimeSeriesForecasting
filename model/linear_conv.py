@@ -14,7 +14,7 @@ class linear_conv(torch.nn.Module):
         self.split_linear0 = split_linear(self.input_dim, self.input_size)
         self.linear1 = torch.nn.Linear(self.input_size, self.input_size, bias=True)
         self.linear2 = torch.nn.Linear(self.input_size, self.output_size, bias=True)
-        self.conv3 = cbs(self.input_dim, 4 * self.input_dim, 1, 1)
+        self.cbs3 = cbs(self.input_dim, 4 * self.input_dim, 1, 1)
         self.conv4 = torch.nn.Conv1d(4 * self.input_dim, self.output_dim, kernel_size=1, stride=1)
 
     def forward(self, x):
@@ -25,7 +25,7 @@ class linear_conv(torch.nn.Module):
         x = self.linear1(x)
         x = self.linear2(x)
         x = x + series_last
-        x = self.conv3(x)
+        x = self.cbs3(x)
         x = self.conv4(x)
         return x
 
