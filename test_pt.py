@@ -85,7 +85,7 @@ def test_pt():
                    model_dict['std_output'])
     model.float().eval().to(args.device)
     epoch = model_dict['epoch']
-    mse = round(model_dict['standard'], 3)
+    mse = round(model_dict['standard'], 4)
     print(f'| 模型加载成功:{args.model_path} | epoch:{epoch} | mse:{mse}|')
     # 加载数据
     try:

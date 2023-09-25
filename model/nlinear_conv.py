@@ -13,23 +13,26 @@ class nlinear_conv(torch.nn.Module):
         self.output_size = args.output_size
         # 网络结构
         self.linear0 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
-        self.linear1 = torch.nn.Linear(self.output_size, self.output_size, bias=False)
-        self.linear2 = torch.nn.Linear(self.output_size, self.output_size, bias=False)
-        self.linear3 = torch.nn.Linear(self.output_size, self.output_size, bias=False)
-        self.conv4 = cbs(self.input_dim, 16 * self.input_dim, 1, 1)
-        self.conv5 = torch.nn.Conv1d(16 * self.input_dim, self.output_dim, kernel_size=1, stride=1)
+        self.linear1 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
+        self.linear2 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
+        self.linear3 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
+        self.linear4 = torch.nn.Linear(self.output_size, self.output_size, bias=False)
+        self.conv3 = cbs(self.input_dim, 4 * self.input_dim, 1, 1)
+        self.conv4 = torch.nn.Conv1d(4 * self.input_dim, self.output_dim, kernel_size=1, stride=1)
 
     def forward(self, x):
         # 输入(batch,input_dim,input_size)
         series_last = x[:, :, -1:]
         x = x - series_last
-        x = self.linear0(x)
-        x_multiply = self.linear1(x)
-        x_add = self.linear2(x)
-        x = x * x_multiply
-        x = self.linear3(x) + x_add + series_last
+        x0 = self.linear0(x)
+        x1 = self.linear1(x)
+        x2 = self.linear2(x)
+        x3 = self.linear3(x)
+        x = x0 + x1 + x2 + x3
+        x = self.linear4(x)
+        x = x + series_last
+        x = self.conv3(x)
         x = self.conv4(x)
-        x = self.conv5(x)
         return x
 
 

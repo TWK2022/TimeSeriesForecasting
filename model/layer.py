@@ -16,6 +16,17 @@ class cbs(torch.nn.Module):
         return x
 
 
+class concat(torch.nn.Module):
+    def __init__(self, dim=1):
+        super().__init__()
+        self.concat = torch.concat
+        self.dim = dim
+
+    def forward(self, x):
+        x = self.concat(x, dim=self.dim)
+        return x
+
+
 class residual(torch.nn.Module):  # in_->in_，len->len
     def __init__(self, in_):
         super().__init__()
