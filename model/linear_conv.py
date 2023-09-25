@@ -1,10 +1,9 @@
-# 根据nlinear改编:https://github.com/cure-lab/LTSF-Linear
 # 多变量异标签
 import torch
 from model.layer import cbs, split_linear
 
 
-class nlinear_conv(torch.nn.Module):
+class linear_conv(torch.nn.Module):
     def __init__(self, args):
         super().__init__()
         self.input_dim = len(args.input_column)
@@ -43,7 +42,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.input_column = args.input_column.split(',')
     args.output_column = args.output_column.split(',')
-    model = nlinear_conv(args).to('cuda')
+    model = linear_conv(args).to('cuda')
     print(model)
     tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32).to('cuda')
     print(model(tensor).shape)
