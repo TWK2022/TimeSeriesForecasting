@@ -18,7 +18,7 @@ class nlinear(torch.nn.Module):
         # 输入(batch,input_dim,input_size)
         series_last = x[:, :, -1:]
         x = x - series_last
-        x = self.linear(x)  # 各dim之间是分开运算的
+        x = self.linear(x)
         x = x + series_last
         return x
 

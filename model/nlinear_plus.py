@@ -21,9 +21,9 @@ class nlinear_plus(torch.nn.Module):
         # 输入(batch,input_dim,input_size)
         series_last = x[:, :, -1:]
         x = x - series_last
-        x = self.linear0(x)  # 各dim之间是分开运算的
-        x_multiply = self.linear1(x)  # 各dim之间是分开运算的
-        x_add = self.linear2(x)  # 各dim之间是分开运算的
+        x = self.linear0(x)
+        x_multiply = self.linear1(x)
+        x_add = self.linear2(x)
         x = x * x_multiply
         x = self.linear3(x) + x_add + series_last
         return x
