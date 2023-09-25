@@ -66,18 +66,3 @@ class data_prepare(object):
             train_data[i, :] = (train_data[i, :] - mean) / std
             val_data[i, :] = (val_data[i, :] - mean) / std
         return train_data, val_data, mean_all, std_all
-
-
-if __name__ == '__main__':
-    import argparse
-
-    parser = argparse.ArgumentParser(description='')
-    parser.add_argument('--data_path', default='../dataset/ETTh.csv', type=str)
-    parser.add_argument('--input_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str)
-    parser.add_argument('--output_column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str)
-    parser.add_argument('--divide', default='9,1', type=str)
-    args = parser.parse_args()
-    args.input_column = args.input_column.split(',')
-    args.output_column = args.output_column.split(',')
-    args.divide = list(map(int, args.divide.split(',')))
-    data_dict = data_get(args)

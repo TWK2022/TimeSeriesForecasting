@@ -12,13 +12,17 @@ class nlinear_conv(torch.nn.Module):
         self.input_size = args.input_size
         self.output_size = args.output_size
         # 网络结构
-        self.linear0 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
-        self.linear1 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
-        self.linear2 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
-        self.linear3 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
-        self.linear4 = torch.nn.Linear(self.output_size, self.output_size, bias=False)
-        self.conv3 = cbs(self.input_dim, 4 * self.input_dim, 1, 1)
-        self.conv4 = torch.nn.Conv1d(4 * self.input_dim, self.output_dim, kernel_size=1, stride=1)
+        self.linear0 = torch.nn.Linear(self.input_size, self.input_size, bias=False)
+        self.linear1 = torch.nn.Linear(self.input_size, self.input_size, bias=False)
+        self.linear2 = torch.nn.Linear(self.input_size, self.input_size, bias=False)
+        self.linear3 = torch.nn.Linear(self.input_size, self.input_size, bias=False)
+        self.linear4 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
+        self.linear5 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
+        self.linear6 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
+        self.linear7 = torch.nn.Linear(self.input_size, self.output_size, bias=False)
+        self.linear8 = torch.nn.Linear(self.output_size, self.output_size, bias=True)
+        self.conv9 = cbs(self.input_dim, 4 * self.input_dim, 1, 1)
+        self.conv10 = torch.nn.Conv1d(4 * self.input_dim, self.output_dim, kernel_size=1, stride=1)
 
     def forward(self, x):
         # 输入(batch,input_dim,input_size)
@@ -28,11 +32,15 @@ class nlinear_conv(torch.nn.Module):
         x1 = self.linear1(x)
         x2 = self.linear2(x)
         x3 = self.linear3(x)
+        x0 = self.linear4(x0)
+        x1 = self.linear5(x1)
+        x2 = self.linear6(x2)
+        x3 = self.linear7(x3)
         x = x0 + x1 + x2 + x3
-        x = self.linear4(x)
+        x = self.linear8(x)
         x = x + series_last
-        x = self.conv3(x)
-        x = self.conv4(x)
+        x = self.conv9(x)
+        x = self.conv10(x)
         return x
 
 
