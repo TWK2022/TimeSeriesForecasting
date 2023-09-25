@@ -61,6 +61,20 @@ class elan(torch.nn.Module):  # in_->out_，len->len
         return x
 
 
+class split_linear(torch.nn.Module):
+    def __init__(self, input_dim, input_size):  # in_->in_，len->len
+        super().__init__()
+        self.input_dim = input_dim
+        for i in range(self.input_dim):
+            function = f'self.linear{i} = torch.nn.Linear(input_size, input_size, bias=False)'
+            exec(function)
+
+    def forward(self, x):
+        for i in range(self.input_dim):
+            x[:, i, :] = eval(f'self.linear{i}')(x[:, i, :])
+        return x
+
+
 class series_encode(torch.nn.Module):
     def __init__(self, mean_input, std_input):
         super().__init__()
