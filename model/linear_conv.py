@@ -14,8 +14,8 @@ class linear_conv(torch.nn.Module):
         self.split_linear0 = split_linear(self.input_dim, self.input_size)
         self.linear1 = torch.nn.Linear(self.input_size, self.input_size, bias=True)
         self.linear2 = torch.nn.Linear(self.input_size, self.output_size, bias=True)
-        self.cbs3 = cbs(self.input_dim, 4 * self.input_dim, 1, 1)
-        self.conv4 = torch.nn.Conv1d(4 * self.input_dim, self.output_dim, kernel_size=1, stride=1)
+        self.cbs3 = cbs(self.input_dim, 16 * self.input_dim, 1, 1)  # 推荐'4至16 * self.input_dim'
+        self.conv4 = torch.nn.Conv1d(16 * self.input_dim, self.output_dim, kernel_size=1, stride=1)
 
     def forward(self, x):
         # 输入(batch,input_dim,input_size)
