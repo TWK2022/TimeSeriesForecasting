@@ -70,8 +70,10 @@ class split_linear(torch.nn.Module):
             exec(function)
 
     def forward(self, x):
+        x_list = []
         for i in range(self.input_dim):
-            x[:, i, :] = eval(f'self.linear{i}')(x[:, i, :])
+            x_list.append(eval(f'self.linear{i}')(x[:, i, :]))
+        x = torch.stack(x_list, dim=1)
         return x
 
 
