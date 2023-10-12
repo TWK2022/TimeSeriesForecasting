@@ -26,7 +26,7 @@ def train_get(args, data_dict, model_dict, loss):
                                                    sampler=train_sampler)
     val_dataset = torch_dataset(args, data_dict['val_input'], data_dict['val_output'])
     val_sampler = None  # 分布式时数据合在主GPU上进行验证
-    val_batch = args.batch // args.gpu_number  # 分布式验证时batch要减少为一个GPU的量
+    val_batch = args.batch // args.device_number  # 分布式验证时batch要减少为一个GPU的量
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=val_batch, shuffle=False,
                                                  drop_last=False, pin_memory=args.latch, num_workers=args.num_worker,
                                                  sampler=val_sampler)
@@ -40,7 +40,7 @@ def train_get(args, data_dict, model_dict, loss):
         model.train()
         train_loss = 0  # 记录训练损失
         tqdm_show = tqdm.tqdm(total=(len(data_dict['train_input']) - args.input_size - args.output_size + 1) //
-                                    args.batch // args.gpu_number * args.gpu_number,
+                                    args.batch // args.device_number * args.device_number,
                               postfix=dict, mininterval=0.2) if args.local_rank == 0 else None  # tqdm
         for item, (series_batch, true_batch) in enumerate(train_dataloader):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
@@ -66,7 +66,7 @@ def train_get(args, data_dict, model_dict, loss):
             # tqdm
             if args.local_rank == 0:
                 tqdm_show.set_postfix({'当前loss': loss_batch.item()})  # 添加loss显示
-                tqdm_show.update(args.gpu_number)  # 更新进度条
+                tqdm_show.update(args.device_number)  # 更新进度条
         # tqdm
         tqdm_show.close() if args.local_rank == 0 else None
         # 计算平均损失

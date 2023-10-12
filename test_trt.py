@@ -1,5 +1,4 @@
 import os
-import cv2
 import time
 import argparse
 import tensorrt
@@ -17,8 +16,8 @@ parser.add_argument('--model_path', default='best.trt', type=str, help='|trt模�
 parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据路径|')
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量|')
 parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量|')
-parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
-parser.add_argument('--output_size', default=64, type=int, help='|输出的长度|')
+parser.add_argument('--input_size', default=512, type=int, help='|输入的长度|')
+parser.add_argument('--output_size', default=256, type=int, help='|输出的长度|')
 parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，要与导出的模型对应，一般为1|')
 parser.add_argument('--float16', default=True, type=bool, help='|推理数据类型，要与导出的模型对应，False时为float32|')
 parser.add_argument('--plot_len', default=1000, type=int, help='|画图长度，取数据的倒数plot_len个|')

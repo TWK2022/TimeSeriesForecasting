@@ -12,9 +12,9 @@ from block.util import read_column
 # 设置
 parser = argparse.ArgumentParser(description='|pt模型推理|')
 parser.add_argument('--model_path', default='best.pt', type=str, help='|pt模型位置|')
-parser.add_argument('--data_path', default=r'./prepare/001/check.csv', type=str, help='|数据路径|')
-parser.add_argument('--input_column', default='input_column.txt', type=str, help='|选择输入的变量|')
-parser.add_argument('--output_column', default='output_column.txt', type=str, help='|选择预测的变量|')
+parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据路径|')
+parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量|')
+parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量|')
 parser.add_argument('--input_size', default=512, type=int, help='|输入的长度|')
 parser.add_argument('--output_size', default=256, type=int, help='|输出的长度|')
 parser.add_argument('--batch', default=64, type=int, help='|批量大小|')
