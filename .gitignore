@@ -11,13 +11,14 @@ __pycache__
 *.png
 *.txt
 *.csv
+*.xml
 *.xlsx
 *.json
-*.xml
 *.pt
 *.pth
-*.onnx
+*.bin
 *.trt
+*.onnx
 # -------------------------------------------------------------------------------------------------------------------- #
 !dataset/ETTh1.csv
 !dataset/ETTh2.csv
