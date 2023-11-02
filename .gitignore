@@ -21,3 +21,8 @@ __pycache__
 *.trt
 *.onnx
 # -------------------------------------------------------------------------------------------------------------------- #
+!dataset/ETTh1.csv
+!dataset/ETTh2.csv
+!dataset/ETTm1.csv
+!dataset/ETTm2.csv
+!dataset/sin_cos.csv
