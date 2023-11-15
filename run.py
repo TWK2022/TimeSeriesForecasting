@@ -75,11 +75,11 @@ if args.distributed:
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
 if args.local_rank == 0:
-    assert os.path.exists(args.data_path), f'data_path不存在:{args.data_path}'
+    assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !'
     if os.path.exists(args.weight):
         print(f'| 加载已有模型:{args.weight} |')
     else:
-        assert os.path.exists(f'model/{args.model}.py'), f'没有此自定义模型:{args.model}'
+        assert os.path.exists(f'model/{args.model}.py'), f'! 没有此自定义模型:{args.model} !'
         print(f'| 创建自定义模型:{args.model} | 型号:{args.model_type} |')
 # -------------------------------------------------------------------------------------------------------------------- #
 # 程序
