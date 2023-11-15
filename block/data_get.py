@@ -3,7 +3,7 @@ import pandas as pd
 
 
 def data_get(args):
-    data_dict = data_prepare(args)._load()
+    data_dict = data_prepare(args).load()
     return data_dict
 
 
@@ -17,7 +17,7 @@ class data_prepare(object):
         self.data_path = args.data_path
         self.z_score_cycle = args.z_score_cycle
 
-    def _load(self):
+    def load(self):
         # 读取数据
         try:
             df = pd.read_csv(self.data_path, encoding='utf-8')

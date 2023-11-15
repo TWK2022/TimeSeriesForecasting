@@ -6,10 +6,10 @@ def model_get(args):
     if os.path.exists(args.weight):
         model_dict = torch.load(args.weight, map_location='cpu')
     else:
-        choice_dict = {'linear': 'model_prepare(args)._linear()',
-                       'linear_conv': 'model_prepare(args)._linear_conv()',
-                       'lstm': 'model_prepare(args)._lstm()',
-                       'nlinear': 'model_prepare(args)._nlinear()',
+        choice_dict = {'linear': 'model_prepare(args).linear()',
+                       'linear_conv': 'model_prepare(args).linear_conv()',
+                       'lstm': 'model_prepare(args).lstm()',
+                       'nlinear': 'model_prepare(args).nlinear()',
                        }
         model = eval(choice_dict[args.model])
         model_dict = {}
@@ -27,22 +27,22 @@ class model_prepare(object):
     def __init__(self, args):
         self.args = args
 
-    def _linear(self):
+    def linear(self):
         from model.linear import linear
         model = linear(self.args)
         return model
 
-    def _lstm(self):
+    def lstm(self):
         from model.lstm import lstm
         model = lstm(self.args)
         return model
 
-    def _nlinear(self):
+    def nlinear(self):
         from model.nlinear import nlinear
         model = nlinear(self.args)
         return model
 
-    def _linear_conv(self):
+    def linear_conv(self):
         from model.linear_conv import linear_conv
         model = linear_conv(self.args)
         return model
