@@ -4,12 +4,12 @@ import torch
 import argparse
 from block.util import read_column
 from block.data_get import data_get
-from block.model_get import model_get
 from block.loss_get import loss_get
+from block.model_get import model_get
 from block.train_get import train_get
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 分布式训练:
+# 分布式训练：
 # python -m torch.distributed.launch --master_port 9999 --nproc_per_node n run.py --distributed True
 # master_port为GPU之间的通讯端口，空闲的即可
 # n为GPU数量
