@@ -17,7 +17,7 @@ class lr_adjust:
         self.lr_adjust_num = args.lr_adjust_num  # 最大学习率调整次数
         self.lr_adjust_threshold = args.lr_adjust_threshold  # 学习率调整阈值
         self.lr_start = args.lr_start  # 初始学习率
-        self.lr_end = args.lr_end  # 最终学习率
+        self.lr_end = args.lr_end_ratio * args.lr_start  # 最终学习率
 
     def __call__(self, optimizer, epoch, loss_now):
         threshold = self.lr_adjust_threshold * self.loss_last
