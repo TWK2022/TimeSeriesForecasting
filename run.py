@@ -24,7 +24,7 @@ parser.add_argument('--wandb', default=False, type=bool, help='|是否使用wand
 parser.add_argument('--wandb_project', default='TimeSeriesForecasting', type=str, help='|wandb项目名称|')
 parser.add_argument('--wandb_name', default='train', type=str, help='|wandb项目中的训练名称|')
 parser.add_argument('--model', default='linear_conv', type=str, help='|自定义模型选择|')
-parser.add_argument('--model_type', default='m', type=str, help='|模型型号，部分模型有|')
+parser.add_argument('--model_type', default='m', type=str, help='|自定义模型型号|')
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量，可传入.txt|')
 parser.add_argument('--input_size', default=512, type=int, help='|输入的长度|')
