@@ -23,8 +23,8 @@ parser.add_argument('--save_name', default='best.pt', type=str, help='|保存模
 parser.add_argument('--wandb', default=False, type=bool, help='|是否使用wandb可视化|')
 parser.add_argument('--wandb_project', default='TimeSeriesForecasting', type=str, help='|wandb项目名称|')
 parser.add_argument('--wandb_name', default='train', type=str, help='|wandb项目中的训练名称|')
-parser.add_argument('--model', default='linear_conv', type=str, help='|模型选择，注意是单变量自标签/单变量异标签/多变量异标签|')
-parser.add_argument('--model_type', default='m', type=str, help='|模型型号参数，部分模型有|')
+parser.add_argument('--model', default='linear_conv', type=str, help='|自定义模型选择|')
+parser.add_argument('--model_type', default='m', type=str, help='|模型型号，部分模型有|')
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量，可传入.txt|')
 parser.add_argument('--input_size', default=512, type=int, help='|输入的长度|')
@@ -33,15 +33,15 @@ parser.add_argument('--z_score_cycle', default=-1, type=int, help='|以训练集
 parser.add_argument('--epoch', default=200, type=int, help='|训练轮数|')
 parser.add_argument('--batch', default=64, type=int, help='|训练批量大小|')
 parser.add_argument('--loss', default='mse_decay', type=str, help='|损失函数|')
-parser.add_argument('--lr_start', default=0.001, type=float, help='|初始学习率，训练中采用adam算法，前3轮有预热训练，基准为0.001|')
+parser.add_argument('--lr_start', default=0.001, type=float, help='|初始学习率，adam算法，3轮预热训练，基准为0.001|')
 parser.add_argument('--lr_end_ratio', default=0.2, type=float, help='|最终学习率=lr_end_ratio*lr_start，基准为0.2|')
-parser.add_argument('--lr_adjust_num', default=100, type=int, help='|从初始学习率到最终学习率经过的调整次数，余玄下降法|')
-parser.add_argument('--lr_adjust_threshold', default=0.97, type=float, help='|本轮训练损失大于上一轮损失的比例时才调整，基准为0.97|')
+parser.add_argument('--lr_adjust_num', default=100, type=int, help='|学习率下降调整次数，余玄下降法，要小于总轮次|')
+parser.add_argument('--lr_adjust_threshold', default=0.97, type=float, help='|本轮损失下降一定比例时才调整，基准为0.97|')
 parser.add_argument('--regularization', default='L2', type=str, help='|正则化，有L2、None|')
 parser.add_argument('--r_value', default=0.0005, type=float, help='|正则化的权重系数|')
 parser.add_argument('--device', default='cuda', type=str, help='|训练设备|')
 parser.add_argument('--latch', default=True, type=bool, help='|模型和数据是否为锁存，True为锁存|')
-parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
+parser.add_argument('--num_worker', default=0, type=int, help='|CPU处理数据的进程数，0表示只有一个主进程，一般为0、2、4、8|')
 parser.add_argument('--ema', default=True, type=bool, help='|使用平均指数移动(EMA)调整参数|')
 parser.add_argument('--amp', default=True, type=bool, help='|混合float16精度训练，CPU时不可用|')
 parser.add_argument('--distributed', default=False, type=bool, help='|单机多卡分布式训练，分布式训练时batch为总batch|')
@@ -79,7 +79,7 @@ if args.local_rank == 0:
     if os.path.exists(args.weight):
         print(f'| 加载已有模型:{args.weight} |')
     else:
-        assert os.path.exists(f'model/{args.model}.py'), f'! 没有此自定义模型:{args.model} !'
+        assert os.path.exists(f'model/{args.model}.py'), f'! 没有自定义模型:{args.model} !'
         print(f'| 创建自定义模型:{args.model} | 型号:{args.model_type} |')
 # -------------------------------------------------------------------------------------------------------------------- #
 # 程序
