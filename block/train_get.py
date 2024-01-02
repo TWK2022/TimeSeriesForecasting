@@ -11,7 +11,7 @@ def train_get(args, data_dict, model_dict, loss):
     # 学习率
     optimizer = adam(args.regularization, args.r_value, model.parameters(), lr=args.lr_start, betas=(0.937, 0.999))
     optimizer.load_state_dict(model_dict['optimizer_state_dict']) if model_dict['optimizer_state_dict'] else None
-    optimizer_adjust = lr_adjust(args, model_dict['lr_adjust_item'])  # 学习率调整函数
+    optimizer_adjust = lr_adjust(args, model_dict['lr_adjust_index'])  # 学习率调整函数
     optimizer = optimizer_adjust(optimizer, model_dict['epoch'] + 1, 0)  # 初始化学习率
     # 使用平均指数移动(EMA)调整参数(不能将ema放到args中，否则会导致模型保存出错)
     ema = ModelEMA(model) if args.ema else None
@@ -85,7 +85,7 @@ def train_get(args, data_dict, model_dict, loss):
             model_dict['model'] = model.module if args.distributed else model
             model_dict['epoch'] = epoch
             model_dict['optimizer_state_dict'] = optimizer.state_dict()
-            model_dict['lr_adjust_item'] = optimizer_adjust.lr_adjust_item
+            model_dict['lr_adjust_index'] = optimizer_adjust.lr_adjust_index
             model_dict['ema_updates'] = ema.updates if args.ema else model_dict['ema_updates']
             model_dict['mean_input'] = data_dict['mean_input']
             model_dict['mean_output'] = data_dict['mean_output']
