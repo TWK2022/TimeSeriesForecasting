@@ -37,7 +37,7 @@ def train_get(args, data_dict, model_dict, loss):
     for epoch in range(epoch_base, epoch_base + args.epoch):  # 训练
         print(f'\n-----------------------第{epoch}轮-----------------------') if args.local_rank == 0 else None
         model.train()
-        train_loss = 0  # 记录训练损失
+        train_loss = 0  # 记录损失
         if args.local_rank == 0:  # tqdm
             tqdm_len = ((data_dict['train_input'].shape[1] - args.input_size - args.output_size + 1)
                         // args.batch // args.device_number * args.device_number)
