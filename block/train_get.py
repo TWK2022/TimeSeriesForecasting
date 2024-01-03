@@ -67,15 +67,15 @@ def train_get(args, data_dict, model_dict, loss):
             if args.local_rank == 0:
                 tqdm_show.set_postfix({'loss': loss_batch.item()})  # 添加loss显示
                 tqdm_show.update(args.device_number)  # 更新进度条
+        # tqdm
+        if args.local_rank == 0:
+            tqdm_show.close()
         # 计算平均损失
         if args.local_rank == 0:
             train_loss = train_loss / (index + 1)
             print('\n| train_loss:{:.4f} | lr:{:.6f} |\n'.format(train_loss, optimizer.param_groups[0]['lr']))
         # 调整学习率
         optimizer = optimizer_adjust(optimizer, epoch + 1, train_loss)
-        # tqdm
-        if args.local_rank == 0:
-            tqdm_show.close()
         # 清理显存空间
         del series_batch, true_batch, pred_batch, loss_batch
         torch.cuda.empty_cache()
