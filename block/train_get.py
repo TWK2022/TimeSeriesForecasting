@@ -34,14 +34,14 @@ def train_get(args, data_dict, model_dict, loss):
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
                                                       output_device=args.local_rank) if args.distributed else model
     epoch_base = model_dict['epoch'] + 1  # 新的一轮要+1
-    for epoch in range(epoch_base, epoch_base + args.epoch):
-        # 训练
+    for epoch in range(epoch_base, epoch_base + args.epoch):  # 训练
         print(f'\n-----------------------第{epoch}轮-----------------------') if args.local_rank == 0 else None
         model.train()
         train_loss = 0  # 记录训练损失
-        tqdm_show = tqdm.tqdm(total=(len(data_dict['train_input']) - args.input_size - args.output_size + 1) //
-                                    args.batch // args.device_number * args.device_number,
-                              postfix=dict, mininterval=0.2) if args.local_rank == 0 else None  # tqdm
+        if args.local_rank == 0:  # tqdm
+            tqdm_len = ((data_dict['train_input'].shape[1] - args.input_size - args.output_size + 1)
+                        // args.batch // args.device_number * args.device_number)
+            tqdm_show = tqdm.tqdm(total=tqdm_len, mininterval=0.2)
         for index, (series_batch, true_batch) in enumerate(train_dataloader):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
             true_batch = true_batch.to(args.device, non_blocking=args.latch)
@@ -65,15 +65,17 @@ def train_get(args, data_dict, model_dict, loss):
             train_loss += loss_batch.item()
             # tqdm
             if args.local_rank == 0:
-                tqdm_show.set_postfix({'当前loss': loss_batch.item()})  # 添加loss显示
+                tqdm_show.set_postfix({'loss': loss_batch.item()})  # 添加loss显示
                 tqdm_show.update(args.device_number)  # 更新进度条
-        # tqdm
-        tqdm_show.close() if args.local_rank == 0 else None
         # 计算平均损失
-        train_loss = train_loss / (index + 1)
-        print('\n| train_loss:{:.4f} | lr:{:.6f} |\n'.format(train_loss, optimizer.param_groups[0]['lr']))
+        if args.local_rank == 0:
+            train_loss = train_loss / (index + 1)
+            print('\n| train_loss:{:.4f} | lr:{:.6f} |\n'.format(train_loss, optimizer.param_groups[0]['lr']))
         # 调整学习率
         optimizer = optimizer_adjust(optimizer, epoch + 1, train_loss)
+        # tqdm
+        if args.local_rank == 0:
+            tqdm_show.close()
         # 清理显存空间
         del series_batch, true_batch, pred_batch, loss_batch
         torch.cuda.empty_cache()
@@ -96,7 +98,7 @@ def train_get(args, data_dict, model_dict, loss):
             model_dict['val_mae'] = mae
             model_dict['val_mse'] = mse
             torch.save(model_dict, 'last.pt')  # 保存最后一次训练的模型
-            if epoch > args.epoch//4 and mse < 1 and mse < model_dict['standard']:
+            if epoch > args.epoch // 4 and mse < 1 and mse < model_dict['standard']:
                 model_dict['standard'] = mse
                 torch.save(model_dict, args.save_path)  # 保存最佳模型
                 print('\n| 保存最佳模型:{} | val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |\n'
