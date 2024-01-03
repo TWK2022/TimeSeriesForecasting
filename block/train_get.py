@@ -71,8 +71,8 @@ def train_get(args, data_dict, model_dict, loss):
         if args.local_rank == 0:
             tqdm_show.close()
         # 计算平均损失
+        train_loss = train_loss / (index + 1)
         if args.local_rank == 0:
-            train_loss = train_loss / (index + 1)
             print('\n| train_loss:{:.4f} | lr:{:.6f} |\n'.format(train_loss, optimizer.param_groups[0]['lr']))
         # 调整学习率
         optimizer = optimizer_adjust(optimizer, epoch + 1, train_loss)
