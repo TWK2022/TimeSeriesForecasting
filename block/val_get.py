@@ -8,11 +8,21 @@ def val_get(args, val_dataloader, model, loss, data_dict, ema):
         model = ema.ema if args.ema else model.eval()
         pred = []
         true = []
-        for item, (series_batch, true_batch) in enumerate(tqdm.tqdm(val_dataloader)):
+        tqdm_len = ((data_dict['val_input'].shape[1] - args.input_size - args.output_size + 1)
+                    // args.batch // args.device_number * args.device_number)
+        tqdm_show = tqdm.tqdm(total=tqdm_len, mininterval=0.2)
+        for item, (series_batch, true_batch) in enumerate(val_dataloader):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
             true_batch = true_batch.to(args.device, non_blocking=args.latch)
-            pred.extend(model(series_batch))
-            true.extend(true_batch)
+            pred_batch = model(series_batch)
+            loss_batch = loss(pred_batch, true_batch)
+            pred.extend(pred_batch.cpu())
+            true.extend(true_batch.cpu())
+            # tqdm
+            tqdm_show.set_postfix({'val_loss': loss_batch.item()})  # 添加loss显示
+            tqdm_show.update(args.device_number)  # 更新进度条
+        # tqdm
+        tqdm_show.close()
         # 计算指标
         pred = torch.stack(pred, dim=0)
         true = torch.stack(true, dim=0)
