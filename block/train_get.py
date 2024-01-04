@@ -101,8 +101,8 @@ def train_get(args, data_dict, model_dict, loss):
             if epoch > args.epoch // 4 and mse < 1 and mse < model_dict['standard']:
                 model_dict['standard'] = mse
                 torch.save(model_dict, args.save_path)  # 保存最佳模型
-                print('\n| 保存最佳模型:{} | val_loss:{:.4f} | val_mae:{:.4f} | val_mse:{:.4f} |\n'
-                      .format(args.save_path, val_loss, mae, mse))
+                print(f'\n| 保存最佳模型:{args.save_path} | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} |'
+                      f' val_mse:{mse:.4f} |\n')
             # wandb
             if args.wandb:
                 args.wandb_run.log({'metric/train_loss': train_loss,
