@@ -23,7 +23,7 @@ def model_get(args):
     return model_dict
 
 
-class model_prepare(object):
+class model_prepare:
     def __init__(self, args):
         self.args = args
 
