@@ -32,6 +32,11 @@ class model_prepare:
         model = linear(self.args)
         return model
 
+    def linear_conv(self):
+        from model.linear_conv import linear_conv
+        model = linear_conv(self.args)
+        return model
+
     def lstm(self):
         from model.lstm import lstm
         model = lstm(self.args)
@@ -40,9 +45,4 @@ class model_prepare:
     def nlinear(self):
         from model.nlinear import nlinear
         model = nlinear(self.args)
-        return model
-
-    def linear_conv(self):
-        from model.linear_conv import linear_conv
-        model = linear_conv(self.args)
         return model
