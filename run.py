@@ -31,7 +31,7 @@ parser.add_argument('--model', default='linear_conv', type=str, help='|自定义
 parser.add_argument('--model_type', default='m', type=str, help='|自定义模型型号|')
 parser.add_argument('--save_path', default='best.pt', type=str, help='|保存最佳模型，除此之外每轮还会保存last.pt|')
 parser.add_argument('--epoch', default=200, type=int, help='|训练轮数|')
-parser.add_argument('--batch', default=64, type=int, help='|训练批量大小|')
+parser.add_argument('--batch', default=64, type=int, help='|训练批量大小，分布式时为总批量|')
 parser.add_argument('--loss', default='mse_decay', type=str, help='|损失函数|')
 parser.add_argument('--lr_start', default=0.0001, type=float, help='|初始学习率，adam算法，3轮预热训练，基准为0.0001|')
 parser.add_argument('--lr_end_ratio', default=0.1, type=float, help='|最终学习率=lr_end_ratio*lr_start，基准为0.1|')
