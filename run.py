@@ -39,7 +39,7 @@ parser.add_argument('--lr_end_ratio', default=0.1, type=float, help='|最终学�
 parser.add_argument('--lr_end_epoch', default=100, type=int, help='|最终学习率达到的轮数，每一步都调整，余玄下降法|')
 parser.add_argument('--regularization', default='L2', type=str, help='|正则化，有L2、None|')
 parser.add_argument('--r_value', default=0.0003, type=float, help='|正则化权重系数，可从0.0001开始逐渐增加，直到最佳值|')
-parser.add_argument('--device', default='cpu', type=str, help='|训练设备|')
+parser.add_argument('--device', default='cuda', type=str, help='|训练设备|')
 parser.add_argument('--latch', default=True, type=bool, help='|模型和数据是否为锁存，True为锁存|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU处理数据的进程数，0表示只有一个主进程，一般为0、2、4、8|')
 parser.add_argument('--ema', default=True, type=bool, help='|使用平均指数移动(EMA)调整参数|')
