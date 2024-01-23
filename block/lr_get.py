@@ -11,27 +11,23 @@ def adam(regularization, r_value, param, lr, betas):
 
 
 class lr_adjust:
-    def __init__(self, args, lr_adjust_index):
-        self.loss_last = 0  # 记录上一轮的学习率，初始化为0
-        self.lr_adjust_index = lr_adjust_index  # 当前学习率调整次数
-        self.lr_adjust_num = args.lr_adjust_num  # 最大学习率调整次数
-        self.lr_adjust_threshold = args.lr_adjust_threshold  # 学习率调整阈值
+    def __init__(self, args, step_epoch, epoch_finished):
         self.lr_start = args.lr_start  # 初始学习率
         self.lr_end = args.lr_end_ratio * args.lr_start  # 最终学习率
+        self.lr_end_epoch = args.lr_end_epoch  # 最终学习率达到的轮数
+        self.step_all = self.lr_end_epoch * step_epoch  # 总调整步数
+        self.step_finished = epoch_finished * step_epoch  # 已调整步数
+        self.warmup_step = max(5, int(args.warmup_ratio * self.step_all))  # 预热训练步数
 
-    def __call__(self, optimizer, epoch, loss_now):
-        threshold = self.lr_adjust_threshold * self.loss_last  # 当前要大于阈值才会调整
-        if epoch <= 3:  # 预热阶段学习率减少为0.1,0.3,0.5
-            lr = max(self.lr_start * (0.2 * epoch - 0.1), 0.00001)
-        elif epoch == 4:  # 正式训练时第1轮学习率不变
-            lr = self.lr_start
-        elif loss_now > threshold and self.lr_adjust_index < self.lr_adjust_num:  # 调整学习率
-            self.lr_adjust_index += 1
-            decay = self.lr_adjust_index / self.lr_adjust_num  # 0-1
+    def __call__(self, optimizer):
+        self.step_finished += 1
+        step_now = self.step_finished
+        if step_now <= self.warmup_step:
+            lr = self.lr_start * (0.1 + 0.9 * step_now / self.warmup_step)
+            lr = max(lr, 0.000001)
+        else:
+            decay = step_now / self.step_all
             lr = self.lr_end + (self.lr_start - self.lr_end) * math.cos(math.pi / 2 * decay)
-        else:  # 当损失下降幅度比较大或调整次数用完时不调整学习率
-            lr = optimizer.param_groups[0]['lr']
         for i in range(len(optimizer.param_groups)):
             optimizer.param_groups[i]['lr'] = lr
-        self.loss_last = loss_now  # 记录上一轮的学习率
         return optimizer
