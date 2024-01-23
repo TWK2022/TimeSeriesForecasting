@@ -41,8 +41,7 @@ def train_get(args, data_dict, model_dict, loss):
         model.train()
         train_loss = 0  # 记录损失
         if args.local_rank == 0:  # tqdm
-            tqdm_len = step_epoch
-            tqdm_show = tqdm.tqdm(total=tqdm_len, mininterval=0.2)
+            tqdm_show = tqdm.tqdm(total=step_epoch, mininterval=0.2)
         for index, (series_batch, true_batch) in enumerate(train_dataloader):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
             true_batch = true_batch.to(args.device, non_blocking=args.latch)
