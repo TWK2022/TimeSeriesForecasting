@@ -14,9 +14,8 @@ def model_get(args):
         model = eval(choice_dict[args.model])
         model_dict = {}
         model_dict['model'] = model
-        model_dict['epoch'] = 0  # 已训练的轮次
+        model_dict['epoch_finished'] = 0  # 已训练的轮次
         model_dict['optimizer_state_dict'] = None  # 学习率参数
-        model_dict['lr_adjust_index'] = 0  # 学习率调整次数
         model_dict['ema_updates'] = 0  # ema参数
         model_dict['standard'] = 999  # 评价指标
     model_dict['model'](torch.rand(args.batch, len(args.input_column), args.input_size))  # 检查
