@@ -30,16 +30,16 @@ parser.add_argument('--weight', default='last.pt', type=str, help='|已有模型
 parser.add_argument('--model', default='linear_conv', type=str, help='|自定义模型选择|')
 parser.add_argument('--model_type', default='m', type=str, help='|自定义模型型号|')
 parser.add_argument('--save_path', default='best.pt', type=str, help='|保存最佳模型，除此之外每轮还会保存last.pt|')
-parser.add_argument('--epoch', default=200, type=int, help='|训练轮数|')
-parser.add_argument('--batch', default=64, type=int, help='|训练批量大小，分布式时为总批量|')
+parser.add_argument('--epoch', default=200, type=int, help='|训练总轮数(包含之前已训练轮数)|')
+parser.add_argument('--batch', default=32, type=int, help='|训练批量大小，分布式时为总批量|')
 parser.add_argument('--loss', default='mse_decay', type=str, help='|损失函数|')
-parser.add_argument('--lr_start', default=0.0001, type=float, help='|初始学习率，adam算法，3轮预热训练，基准为0.0001|')
+parser.add_argument('--warmup_ratio', default=0.01, type=float, help='|预热训练步数占总步数比例，最少5步，基准为0.01|')
+parser.add_argument('--lr_start', default=0.0001, type=float, help='|初始学习率，adam算法，有预热训练，基准为0.0001|')
 parser.add_argument('--lr_end_ratio', default=0.1, type=float, help='|最终学习率=lr_end_ratio*lr_start，基准为0.1|')
-parser.add_argument('--lr_adjust_num', default=100, type=int, help='|学习率下降调整次数，余玄下降法，要小于总轮次|')
-parser.add_argument('--lr_adjust_threshold', default=0.9, type=float, help='|损失下降比较快时不调整学习率，基准为0.9|')
+parser.add_argument('--lr_end_epoch', default=100, type=int, help='|最终学习率达到的轮数，每一步都调整，余玄下降法|')
 parser.add_argument('--regularization', default='L2', type=str, help='|正则化，有L2、None|')
 parser.add_argument('--r_value', default=0.0003, type=float, help='|正则化权重系数，可从0.0001开始逐渐增加，直到最佳值|')
-parser.add_argument('--device', default='cuda', type=str, help='|训练设备|')
+parser.add_argument('--device', default='cpu', type=str, help='|训练设备|')
 parser.add_argument('--latch', default=True, type=bool, help='|模型和数据是否为锁存，True为锁存|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU处理数据的进程数，0表示只有一个主进程，一般为0、2、4、8|')
 parser.add_argument('--ema', default=True, type=bool, help='|使用平均指数移动(EMA)调整参数|')
@@ -51,7 +51,6 @@ args.divide = list(map(int, args.divide.split(',')))
 args.input_column = read_column(args.input_column)  # column处理
 args.output_column = read_column(args.output_column)  # column处理
 args.device_number = max(torch.cuda.device_count(), 1)  # 使用的GPU数，可能为CPU
-print(f'| args:{args} |')
 # 为CPU设置随机种子
 torch.manual_seed(999)
 # 为所有GPU设置随机种子
@@ -91,8 +90,6 @@ if __name__ == '__main__':
     # 损失
     loss = loss_get(args)
     # 摘要
-    print('| 训练集:{} | 验证集:{} | 批量{} | 模型:{} | 输入长度:{} | 输出长度:{} | 损失函数:{} | 初始学习率:{} |'
-          .format(len(data_dict['train_input']), len(data_dict['val_input']), args.batch, args.model, args.input_size,
-                  args.output_size, args.loss, args.lr_start)) if args.local_rank == 0 else None
+    print(f'| args:{args} |') if args.local_rank == 0 else None
     # 训练
     train_get(args, data_dict, model_dict, loss)
