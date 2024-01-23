@@ -36,7 +36,7 @@ def train_get(args, data_dict, model_dict, loss):
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
                                                       output_device=args.local_rank) if args.distributed else model
     epoch_base = model_dict['epoch_finished'] + 1  # 新的一轮要+1
-    for epoch in range(epoch_base, args.epoch):  # 训练
+    for epoch in range(epoch_base, args.epoch + 1):  # 训练
         print(f'\n-----------------------第{epoch}轮-----------------------') if args.local_rank == 0 else None
         model.train()
         train_loss = 0  # 记录损失
