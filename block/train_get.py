@@ -68,7 +68,7 @@ def train_get(args, data_dict, model_dict, loss):
             # tqdm
             if args.local_rank == 0:
                 tqdm_show.set_postfix({'train_loss': loss_batch.item(),
-                                       'lr': optimizer.param_groups[0]["lr"]})  # 添加显示
+                                       'lr': optimizer.param_groups[0]['lr']})  # 添加显示
                 tqdm_show.update(args.device_number)  # 更新进度条
         # tqdm
         if args.local_rank == 0:
