@@ -16,7 +16,7 @@ def train_get(args, data_dict, model_dict, loss):
     optimizer_adjust = lr_adjust(args, step_epoch, model_dict['epoch_finished'])  # 学习率调整函数
     optimizer = optimizer_adjust(optimizer)  # 学习率初始化
     # 使用平均指数移动(EMA)调整参数(不能将ema放到args中，否则会导致模型保存出错)
-    ema = ModelEMA(model) if args.ema else None
+    ema = model_ema(model) if args.ema else None
     if args.ema:
         ema.updates = model_dict['ema_updates']
     # 数据集
