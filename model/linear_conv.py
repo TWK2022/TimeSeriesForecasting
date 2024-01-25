@@ -6,16 +6,16 @@ from model.layer import cbs, split_linear
 class linear_conv(torch.nn.Module):
     def __init__(self, args):
         super().__init__()
-        self.input_dim = len(args.input_column)
-        self.output_dim = len(args.output_column)
-        self.input_size = args.input_size
-        self.output_size = args.output_size
+        input_dim = len(args.input_column)
+        output_dim = len(args.output_column)
+        input_size = args.input_size
+        output_size = args.output_size
         # 网络结构
-        self.split_linear0 = split_linear(self.input_dim, self.input_size)
-        self.linear1 = torch.nn.Linear(self.input_size, self.input_size, bias=True)
-        self.linear2 = torch.nn.Linear(self.input_size, self.output_size, bias=True)
-        self.cbs3 = cbs(self.input_dim, 16 * self.input_dim, 1, 1)  # 推荐'4至16 * self.input_dim'
-        self.conv4 = torch.nn.Conv1d(16 * self.input_dim, self.output_dim, kernel_size=1, stride=1)
+        self.split_linear0 = split_linear(input_dim, input_size)
+        self.linear1 = torch.nn.Linear(input_size, input_size, bias=True)
+        self.linear2 = torch.nn.Linear(input_size, output_size, bias=True)
+        self.cbs3 = cbs(input_dim, 16 * input_dim, 1, 1)  # 推荐'4至16 * input_dim'
+        self.conv4 = torch.nn.Conv1d(16 * input_dim, output_dim, kernel_size=1, stride=1)
 
     def forward(self, x):
         # 输入(batch,input_dim,input_size)
@@ -42,7 +42,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.input_column = args.input_column.split(',')
     args.output_column = args.output_column.split(',')
-    model = linear_conv(args).to('cuda')
+    model = linear_conv(args).to('cpu')
+    tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32).to('cpu')
     print(model)
-    tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32).to('cuda')
     print(model(tensor).shape)
