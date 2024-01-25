@@ -66,8 +66,7 @@ class split_linear(torch.nn.Module):
         super().__init__()
         self.input_dim = input_dim
         for i in range(self.input_dim):
-            function = f'self.linear{i} = torch.nn.Linear(input_size, input_size, bias=False)'
-            exec(function)
+            exec(f'self.linear{i} = torch.nn.Linear(input_size, input_size, bias=False)')
 
     def forward(self, x):
         x_list = []
