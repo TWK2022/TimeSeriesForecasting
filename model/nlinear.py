@@ -6,13 +6,13 @@ import torch
 class nlinear(torch.nn.Module):
     def __init__(self, args):
         super().__init__()
-        self.input_dim = len(args.input_column)
-        self.output_dim = len(args.output_column)
-        self.input_size = args.input_size
-        self.output_size = args.output_size
-        assert self.input_dim == self.output_dim, f'单变量自标签'
+        input_dim = len(args.input_column)
+        output_dim = len(args.output_column)
+        input_size = args.input_size
+        output_size = args.output_size
+        assert input_dim == output_dim, f'单变量自标签'
         # 网络结构
-        self.linear = torch.nn.Linear(self.input_size, self.output_size)
+        self.linear = torch.nn.Linear(input_size, output_size)
 
     def forward(self, x):
         # 输入(batch,input_dim,input_size)
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.input_column = args.input_column.split(',')
     args.output_column = args.output_column.split(',')
-    model = nlinear(args).to('cuda')
+    model = nlinear(args).to('cpu')
+    tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32).to('cpu')
     print(model)
-    tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32).to('cuda')
     print(model(tensor).shape)
