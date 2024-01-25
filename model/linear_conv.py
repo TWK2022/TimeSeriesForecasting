@@ -32,7 +32,6 @@ class linear_conv(torch.nn.Module):
 
 if __name__ == '__main__':
     import argparse
-    from layer import cbs
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_column', default='1,2,3', type=str)
@@ -42,7 +41,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.input_column = args.input_column.split(',')
     args.output_column = args.output_column.split(',')
-    model = linear_conv(args).to('cpu')
-    tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32).to('cpu')
+    model = linear_conv(args)
+    tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32)
     print(model)
     print(model(tensor).shape)
