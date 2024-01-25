@@ -10,7 +10,7 @@ class nlinear(torch.nn.Module):
         output_dim = len(args.output_column)
         input_size = args.input_size
         output_size = args.output_size
-        assert input_dim == output_dim, f'单变量自标签'
+        assert input_dim == output_dim, f'! 单变量自标签 !'
         # 网络结构
         self.linear = torch.nn.Linear(input_size, output_size)
 
@@ -34,7 +34,7 @@ if __name__ == '__main__':
     args = parser.parse_args()
     args.input_column = args.input_column.split(',')
     args.output_column = args.output_column.split(',')
-    model = nlinear(args).to('cpu')
-    tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32).to('cpu')
+    model = nlinear(args)
+    tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32)
     print(model)
     print(model(tensor).shape)
