@@ -82,7 +82,8 @@ def train_get(args, data_dict, model_dict, loss):
         torch.cuda.empty_cache()
         # 验证
         if args.local_rank == 0:  # 分布式时只验证一次
-            val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict, ema)
+            val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict, ema,
+                                         data_dict['val_input'].shape[1])
         # 保存
         if args.local_rank == 0:  # 分布式时只保存一次
             model_dict['model'] = model.module if args.distributed else model
