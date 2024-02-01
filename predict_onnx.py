@@ -76,7 +76,7 @@ def draw_predict(last_data, last_output):
         plt.close()
 
 
-def test_onnx():
+def predict_onnx():
     # 加载模型
     provider = 'CUDAExecutionProvider' if args.device.lower() in ['gpu', 'cuda'] else 'CPUExecutionProvider'
     model = onnxruntime.InferenceSession(args.model_path, providers=[provider])  # 加载模型和框架
@@ -133,4 +133,4 @@ def test_onnx():
 
 
 if __name__ == '__main__':
-    test_onnx()
+    predict_onnx()
