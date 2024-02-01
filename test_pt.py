@@ -98,7 +98,6 @@ def test_pt():
     last_data = output_data[:, -args.input_size - args.output_size:]
     output_data = output_data[:, -args.plot_len - args.input_size:]  # 限定长度方便画图
     # 推理
-    start_time = time.time()
     middle = args.output_size // 2
     last = args.output_size
     pred_middle = []
@@ -106,6 +105,7 @@ def test_pt():
     dataloader = torch.utils.data.DataLoader(torch_dataset(args, input_data), batch_size=args.batch,
                                              shuffle=False, drop_last=False, pin_memory=False,
                                              num_workers=args.num_worker)
+    start_time = time.time()
     with torch.no_grad():
         for index, batch in enumerate(dataloader):
             batch = batch.to(args.device)
