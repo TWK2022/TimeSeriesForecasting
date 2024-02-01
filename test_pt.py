@@ -82,8 +82,8 @@ def test_pt():
     model_dict = torch.load(args.model_path, map_location='cpu')
     model = model_dict['model']
     model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
-                   model_dict['std_output'])
-    model.float().eval().to(args.device)
+                   model_dict['std_output']).eval().to(args.device)
+    model = model.half() if args.device == 'cuda' else model.float()
     epoch = model_dict['epoch']
     mse = round(model_dict['val_mse'], 4)
     print(f'| 模型加载成功:{args.model_path} | epoch:{epoch} | mse:{mse}|')
