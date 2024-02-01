@@ -77,7 +77,7 @@ def draw_predict(last_data, last_output):
         plt.close()
 
 
-def test_pt():
+def predict_pt():
     # 加载模型
     model_dict = torch.load(args.model_path, map_location='cpu')
     model = model_dict['model']
@@ -141,4 +141,4 @@ class torch_dataset(torch.utils.data.Dataset):
 
 
 if __name__ == '__main__':
-    test_pt()
+    predict_pt()
