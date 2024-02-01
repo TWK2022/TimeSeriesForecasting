@@ -15,10 +15,10 @@ parser.add_argument('--model_path', default='best.pt', type=str, help='|pt模型
 parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据路径|')
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量|')
 parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量|')
-parser.add_argument('--input_size', default=512, type=int, help='|输入的长度|')
-parser.add_argument('--output_size', default=256, type=int, help='|输出的长度|')
+parser.add_argument('--input_size', default=512, type=int, help='|输入长度|')
+parser.add_argument('--output_size', default=256, type=int, help='|输出长度|')
 parser.add_argument('--batch', default=64, type=int, help='|批量大小|')
-parser.add_argument('--device', default='cuda', type=str, help='|用CPU/GPU推理|')
+parser.add_argument('--device', default='cuda', type=str, help='|推理设备|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
 parser.add_argument('--plot_len', default=1000, type=int, help='|画图长度，取数据的倒数plot_len个|')
 args = parser.parse_args()
@@ -27,8 +27,8 @@ args.output_column = read_column(args.output_column)  # column处理
 args.save_path = 'save_image'
 # -------------------------------------------------------------------------------------------------------------------- #
 # 初步检查
-assert os.path.exists(args.model_path), f'没有找到模型{args.model_path}'
-assert os.path.exists(args.data_path), f'没有找到预测数据{args.data_path}'
+assert os.path.exists(args.model_path), f'! model_path不存在:{args.model_path} !'
+assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !'
 if not os.path.exists(args.save_path):
     os.makedirs(args.save_path)
 
