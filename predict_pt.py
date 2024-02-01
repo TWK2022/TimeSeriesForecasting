@@ -84,7 +84,7 @@ def test_pt():
     model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
                    model_dict['std_output']).eval().to(args.device)
     model = model.half() if args.device == 'cuda' else model.float()
-    epoch = model_dict['epoch']
+    epoch = model_dict['epoch_finished']
     mse = round(model_dict['val_mse'], 4)
     print(f'| 模型加载成功:{args.model_path} | epoch:{epoch} | mse:{mse}|')
     # 加载数据
