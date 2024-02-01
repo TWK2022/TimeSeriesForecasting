@@ -94,20 +94,17 @@ def test_onnx():
     last_data = output_data[:, -args.input_size - args.output_size:]
     output_data = output_data[:, -args.plot_len:]  # 限定长度方便画图
     # 数据处理
-    start_time = time.time()
     input_data = input_data.astype(np.float16 if args.float16 else np.float32)
     input_len = input_data.shape[1] - args.input_size - args.output_size + 1
     input_batch = [input_data[:, _:_ + args.input_size] for _ in range(input_len)]
     input_batch = np.stack(input_batch, axis=0)
-    end_time = time.time()
-    print('| 数据处理成功:{} 耗时:{:.4f} |'.format(args.data_path, end_time - start_time))
     # 推理
-    start_time = time.time()
     middle = args.output_size // 2
     last = args.output_size
     pred_middle = []
     pred_last = []
     n = input_len // args.batch
+    start_time = time.time()
     if n > 0:  # 如果预测数量>=批量(分批预测)
         for i in range(n):
             batch = input_batch[i * args.batch:(i + 1) * args.batch]
