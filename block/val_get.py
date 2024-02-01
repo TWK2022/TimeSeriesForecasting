@@ -21,7 +21,7 @@ def val_get(args, val_dataloader, model, loss, data_dict, ema):
             true.extend(true_batch.cpu())
             # tqdm
             tqdm_show.set_postfix({'val_loss': loss_batch.item()})  # 添加loss显示
-            tqdm_show.update(args.device_number)  # 更新进度条
+            tqdm_show.update(1)  # 更新进度条
         # tqdm
         tqdm_show.close()
         # 计算指标
