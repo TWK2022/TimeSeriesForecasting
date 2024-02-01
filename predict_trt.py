@@ -77,7 +77,7 @@ def draw_predict(last_data, last_output):
         plt.close()
 
 
-def test_tensorrt():
+def predict_trt():
     # 加载模型
     logger = tensorrt.Logger(tensorrt.Logger.WARNING)  # 创建日志记录信息
     with tensorrt.Runtime(logger) as runtime, open(args.model_path, "rb") as f:
@@ -132,4 +132,4 @@ def test_tensorrt():
 
 
 if __name__ == '__main__':
-    test_tensorrt()
+    predict_trt()
