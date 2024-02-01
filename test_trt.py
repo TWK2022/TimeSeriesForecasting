@@ -106,7 +106,6 @@ def test_tensorrt():
     input_len = input_data.shape[1] - args.input_size - args.output_size + 1
     input_batch = [input_data[:, _:_ + args.input_size] for _ in range(input_len)]
     input_batch = np.stack(input_batch, axis=0).reshape(input_len, -1)
-    end_time = time.time()
     # 推理
     start_time = time.time()
     middle = args.output_size // 2
