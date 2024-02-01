@@ -107,7 +107,7 @@ def test_pt():
                                              shuffle=False, drop_last=False, pin_memory=False,
                                              num_workers=args.num_worker)
     with torch.no_grad():
-        for item, batch in enumerate(dataloader):
+        for index, batch in enumerate(dataloader):
             batch = batch.to(args.device)
             pred_batch = model(batch).cpu().numpy()
             pred_middle.append(pred_batch[:, :, middle - 1])
