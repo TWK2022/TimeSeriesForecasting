@@ -3,13 +3,13 @@ import torch
 from block.metric_get import metric
 
 
-def val_get(args, val_dataloader, model, loss, data_dict, ema):
+def val_get(args, val_dataloader, model, loss, data_dict, ema, data_len):
     with torch.no_grad():
         model = ema.ema if args.ema else model.eval()
         pred = []
         true = []
         val_loss = 0
-        tqdm_len = (data_dict['val_input'].shape[1] - args.input_size - args.output_size + 1) // args.batch
+        tqdm_len = (data_len - args.input_size - args.output_size + 1) // args.batch
         tqdm_show = tqdm.tqdm(total=tqdm_len)
         for index, (series_batch, true_batch) in enumerate(val_dataloader):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
