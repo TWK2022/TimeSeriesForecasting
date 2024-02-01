@@ -11,15 +11,15 @@
 >├── 数据集路径：data_path(.csv)
 ### 3，run.py
 >模型训练时运行该文件，argparse中有对每个参数的说明
-### 4，test_pt.py
+### 4，predict_pt.py
 >使用训练好的pt模型预测
 ### 5. export_onnx.py
 >将pt模型导出为onnx模型
-### 6. test_onnx.py
+### 6. predict_onnx.py
 >使用导出的onnx模型预测
 ### 7，export_trt_record
 >文档中有onnx模型导出为tensort模型的详细说明
-### 8，test_trt.py
+### 8，predict_trt.py
 >使用导出的trt模型预测
 ### 其他
 >github链接：https://github.com/TWK2022/TimeSeriesForecasting  
