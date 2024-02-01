@@ -19,7 +19,7 @@ parser.add_argument('--input_size', default=512, type=int, help='|输入长度|'
 parser.add_argument('--output_size', default=256, type=int, help='|输出长度|')
 parser.add_argument('--batch', default=64, type=int, help='|批量大小|')
 parser.add_argument('--device', default='cuda', type=str, help='|推理设备|')
-parser.add_argument('--num_worker', default=0, type=int, help='|CPU在处理数据时使用的进程数，0表示只有一个主进程，一般为0、2、4、8|')
+parser.add_argument('--num_worker', default=0, type=int, help='|CPU处理数据的进程数，0只有一个主进程，一般为0、2、4、8|')
 parser.add_argument('--plot_len', default=1000, type=int, help='|画图长度，取数据的倒数plot_len个|')
 args = parser.parse_args()
 args.input_column = read_column(args.input_column)  # column处理
