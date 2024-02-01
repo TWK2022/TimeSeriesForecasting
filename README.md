@@ -13,9 +13,9 @@
 >模型训练时运行该文件，argparse中有对每个参数的说明
 ### 4，predict_pt.py
 >使用训练好的pt模型预测
-### 5. export_onnx.py
+### 5，export_onnx.py
 >将pt模型导出为onnx模型
-### 6. predict_onnx.py
+### 6，predict_onnx.py
 >使用导出的onnx模型预测
 ### 7，export_trt_record
 >文档中有onnx模型导出为tensort模型的详细说明
