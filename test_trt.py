@@ -102,13 +102,11 @@ def test_tensorrt():
     last_data = output_data[:, -args.input_size - args.output_size:]
     output_data = output_data[:, -args.plot_len:]  # 限定长度方便画图
     # 数据处理
-    start_time = time.time()
     input_data = input_data.astype(np.float16 if args.float16 else np.float32)
     input_len = input_data.shape[1] - args.input_size - args.output_size + 1
     input_batch = [input_data[:, _:_ + args.input_size] for _ in range(input_len)]
     input_batch = np.stack(input_batch, axis=0).reshape(input_len, -1)
     end_time = time.time()
-    print('| 数据处理成功:{} 耗时:{:.4f} |'.format(args.data_path, end_time - start_time))
     # 推理
     start_time = time.time()
     middle = args.output_size // 2
