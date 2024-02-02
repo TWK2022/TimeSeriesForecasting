@@ -129,6 +129,7 @@ class torch_dataset(torch.utils.data.Dataset):
         self.input_size = args.input_size
         self.output_size = args.output_size
         self.input_data = input_data
+        self.device = args.device
 
     def __len__(self):
         return self.input_data.shape[1] - self.input_size - self.output_size + 1
@@ -136,7 +137,8 @@ class torch_dataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         boundary = index + self.input_size
         series = self.input_data[:, index:boundary]  # 输入数据
-        series = torch.tensor(series, dtype=torch.float32)  # 转换为tensor
+        series = torch.tensor(series)  # 转换为tensor
+        series = series.type(torch.float16) if self.device == 'cuda' else series.type(torch.float32)
         return series
 
 
