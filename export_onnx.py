@@ -4,7 +4,7 @@ import argparse
 from model.layer import deploy
 
 # -------------------------------------------------------------------------------------------------------------------- #
-parser = argparse.ArgumentParser(description='将pt模型字典中的模型转为onnx，同时导出类别信息')
+parser = argparse.ArgumentParser(description='|将pt模型转为onnx，同时导出类别信息|')
 parser.add_argument('--weight', default='best.pt', type=str, help='|模型位置|')
 parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
 parser.add_argument('--input_column_num', default=7, type=int, help='|输入的变量数量|')
@@ -16,9 +16,9 @@ args = parser.parse_args()
 args.weight = args.weight.split('.')[0] + '.pt'
 args.save_name = args.weight.split('.')[0] + '.onnx'
 # -------------------------------------------------------------------------------------------------------------------- #
-assert os.path.exists(args.weight), f'没有找到模型{args.weight}'
+assert os.path.exists(args.weight), f'! 没有找到模型{args.weight} !'
 if args.float16:
-    assert torch.cuda.is_available(), 'cuda不可用，因此无法使用float16'
+    assert torch.cuda.is_available(), '! cuda不可用，无法使用float16 !'
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
