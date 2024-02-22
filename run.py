@@ -14,7 +14,6 @@ from block.train_get import train_get
 # master_port为GPU之间的通讯端口，空闲的即可
 # n为GPU数量
 # -------------------------------------------------------------------------------------------------------------------- #
-# 设置
 parser = argparse.ArgumentParser(description='|时间序列预测|')
 parser.add_argument('--wandb', default=False, type=bool, help='|是否使用wandb可视化|')
 parser.add_argument('--wandb_project', default='TimeSeriesForecasting', type=str, help='|wandb项目名称|')
@@ -72,7 +71,6 @@ if args.distributed:
     torch.distributed.init_process_group(backend="nccl")
     args.device = torch.device("cuda", args.local_rank)
 # -------------------------------------------------------------------------------------------------------------------- #
-# 初步检查
 if args.local_rank == 0:
     assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !'
     if os.path.exists(args.weight):
@@ -81,7 +79,6 @@ if args.local_rank == 0:
         assert os.path.exists(f'model/{args.model}.py'), f'! 没有自定义模型:{args.model} !'
         print(f'| 创建自定义模型:{args.model} | 型号:{args.model_type} |')
 # -------------------------------------------------------------------------------------------------------------------- #
-# 程序
 if __name__ == '__main__':
     # 摘要
     print(f'| args:{args} |') if args.local_rank == 0 else None
