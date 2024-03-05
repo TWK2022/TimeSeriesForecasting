@@ -61,8 +61,8 @@ def draw_predict(last_data, last_output):
     true = last_data[:, -args.output_size - args.input_size:]
     pred = pred[:, -args.output_size - args.input_size:]
     input_cut = max(args.input_size - 50, 0)  # 防止输入序列太长时画图不好看
-    true = true[input_cut:]
-    pred = pred[input_cut:]
+    true = true[:, input_cut:]
+    pred = pred[:, input_cut:]
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last_predict'
         plt.title(name)
