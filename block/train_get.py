@@ -99,8 +99,8 @@ def train_get(args, data_dict, model_dict, loss):
             model_dict['val_mae'] = mae
             model_dict['val_mse'] = mse
             torch.save(model_dict, 'last.pt')  # 保存最后一次训练的模型
-            if mse < 1 and mse < model_dict['standard']:
-                model_dict['standard'] = mse
+            if val_loss < 1 and val_loss < model_dict['standard']:
+                model_dict['standard'] = val_loss
                 torch.save(model_dict, args.save_path)  # 保存最佳模型
                 print(f'\n| 保存最佳模型:{args.save_path} | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} |'
                       f' val_mse:{mse:.4f} |\n')
