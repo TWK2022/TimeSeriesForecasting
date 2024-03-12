@@ -37,7 +37,7 @@ class data_prepare:
         if self.z_score_cycle == -1:
             self.max_cycle = train_input.shape[1]
         else:
-            assert self.z_score_cycle <= train_input.shape[1], f'周期设置不能大于训练集长度'
+            assert self.z_score_cycle <= train_input.shape[1], f'! 周期设置不能大于训练集长度 !'
             self.max_cycle = train_input.shape[1] // self.z_score_cycle * self.z_score_cycle
         # 数据处理
         train_input, val_input, mean_input, std_input = self._z_score(train_input, val_input, self.input_column)
