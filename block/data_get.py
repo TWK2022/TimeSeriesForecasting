@@ -9,12 +9,12 @@ def data_get(args):
 
 class data_prepare:
     def __init__(self, args):
+        self.data_path = args.data_path
         self.input_column = args.input_column
         self.output_column = args.output_column
         self.input_size = args.input_size
         self.output_size = args.output_size
         self.divide = args.divide
-        self.data_path = args.data_path
         self.z_score_cycle = args.z_score_cycle
 
     def load(self):
