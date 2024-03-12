@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from block.util import read_column
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 设置
 parser = argparse.ArgumentParser(description='|tensorrt模型推理|')
 parser.add_argument('--model_path', default='best.trt', type=str, help='|trt模型位置|')
 parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据路径|')
@@ -26,7 +25,6 @@ args.input_column = read_column(args.input_column)  # column处理
 args.output_column = read_column(args.output_column)  # column处理
 args.save_path = 'save_image'
 # -------------------------------------------------------------------------------------------------------------------- #
-# 初步检查
 assert os.path.exists(args.model_path), f'! model_path不存在:{args.model_path} !'
 assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !'
 if not os.path.exists(args.save_path):
@@ -34,7 +32,6 @@ if not os.path.exists(args.save_path):
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 程序
 def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true为真实值，pred和true长度不相等
     # 画图(所有预测中值和预测末值)
     middle_plot = np.zeros(true.shape)
@@ -64,8 +61,8 @@ def draw_predict(last_data, last_output):
     true = last_data[:, -args.output_size - args.input_size:]
     pred = pred[:, -args.output_size - args.input_size:]
     input_cut = max(args.input_size - 50, 0)  # 防止输入序列太长时画图不好看
-    true = true[input_cut:]
-    pred = pred[input_cut:]
+    true = true[:, input_cut:]
+    pred = pred[:, input_cut:]
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last_predict'
         plt.title(name)

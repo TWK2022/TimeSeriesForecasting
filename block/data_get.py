@@ -9,12 +9,12 @@ def data_get(args):
 
 class data_prepare:
     def __init__(self, args):
+        self.data_path = args.data_path
         self.input_column = args.input_column
         self.output_column = args.output_column
         self.input_size = args.input_size
         self.output_size = args.output_size
         self.divide = args.divide
-        self.data_path = args.data_path
         self.z_score_cycle = args.z_score_cycle
 
     def load(self):
@@ -37,7 +37,7 @@ class data_prepare:
         if self.z_score_cycle == -1:
             self.max_cycle = train_input.shape[1]
         else:
-            assert self.z_score_cycle <= train_input.shape[1], f'周期设置不能大于训练集长度'
+            assert self.z_score_cycle <= train_input.shape[1], f'! 周期设置不能大于训练集长度 !'
             self.max_cycle = train_input.shape[1] // self.z_score_cycle * self.z_score_cycle
         # 数据处理
         train_input, val_input, mean_input, std_input = self._z_score(train_input, val_input, self.input_column)

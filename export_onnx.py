@@ -4,11 +4,10 @@ import argparse
 from model.layer import deploy
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 设置
-parser = argparse.ArgumentParser(description='将pt模型字典中的模型转为onnx，同时导出类别信息')
+parser = argparse.ArgumentParser(description='|将pt模型转为onnx，同时导出类别信息|')
 parser.add_argument('--weight', default='best.pt', type=str, help='|模型位置|')
-parser.add_argument('--input_size', default=128, type=int, help='|输入的长度|')
-parser.add_argument('--input_column_num', default=7, type=int, help='|输入的变量数量|')
+parser.add_argument('--input_size', default=512, type=int, help='|输入的长度|')
+parser.add_argument('--input_column_num', default=2, type=int, help='|输入的变量数量|')
 parser.add_argument('--batch', default=0, type=int, help='|输入图片批量，0为动态|')
 parser.add_argument('--sim', default=True, type=bool, help='|使用onnxsim压缩简化模型|')
 parser.add_argument('--device', default='cuda', type=str, help='|在哪个设备上加载模型|')
@@ -17,14 +16,12 @@ args = parser.parse_args()
 args.weight = args.weight.split('.')[0] + '.pt'
 args.save_name = args.weight.split('.')[0] + '.onnx'
 # -------------------------------------------------------------------------------------------------------------------- #
-# 初步检查
-assert os.path.exists(args.weight), f'没有找到模型{args.weight}'
+assert os.path.exists(args.weight), f'! 没有找到模型{args.weight} !'
 if args.float16:
-    assert torch.cuda.is_available(), 'cuda不可用，因此无法使用float16'
+    assert torch.cuda.is_available(), '! cuda不可用，无法使用float16 !'
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 程序
 def export_onnx():
     model_dict = torch.load(args.weight, map_location='cpu')
     model = model_dict['model']

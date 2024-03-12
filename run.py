@@ -9,22 +9,21 @@ from block.model_get import model_get
 from block.train_get import train_get
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 分布式训练：
+# 分布式数据并行训练：
 # python -m torch.distributed.launch --master_port 9999 --nproc_per_node n run.py --distributed True
 # master_port为GPU之间的通讯端口，空闲的即可
 # n为GPU数量
 # -------------------------------------------------------------------------------------------------------------------- #
-# 设置
 parser = argparse.ArgumentParser(description='|时间序列预测|')
 parser.add_argument('--wandb', default=False, type=bool, help='|是否使用wandb可视化|')
 parser.add_argument('--wandb_project', default='TimeSeriesForecasting', type=str, help='|wandb项目名称|')
 parser.add_argument('--wandb_name', default='train', type=str, help='|wandb项目中的训练名称|')
 parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据位置|')
-parser.add_argument('--divide', default='9,1', type=str, help='|训练集和验证集划分比例|')
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量，可传入.txt|')
-parser.add_argument('--input_size', default=256, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=128, type=int, help='|输出长度|')
+parser.add_argument('--input_size', default=512, type=int, help='|输入长度|')
+parser.add_argument('--output_size', default=256, type=int, help='|输出长度|')
+parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例|')
 parser.add_argument('--z_score_cycle', default=-1, type=int, help='|以训练集的周期长度计算mean和std，-1时用所有训练集|')
 parser.add_argument('--weight', default='last.pt', type=str, help='|已有模型的位置，如果没找到模型则会创建新模型|')
 parser.add_argument('--model', default='linear_conv', type=str, help='|自定义模型选择|')
@@ -69,10 +68,9 @@ if args.amp:
     args.amp = torch.cuda.amp.GradScaler()
 # 分布式训练
 if args.distributed:
-    torch.distributed.init_process_group(backend="nccl")
+    torch.distributed.init_process_group(backend='nccl')
     args.device = torch.device("cuda", args.local_rank)
 # -------------------------------------------------------------------------------------------------------------------- #
-# 初步检查
 if args.local_rank == 0:
     assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !'
     if os.path.exists(args.weight):
@@ -81,7 +79,6 @@ if args.local_rank == 0:
         assert os.path.exists(f'model/{args.model}.py'), f'! 没有自定义模型:{args.model} !'
         print(f'| 创建自定义模型:{args.model} | 型号:{args.model_type} |')
 # -------------------------------------------------------------------------------------------------------------------- #
-# 程序
 if __name__ == '__main__':
     # 摘要
     print(f'| args:{args} |') if args.local_rank == 0 else None

@@ -9,7 +9,6 @@ from model.layer import deploy
 from block.util import read_column
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 设置
 parser = argparse.ArgumentParser(description='|pt模型推理|')
 parser.add_argument('--model_path', default='best.pt', type=str, help='|pt模型位置|')
 parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据路径|')
@@ -26,7 +25,6 @@ args.input_column = read_column(args.input_column)  # column处理
 args.output_column = read_column(args.output_column)  # column处理
 args.save_path = 'save_image'
 # -------------------------------------------------------------------------------------------------------------------- #
-# 初步检查
 assert os.path.exists(args.model_path), f'! model_path不存在:{args.model_path} !'
 assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !'
 if not os.path.exists(args.save_path):
@@ -34,7 +32,6 @@ if not os.path.exists(args.save_path):
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 程序
 def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true为真实值，pred和true长度不相等
     # 画图(所有预测中值和预测末值)
     middle_plot = np.zeros(true.shape)
@@ -129,6 +126,7 @@ class torch_dataset(torch.utils.data.Dataset):
         self.input_size = args.input_size
         self.output_size = args.output_size
         self.input_data = input_data
+        self.device = args.device
 
     def __len__(self):
         return self.input_data.shape[1] - self.input_size - self.output_size + 1
@@ -136,7 +134,8 @@ class torch_dataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         boundary = index + self.input_size
         series = self.input_data[:, index:boundary]  # 输入数据
-        series = torch.tensor(series, dtype=torch.float32)  # 转换为tensor
+        series = torch.tensor(series)  # 转换为tensor
+        series = series.type(torch.float16) if self.device == 'cuda' else series.type(torch.float32)
         return series
 
 
