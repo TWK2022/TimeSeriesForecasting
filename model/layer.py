@@ -1,6 +1,22 @@
 import torch
 
 
+class lbsd(torch.nn.Module):  # in_->out_
+    def __init__(self, in_, out_, dropout):
+        super().__init__()
+        self.linear = torch.nn.Linear(in_, out_, bias=False)
+        self.bn = torch.nn.BatchNorm1d(out_, track_running_stats=False)
+        self.silu = torch.nn.SiLU()
+        self.dropout = torch.nn.Dropout(dropout)
+
+    def forward(self, x):
+        x = self.linear(x)
+        x = self.bn(x)
+        x = self.silu(x)
+        x = self.dropout(x)
+        return x
+
+
 class cbs(torch.nn.Module):
     def __init__(self, in_, out_, kernel_size, stride):
         super().__init__()
