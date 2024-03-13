@@ -18,7 +18,6 @@ import pandas as pd
 # wind_data = WindPy.w.wsd('600000.SH', 'open', '2010-01-01', '2010-02-01', 'Currency=CNY;PriceAdj=F')
 # assert False
 # -------------------------------------------------------------------------------------------------------------------- #
-# 设置
 parser = argparse.ArgumentParser(description='|通过WindPy获取最新股票数据以补全数据库|')
 parser.add_argument('--save_path', default='dataset', type=str, help='|数据保存的目录|')
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
@@ -30,7 +29,6 @@ args = parser.parse_args()
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 程序
 def read_yaml(path):  # 读取yaml文件
     with open(path, 'r', encoding='utf-8')as f:
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
@@ -102,7 +100,6 @@ def get_data(number_dict, variable_dict, start_time, end_time, save_path, divide
             df.to_csv(file_name, index=True, header=True)
 
 
-# 程序args
 if __name__ == '__main__':
     number_dict = read_yaml(args.number)  # 读取选用的股票号
     variable_dict = read_yaml(args.variable)  # 读取选用的变量
