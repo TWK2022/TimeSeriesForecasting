@@ -11,7 +11,7 @@ def train_get(args, data_dict, model_dict, loss):
     # 学习率
     optimizer = adam(args.regularization, args.r_value, model.parameters(), lr=args.lr_start, betas=(0.937, 0.999))
     optimizer.load_state_dict(model_dict['optimizer_state_dict']) if model_dict['optimizer_state_dict'] else None
-    step_epoch = ((data_dict['train_input'].shape[1] - args.input_size - args.output_size + 1)
+    step_epoch = ((len(data_dict['train_input']) - args.input_size - args.output_size + 1)
                   // args.batch // args.device_number * args.device_number)  # 每轮的步数
     optimizer_adjust = lr_adjust(args, step_epoch, model_dict['epoch_finished'])  # 学习率调整函数
     optimizer = optimizer_adjust(optimizer)  # 学习率初始化
@@ -82,8 +82,7 @@ def train_get(args, data_dict, model_dict, loss):
         torch.cuda.empty_cache()
         # 验证
         if args.local_rank == 0:  # 分布式时只验证一次
-            val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict, ema,
-                                         data_dict['val_input'].shape[1])
+            val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict, ema, len(data_dict['val_input']))
         # 保存
         if args.local_rank == 0:  # 分布式时只保存一次
             model_dict['model'] = model.module if args.distributed else model
@@ -121,12 +120,12 @@ class torch_dataset(torch.utils.data.Dataset):
         self.output_size = args.output_size
 
     def __len__(self):
-        return self.input_data.shape[1] - self.input_size - self.output_size + 1
+        return len(self.input_data) - self.input_size - self.output_size + 1
 
     def __getitem__(self, index):
         boundary = index + self.input_size
-        series = self.input_data[:, index:boundary]  # 输入数据
-        series = torch.tensor(series, dtype=torch.float32)  # 转换为tensor
-        label = self.output_data[:, boundary:boundary + self.output_size]  # 输出标签
-        label = torch.tensor(label, dtype=torch.float32)  # 转换为tensor
+        series = self.input_data[index:boundary]  # 输入数据
+        series = torch.tensor(series.T, dtype=torch.float32)  # 转换为tensor
+        label = self.output_data[boundary:boundary + self.output_size]  # 输出标签
+        label = torch.tensor(label.T, dtype=torch.float32)  # 转换为tensor
         return series, label
