@@ -89,9 +89,9 @@ def predict_pt():
         df = pd.read_csv(args.data_path, encoding='utf-8')
     except:
         df = pd.read_csv(args.data_path, encoding='gbk')
-    input_data = np.array(df[args.input_column].astype(np.float32)).transpose(1, 0)
+    input_data = np.array(df[args.input_column]).astype(np.float32).T
     input_data = input_data[:, -args.plot_len - args.input_size:]  # 限定长度方便画图
-    output_data = np.array(df[args.output_column].astype(np.float32)).transpose(1, 0)
+    output_data = np.array(df[args.output_column]).astype(np.float32).T
     last_data = output_data[:, -args.input_size - args.output_size:]
     output_data = output_data[:, -args.plot_len - args.input_size:]  # 限定长度方便画图
     # 推理
