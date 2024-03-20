@@ -18,7 +18,6 @@ def model_get(args):
         model_dict['optimizer_state_dict'] = None  # 学习率参数
         model_dict['ema_updates'] = 0  # ema参数
         model_dict['standard'] = 999  # 评价指标
-    model_dict['model'](torch.rand(args.batch, len(args.input_column), args.input_size))  # 检查
     return model_dict
 
 
