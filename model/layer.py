@@ -1,21 +1,21 @@
 import torch
 
 
-class llg(torch.nn.Module):  # (batch,dim,in_) -> (batch,dim,out_)
+class llg(torch.nn.Module):
     def __init__(self, in_, out_):
         super().__init__()
         self.linear = torch.nn.Linear(in_, out_, bias=False)
         self.ln = torch.nn.LayerNorm(out_)
         self.gelu = torch.nn.GELU()
 
-    def forward(self, x):
+    def forward(self, x):  # (batch,dim,in_) -> (batch,dim,out_)
         x = self.linear(x)
         x = self.ln(x)
         x = self.gelu(x)
         return x
 
 
-class clg(torch.nn.Module):  # (batch,in_,feature) -> (batch,out_,feature)
+class clg(torch.nn.Module):
     def __init__(self, in_, out_, feature, kernel_size, stride):
         super().__init__()
         self.conv1d = torch.nn.Conv1d(in_, out_, kernel_size=kernel_size, stride=stride, padding=(kernel_size - 1) // 2,
@@ -23,7 +23,7 @@ class clg(torch.nn.Module):  # (batch,in_,feature) -> (batch,out_,feature)
         self.ln = torch.nn.LayerNorm(feature)
         self.gelu = torch.nn.GELU()
 
-    def forward(self, x):
+    def forward(self, x):  # (batch,in_,feature) -> (batch,out_,feature)
         x = self.conv1d(x)
         x = self.ln(x)
         x = self.gelu(x)
@@ -41,14 +41,14 @@ class concat(torch.nn.Module):
         return x
 
 
-class split_linear(torch.nn.Module):  # (batch,in_,feature) -> (batch,in_,feature)
+class split_linear(torch.nn.Module):
     def __init__(self, in_, feature):
         super().__init__()
         self.input_dim = in_
         for i in range(self.input_dim):
             exec(f'self.linear{i} = torch.nn.Linear(feature, feature, bias=False)')
 
-    def forward(self, x):
+    def forward(self, x):  # (batch,in_,feature) -> (batch,in_,feature)
         x_list = []
         for i in range(self.input_dim):
             x_list.append(eval(f'self.linear{i}')(x[:, i, :]))
