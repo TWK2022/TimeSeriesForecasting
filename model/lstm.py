@@ -15,8 +15,7 @@ class lstm(torch.nn.Module):
         # 网络结构
         self.lstm0 = torch.nn.LSTM(input_size=input_size, hidden_size=output_size, num_layers=n, dropout=0.2)
 
-    def forward(self, x):
-        # 输入(batch,input_dim,input_size)
+    def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         x, (h_n, c_n) = self.lstm0(x)
         return x
 
