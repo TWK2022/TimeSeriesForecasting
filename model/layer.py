@@ -1,34 +1,32 @@
 import torch
 
 
-class lbsd(torch.nn.Module):  # in_->out_
-    def __init__(self, in_, out_, dropout):
+class llg(torch.nn.Module):  # (batch,dim,in_) -> (batch,dim,out_)
+    def __init__(self, in_, out_):
         super().__init__()
         self.linear = torch.nn.Linear(in_, out_, bias=False)
-        self.bn = torch.nn.BatchNorm1d(out_, track_running_stats=False)
-        self.silu = torch.nn.SiLU()
-        self.dropout = torch.nn.Dropout(dropout)
+        self.ln = torch.nn.LayerNorm(out_)
+        self.gelu = torch.nn.GELU()
 
     def forward(self, x):
         x = self.linear(x)
-        x = self.bn(x)
-        x = self.silu(x)
-        x = self.dropout(x)
+        x = self.ln(x)
+        x = self.gelu(x)
         return x
 
 
-class cbs(torch.nn.Module):
-    def __init__(self, in_, out_, kernel_size, stride):
+class clg(torch.nn.Module):  # (batch,in_,feature) -> (batch,out_,feature)
+    def __init__(self, in_, out_, feature, kernel_size, stride):
         super().__init__()
-        self.conv = torch.nn.Conv1d(in_, out_, kernel_size=kernel_size, stride=stride, padding=(kernel_size - 1) // 2,
-                                    bias=False)
-        self.bn = torch.nn.BatchNorm1d(out_)
-        self.silu = torch.nn.SiLU()
+        self.conv1d = torch.nn.Conv1d(in_, out_, kernel_size=kernel_size, stride=stride, padding=(kernel_size - 1) // 2,
+                                      bias=False)
+        self.ln = torch.nn.LayerNorm(feature)
+        self.gelu = torch.nn.GELU()
 
     def forward(self, x):
-        x = self.conv(x)
-        x = self.bn(x)
-        x = self.silu(x)
+        x = self.conv1d(x)
+        x = self.ln(x)
+        x = self.gelu(x)
         return x
 
 
@@ -43,46 +41,12 @@ class concat(torch.nn.Module):
         return x
 
 
-class residual(torch.nn.Module):  # in_->in_，len->len
-    def __init__(self, in_):
+class split_linear(torch.nn.Module):  # (batch,in_,feature) -> (batch,in_,feature)
+    def __init__(self, in_, feature):
         super().__init__()
-        self.cbs0 = cbs(in_, in_, kernel_size=3, stride=1)
-        self.cbs1 = cbs(in_, in_, kernel_size=3, stride=1)
-        self.cbs2 = cbs(in_, in_, kernel_size=3, stride=1)
-
-    def forward(self, x):
-        x0 = self.cbs0(x)
-        x0 = self.cbs1(x0)
-        x0 = self.cbs2(x0)
-        return x + x0
-
-
-class elan(torch.nn.Module):  # in_->out_，len->len
-    def __init__(self, in_, n):
-        super().__init__()
-        self.cbs0 = cbs(in_, in_ // 2, kernel_size=1, stride=1)
-        self.cbs1 = cbs(in_, in_ // 2, kernel_size=1, stride=1)
-        self.sequential2 = torch.nn.Sequential(*(cbs(in_ // 2, in_ // 2, kernel_size=3, stride=1) for _ in range(n)))
-        self.sequential3 = torch.nn.Sequential(*(cbs(in_ // 2, in_ // 2, kernel_size=3, stride=1) for _ in range(n)))
-        self.concat4 = torch.concat
-        self.cbs5 = cbs(2 * in_, 2 * in_, kernel_size=1, stride=1)
-
-    def forward(self, x):
-        x0 = self.cbs0(x)
-        x1 = self.cbs1(x)
-        x2 = self.sequential2(x1)
-        x3 = self.sequential3(x2)
-        x = self.concat4([x0, x1, x2, x3], dim=1)
-        x = self.cbs5(x)
-        return x
-
-
-class split_linear(torch.nn.Module):
-    def __init__(self, input_dim, input_size):  # in_->in_，len->len
-        super().__init__()
-        self.input_dim = input_dim
+        self.input_dim = in_
         for i in range(self.input_dim):
-            exec(f'self.linear{i} = torch.nn.Linear(input_size, input_size, bias=False)')
+            exec(f'self.linear{i} = torch.nn.Linear(feature, feature, bias=False)')
 
     def forward(self, x):
         x_list = []
@@ -92,31 +56,33 @@ class split_linear(torch.nn.Module):
         return x
 
 
-class series_encode(torch.nn.Module):
+class series_encode(torch.nn.Module):  # 归一化
     def __init__(self, mean_input, std_input):
         super().__init__()
         self.mean_input = mean_input
         self.std_input = std_input
 
     def forward(self, x):
-        for i in range(len(self.mean_input)):
-            x[:, i] = (x[:, i] - self.mean_input[i]) / self.std_input[i]
+        x = x.permute(0, 2, 1)
+        x = (x - self.mean_input) / self.std_input
+        x = x.permute(0, 2, 1)
         return x
 
 
-class series_decode(torch.nn.Module):
+class series_decode(torch.nn.Module):  # 反归一化
     def __init__(self, mean_output, std_output):
         super().__init__()
         self.mean_output = mean_output
         self.std_output = std_output
 
     def forward(self, x):
-        for i in range(len(self.mean_output)):
-            x[:, i] = x[:, i] * self.std_output[i] + self.mean_output[i]
+        x = x.permute(0, 2, 1)
+        x = x * self.std_output + self.mean_output
+        x = x.permute(0, 2, 1)
         return x
 
 
-class deploy(torch.nn.Module):
+class deploy(torch.nn.Module):  # 对输入进行归一化，对输出进行反归一化
     def __init__(self, model, mean_input, mean_output, std_input, std_output):
         super().__init__()
         self.series_encode = series_encode(mean_input, std_input)
