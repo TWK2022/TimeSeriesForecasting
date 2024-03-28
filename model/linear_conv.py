@@ -17,8 +17,7 @@ class linear_conv(torch.nn.Module):
         self.l3 = clg(input_dim, 8 * input_dim, output_size, 1, 1)
         self.l4 = torch.nn.Conv1d(8 * input_dim, output_dim, kernel_size=1, stride=1)
 
-    def forward(self, x):
-        # 输入(batch,input_dim,input_size)
+    def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         series_last = x[:, :, -1:]
         x = x - series_last
         x = self.l0(x)
