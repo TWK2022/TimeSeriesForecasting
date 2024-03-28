@@ -37,13 +37,13 @@ class data_prepare:
         if self.z_score_cycle == -1:
             max_cycle = input_data.shape[0]
         else:
-            assert self.z_score_cycle <= input_data.shape[0], f'! 周期设置不能大于训练集长度 !'
-            max_cycle = input_data.shape[0] // self.z_score_cycle * self.z_score_cycle
+            assert self.z_score_cycle <= len(train_input), f'! 周期设置不能大于训练集长度 !'
+            max_cycle = train_input.shape[0] // self.z_score_cycle * self.z_score_cycle
         # 归一化
-        mean_input = np.mean(input_data[0:max_cycle], axis=0)
-        mean_output = np.mean(output_data[0:max_cycle], axis=0)
-        std_input = np.std(input_data[0:max_cycle], axis=0)
-        std_output = np.std(output_data[0:max_cycle], axis=0)
+        mean_input = np.mean(train_input[0:max_cycle], axis=0)
+        mean_output = np.mean(train_output[0:max_cycle], axis=0)
+        std_input = np.std(train_input[0:max_cycle], axis=0)
+        std_output = np.std(train_output[0:max_cycle], axis=0)
         train_input = (train_input - mean_input) / std_input
         val_input = (val_input - mean_input) / std_input
         train_output = (train_output - mean_output) / std_output
