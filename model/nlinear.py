@@ -10,11 +10,11 @@ class nlinear(torch.nn.Module):
         output_dim = len(args.output_column)
         input_size = args.input_size
         output_size = args.output_size
+        assert input_dim == output_dim, f'! 单变量自标签 !'
         # 网络结构
         self.linear = torch.nn.Linear(input_size, output_size)
 
-    def forward(self, x):
-        # 输入(batch,input_dim,input_size)
+    def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         series_last = x[:, :, -1:]
         x = x - series_last
         x = self.linear(x)
