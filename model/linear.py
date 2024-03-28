@@ -5,16 +5,13 @@ import torch
 class linear(torch.nn.Module):
     def __init__(self, args):
         super().__init__()
-        input_dim = len(args.input_column)
-        output_dim = len(args.output_column)
         input_size = args.input_size
         output_size = args.output_size
         # 网络结构
         self.linear = torch.nn.Linear(input_size, output_size)
 
-    def forward(self, x):
-        # 输入(batch,input_dim,input_size)
-        x = self.linear(x)  # 各dim之间是分开运算的
+    def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
+        x = self.linear(x)
         return x
 
 
