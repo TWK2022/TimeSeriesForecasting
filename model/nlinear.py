@@ -10,7 +10,6 @@ class nlinear(torch.nn.Module):
         output_dim = len(args.output_column)
         input_size = args.input_size
         output_size = args.output_size
-        assert input_dim == output_dim, f'! 单变量自标签 !'
         # 网络结构
         self.linear = torch.nn.Linear(input_size, output_size)
 
