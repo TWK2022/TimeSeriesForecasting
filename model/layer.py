@@ -1,14 +1,15 @@
+import math
 import torch
 
 
 class llg(torch.nn.Module):
-    def __init__(self, in_, out_):
+    def __init__(self, feature_in, feature_out):
         super().__init__()
-        self.linear = torch.nn.Linear(in_, out_, bias=False)
-        self.ln = torch.nn.LayerNorm(out_)
+        self.linear = torch.nn.Linear(feature_in, feature_out, bias=False)
+        self.ln = torch.nn.LayerNorm(feature_out)
         self.gelu = torch.nn.GELU()
 
-    def forward(self, x):  # (batch,dim,in_) -> (batch,dim,out_)
+    def forward(self, x):  # (batch,dim,feature_in) -> (batch,dim,feature_out)
         x = self.linear(x)
         x = self.ln(x)
         x = self.gelu(x)
@@ -16,18 +17,47 @@ class llg(torch.nn.Module):
 
 
 class clg(torch.nn.Module):
-    def __init__(self, in_, out_, feature, kernel_size, stride):
+    def __init__(self, dim_in, dim_out, feature, kernel_size, stride):
         super().__init__()
-        self.conv1d = torch.nn.Conv1d(in_, out_, kernel_size=kernel_size, stride=stride, padding=(kernel_size - 1) // 2,
+        self.conv1d = torch.nn.Conv1d(dim_in, dim_out, kernel_size=kernel_size, stride=stride,
+                                      padding=(kernel_size - 1) // 2,
                                       bias=False)
         self.ln = torch.nn.LayerNorm(feature)
         self.gelu = torch.nn.GELU()
 
-    def forward(self, x):  # (batch,in_,feature) -> (batch,out_,feature)
+    def forward(self, x):  # (batch,dim_in,feature) -> (batch,dim_out,feature)
         x = self.conv1d(x)
         x = self.ln(x)
         x = self.gelu(x)
         return x
+
+
+class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
+    def __init__(self, feature, head, dropout=0.2):
+        super(attention, self).__init__()
+        self.head = head
+        self.divisor = math.sqrt(feature // self.head)
+        self.query = torch.nn.Linear(feature, feature)
+        self.key = torch.nn.Linear(feature, feature)
+        self.value = torch.nn.Linear(feature, feature)
+        self.softmax = torch.nn.Softmax(dim=-1)
+        self.dropout = torch.nn.Dropout(dropout)
+        self.linear = torch.nn.Linear(feature, feature)
+
+    def forward(self, query, key, value):  # 3*(batch,dim,feature) -> (batch,dim,feature)，key和value的dim可以与query不同
+        batch, dim, feature = query.shape
+        _, dim2, _ = key.shape
+        query = self.query(query).reshape(batch, dim, self.head, -1).permute(0, 2, 1, 3)  # (batch,head,dim,-1)
+        key = self.key(key).reshape(batch, dim2, self.head, -1).permute(0, 2, 3, 1)  # (batch,head,-1,dim2)
+        value = self.value(value).reshape(batch, dim2, self.head, -1).permute(0, 2, 1, 3)  # (batch,head,dim2,-1)
+        x = torch.matmul(query, key)  # (batch,head,dim,dim2)
+        x = x / self.divisor
+        x = self.softmax(x)
+        x = self.dropout(x)
+        x = torch.matmul(x, value)  # (batch,head,dim,-1)
+        x = x.permute(0, 2, 1, 3).reshape(batch, dim, feature)  # (batch,dim,feature)
+        x = self.linear(x)
+        return x  # (batch,dim,feature)
 
 
 class concat(torch.nn.Module):
@@ -42,13 +72,13 @@ class concat(torch.nn.Module):
 
 
 class split_linear(torch.nn.Module):
-    def __init__(self, in_, feature):
+    def __init__(self, dim, feature):
         super().__init__()
-        self.input_dim = in_
+        self.input_dim = dim
         for i in range(self.input_dim):
             exec(f'self.linear{i} = torch.nn.Linear(feature, feature, bias=False)')
 
-    def forward(self, x):  # (batch,in_,feature) -> (batch,in_,feature)
+    def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
         x_list = []
         for i in range(self.input_dim):
             x_list.append(eval(f'self.linear{i}')(x[:, i, :]))
