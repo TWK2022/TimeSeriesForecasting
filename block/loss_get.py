@@ -11,8 +11,8 @@ def loss_get(args):
 
 class mse_decay:  # 使越靠近前面的数值的准确率越重要
     def __init__(self, args):
-        start = 1.3
-        end = 0.7
+        start = 1.5
+        end = 0.5
         self.decay = torch.arange(start, end, -1 / args.output_size)
         self.mse = torch.nn.MSELoss()
 
