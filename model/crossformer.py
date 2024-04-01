@@ -135,7 +135,7 @@ class crossformer(torch.nn.Module):
         assert input_size % (self.segment * 4) == 0 or output_size % (self.segment * 2) == 0
         input_number = input_size // self.segment
         output_number = output_size // self.segment
-        # 网络
+        # 网络结构
         self.embedding = torch.nn.Linear(self.segment, feature)
         self.position = torch.nn.Parameter(torch.randn(1, input_dim, input_number, feature))
         self.normalization = torch.nn.LayerNorm(feature)
