@@ -6,7 +6,8 @@ def model_get(args):
     if os.path.exists(args.weight):
         model_dict = torch.load(args.weight, map_location='cpu')
     else:
-        choice_dict = {'linear': 'model_prepare(args).linear()',
+        choice_dict = {'crossformer': 'model_prepare(args).crossformer()',
+                       'linear': 'model_prepare(args).linear()',
                        'linear_conv': 'model_prepare(args).linear_conv()',
                        'lstm': 'model_prepare(args).lstm()',
                        'nlinear': 'model_prepare(args).nlinear()',
@@ -24,6 +25,11 @@ def model_get(args):
 class model_prepare:
     def __init__(self, args):
         self.args = args
+
+    def crossformer(self):
+        from model.crossformer import crossformer
+        model = crossformer(self.args)
+        return model
 
     def linear(self):
         from model.linear import linear
