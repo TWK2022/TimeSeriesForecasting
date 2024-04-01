@@ -34,7 +34,7 @@ parser.add_argument('--batch', default=64, type=int, help='|训练批量大小�
 parser.add_argument('--loss', default='mse_decay', type=str, help='|损失函数|')
 parser.add_argument('--warmup_ratio', default=0.01, type=float, help='|预热训练步数占总步数比例，最少5步，基准为0.01|')
 parser.add_argument('--lr_start', default=0.001, type=float, help='|初始学习率，adam算法，批量小时要减小，基准为0.001|')
-parser.add_argument('--lr_end_ratio', default=0.01, type=float, help='|最终学习率=lr_end_ratio*lr_start，基准为0.01|')
+parser.add_argument('--lr_end_ratio', default=0.001, type=float, help='|最终学习率=lr_end_ratio*lr_start，基准为0.001|')
 parser.add_argument('--lr_end_epoch', default=300, type=int, help='|最终学习率达到的轮数，每一步都调整，余玄下降法|')
 parser.add_argument('--regularization', default='L2', type=str, help='|正则化，有L2、None|')
 parser.add_argument('--r_value', default=0.0005, type=float, help='|正则化权重系数，可从0.0001开始逐渐增加，直到最佳值|')
