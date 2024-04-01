@@ -22,11 +22,10 @@ class lr_adjust:
     def __call__(self, optimizer):
         self.step_finished += 1
         step_now = self.step_finished
+        decay = step_now / self.step_all
+        lr = self.lr_end + (self.lr_start - self.lr_end) * math.cos(math.pi / 2 * decay)
         if step_now <= self.warmup_step:
-            lr = self.lr_start * (0.1 + 0.9 * step_now / self.warmup_step)
-        else:
-            decay = step_now / self.step_all
-            lr = self.lr_end + (self.lr_start - self.lr_end) * math.cos(math.pi / 2 * decay)
+            lr = lr * (0.1 + 0.9 * step_now / self.warmup_step)
         lr = max(lr, 0.000001)
         for i in range(len(optimizer.param_groups)):
             optimizer.param_groups[i]['lr'] = lr
