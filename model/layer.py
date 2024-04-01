@@ -44,7 +44,7 @@ class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
         self.dropout = torch.nn.Dropout(dropout)
         self.linear = torch.nn.Linear(feature, feature)
 
-    def forward(self, query, key, value):  # 3*(batch,dim,feature) -> (batch,dim,feature)，key和value的dim可以与query不同
+    def forward(self, query, key, value):  # 3*(batch,dim,feature) -> (batch,dim,feature)。key和value的dim可以与query不同
         batch, dim, feature = query.shape
         _, dim2, _ = key.shape
         query = self.query(query).reshape(batch, dim, self.head, -1).permute(0, 2, 1, 3)  # (batch,head,dim,-1)
@@ -56,8 +56,8 @@ class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
         x = self.dropout(x)
         x = torch.matmul(x, value)  # (batch,head,dim,-1)
         x = x.permute(0, 2, 1, 3).reshape(batch, dim, feature)  # (batch,dim,feature)
-        x = self.linear(x)
-        return x  # (batch,dim,feature)
+        x = self.linear(x)  # (batch,dim,feature)
+        return x
 
 
 class concat(torch.nn.Module):
