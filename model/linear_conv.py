@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_column', default='1,2,3', type=str)
-    parser.add_argument('--output_column', default='1', type=str)
+    parser.add_argument('--output_column', default='1,2', type=str)
     parser.add_argument('--input_size', default=512, type=int)
     parser.add_argument('--output_size', default=256, type=int)
     args = parser.parse_args()
