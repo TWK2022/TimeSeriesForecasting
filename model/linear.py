@@ -5,8 +5,11 @@ import torch
 class linear(torch.nn.Module):
     def __init__(self, args):
         super().__init__()
+        input_dim = len(args.input_column)
+        output_dim = len(args.output_column)
         input_size = args.input_size
         output_size = args.output_size
+        assert input_dim == output_dim, f'! 输入的变量要和预测的变量一致 !'
         # 网络结构
         self.linear = torch.nn.Linear(input_size, output_size)
 
