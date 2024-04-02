@@ -4,9 +4,9 @@ import torch
 from model.layer import attention
 
 
-class attention_block(torch.nn.Module):
+class encode_block(torch.nn.Module):
     def __init__(self, head, feature):
-        super(attention_block, self).__init__()
+        super(encode_block, self).__init__()
         self.attention = attention(head, feature, dropout=0.2)
         self.conv1d1 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.conv1d2 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
@@ -27,18 +27,6 @@ class attention_block(torch.nn.Module):
         return x
 
 
-class encode(torch.nn.Module):
-    def __init__(self, head, feature):
-        super(encode, self).__init__()
-        self.attention_block1 = attention_block(head, feature)
-        self.attention_block2 = attention_block(head, feature)
-
-    def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
-        x = self.attention_block1(x)
-        x = self.attention_block2(x)
-        return x
-
-
 class itransformer(torch.nn.Module):
     def __init__(self, args):
         super(itransformer, self).__init__()
@@ -50,16 +38,18 @@ class itransformer(torch.nn.Module):
         feature = n_dict[args.model_type]
         head = 8
         # 网络结构
-        self.embedding = torch.nn.Linear(input_size, feature)
-        self.encode = encode(head, feature)
-        self.linear = torch.nn.Linear(feature, output_size, bias=True)
-        self.conv1d = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
+        self.l0 = torch.nn.Linear(input_size, feature)
+        self.l1 = encode_block(head, feature)
+        self.l2 = encode_block(head, feature)
+        self.l3 = torch.nn.Linear(feature, output_size, bias=True)
+        self.l4 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
-        x = self.embedding(x)  # (batch,input_dim,feature)
-        x = self.encode(x)
-        x = self.linear(x)  # (batch,input_dim,output_size)
-        x = self.conv1d(x)  # (batch,output_dim,output_size)
+        x = self.l0(x)  # (batch,input_dim,feature)
+        x = self.l1(x)
+        x = self.l2(x)
+        x = self.l3(x)  # (batch,input_dim,output_size)
+        x = self.l4(x)  # (batch,output_dim,output_size)
         return x
 
 
