@@ -10,7 +10,6 @@ class nlinear(torch.nn.Module):
         output_dim = len(args.output_column)
         input_size = args.input_size
         output_size = args.output_size
-        assert input_dim == output_dim, f'! 单变量自标签 !'
         # 网络结构
         self.l0 = torch.nn.Linear(input_size, output_size)
         self.l1 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
