@@ -20,8 +20,7 @@ class clg(torch.nn.Module):
     def __init__(self, dim_in, dim_out, feature, kernel_size, stride):
         super().__init__()
         self.conv1d = torch.nn.Conv1d(dim_in, dim_out, kernel_size=kernel_size, stride=stride,
-                                      padding=(kernel_size - 1) // 2,
-                                      bias=False)
+                                      padding=(kernel_size - 1) // 2, bias=False)
         self.ln = torch.nn.LayerNorm(feature)
         self.gelu = torch.nn.GELU()
 
