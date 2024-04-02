@@ -26,7 +26,7 @@ parser.add_argument('--output_size', default=256, type=int, help='|输出长度|
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例|')
 parser.add_argument('--z_score_cycle', default=-1, type=int, help='|以训练集的周期长度计算mean和std，-1时用所有训练集|')
 parser.add_argument('--weight', default='last.pt', type=str, help='|已有模型的位置，如果没找到模型则会创建新模型|')
-parser.add_argument('--model', default='linear_conv', type=str, help='|自定义模型选择|')
+parser.add_argument('--model', default='nlinear', type=str, help='|自定义模型选择|')
 parser.add_argument('--model_type', default='m', type=str, help='|自定义模型型号|')
 parser.add_argument('--save_path', default='best.pt', type=str, help='|保存最佳模型，除此之外每轮还会保存last.pt|')
 parser.add_argument('--epoch', default=100, type=int, help='|训练总轮数(包含之前已训练轮数)|')
