@@ -55,18 +55,18 @@ class merge_feature(torch.nn.Module):
 class encode(torch.nn.Module):
     def __init__(self, number, head, feature, middle_dim=10):
         super(encode, self).__init__()
-        self.attention_block0 = attention_block(number, middle_dim, head, feature)
+        self.attention_block1 = attention_block(number, middle_dim, head, feature)
         self.merge1 = merge_feature(feature)
-        self.attention_block1 = attention_block(number // 2, middle_dim, head, feature)
+        self.attention_block2 = attention_block(number // 2, middle_dim, head, feature)
         self.merge2 = merge_feature(feature)
-        self.attention_block2 = attention_block(number // 4, middle_dim, head, feature)
+        self.attention_block3 = attention_block(number // 4, middle_dim, head, feature)
 
     def forward(self, x):  # (batch,dim,number,feature) -> [(batch,dim,number、number、number//2、number//4,feature)]
-        x0 = self.attention_block0(x)
+        x0 = self.attention_block1(x)
         x1 = self.merge1(x0)
-        x1 = self.attention_block1(x1)
+        x1 = self.attention_block2(x1)
         x2 = self.merge2(x1)
-        x2 = self.attention_block2(x2)
+        x2 = self.attention_block3(x2)
         x_list = [x, x0, x1, x2]
         return x_list
 
