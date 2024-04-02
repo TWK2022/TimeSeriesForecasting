@@ -1,0 +1,81 @@
+# 根据itransformer改编:https://github.com/thuml/iTransformer
+# 多变量异标签
+import torch
+from model.layer import attention
+
+
+class attention_block(torch.nn.Module):
+    def __init__(self, head, feature):
+        super(attention_block, self).__init__()
+        self.attention = attention(head, feature, dropout=0.2)
+        self.conv1d1 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
+        self.conv1d2 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
+        self.activation = torch.nn.GELU()
+        self.normalization1 = torch.nn.LayerNorm(feature)
+        self.normalization2 = torch.nn.LayerNorm(feature)
+        self.dropout = torch.nn.Dropout(0.2)
+
+    def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
+        x = self.normalization1(x + self.dropout(self.attention(x, x, x)))
+        x1 = x.permute(0, 2, 1)
+        x1 = self.conv1d1(x1)
+        x1 = self.activation(x1)
+        x1 = self.dropout(x1)
+        x1 = self.conv1d2(x1)
+        x1 = x1.permute(0, 2, 1)
+        x = self.normalization2(x + x1)
+        return x
+
+
+class encode(torch.nn.Module):
+    def __init__(self, head, feature):
+        super(encode, self).__init__()
+        self.attention_block1 = attention_block(head, feature)
+        self.attention_block2 = attention_block(head, feature)
+
+    def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
+        x = self.attention_block1(x)
+        x = self.attention_block2(x)
+        return x
+
+
+class itransformer(torch.nn.Module):
+    def __init__(self, args):
+        super(itransformer, self).__init__()
+        input_dim = len(args.input_column)
+        output_dim = len(args.output_column)
+        input_size = args.input_size
+        output_size = args.output_size
+        n_dict = {'s': 128, 'm': 256, 'l': 512}
+        feature = n_dict[args.model_type]
+        head = 8
+        # 网络结构
+        self.embedding = torch.nn.Linear(input_size, feature)
+        self.encode = encode(head, feature)
+        self.linear = torch.nn.Linear(feature, output_size, bias=True)
+        self.conv1d = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
+
+    def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
+        x = self.embedding(x)  # (batch,input_dim,feature)
+        x = self.encode(x)
+        x = self.linear(x)  # (batch,input_dim,output_size)
+        x = self.conv1d(x)  # (batch,output_dim,output_size)
+        return x
+
+
+if __name__ == '__main__':
+    import argparse
+
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--input_column', default='1,2,3', type=str)
+    parser.add_argument('--output_column', default='1,2', type=str)
+    parser.add_argument('--input_size', default=512, type=int)
+    parser.add_argument('--output_size', default=256, type=int)
+    parser.add_argument('--model_type', default='m', type=str)
+    args = parser.parse_args()
+    args.input_column = args.input_column.split(',')
+    args.output_column = args.output_column.split(',')
+    model = itransformer(args)
+    tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32)
+    print(model)
+    print(model(tensor).shape)
