@@ -16,6 +16,20 @@ class llg(torch.nn.Module):
         return x
 
 
+class lgl(torch.nn.Module):
+    def __init__(self, feature, n=2):
+        super().__init__()
+        self.linear0 = torch.nn.Linear(feature, n * feature, bias=False)
+        self.gelu1 = torch.nn.GELU()
+        self.linear2 = torch.nn.Linear(n * feature, feature, bias=False)
+
+    def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
+        x = self.linear0(x)
+        x = self.gelu1(x)
+        x = self.linear2(x)
+        return x
+
+
 class clg(torch.nn.Module):
     def __init__(self, dim_in, dim_out, feature, kernel_size, stride):
         super().__init__()
