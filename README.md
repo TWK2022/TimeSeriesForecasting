@@ -22,3 +22,15 @@
 >使用导出的trt模型预测
 ### 其他
 >学习笔记：https://github.com/TWK2022/notebook
+***
+### ETTh1.csv
+|      模型      | input_column | output_column | input_size | output_size | train_mse_decay | val_mse |
+|:------------:|:------------:|:-------------:|:----------:|:-----------:|:---------------:|:-------:|
+| crossformer  |     all      |      all      |     96     |     24      |      0.28       |  0.30   |
+| itransformer |     all      |      all      |     96     |     24      |      0.27       |  0.26   |
+|     lstm     |     all      |      all      |     96     |     24      |      0.54       |  0.44   |
+|   nlinear    |     all      |      all      |     96     |     24      |      0.28       |  0.26   |
+| crossformer  |     all      |      all      |    512     |     256     |      0.43       |  0.38   |
+| itransformer |     all      |      all      |    512     |     256     |      0.29       |  0.55   |
+|     lstm     |     all      |      all      |    512     |     256     |      0.57       |  0.48   |
+|   nlinear    |     all      |      all      |    512     |     256     |      0.44       |  0.35   |
