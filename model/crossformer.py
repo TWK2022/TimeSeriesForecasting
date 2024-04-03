@@ -1,7 +1,7 @@
 # 根据crossformer改编:https://github.com/Thinklab-SJTU/Crossformer
 # 多变量异标签
 import torch
-from model.layer import attention
+from model.layer import attention, lgl
 
 
 class attention_block(torch.nn.Module):
@@ -11,10 +11,8 @@ class attention_block(torch.nn.Module):
         self.time_attention = attention(head, feature, dropout=0.2)
         self.param_attention = attention(head, feature, dropout=0.2)
         self.input_attention = attention(head, feature, dropout=0.2)
-        self.lgl1 = torch.nn.Sequential(torch.nn.Linear(feature, feature), torch.nn.GELU(),
-                                        torch.nn.Linear(feature, feature))
-        self.lgl2 = torch.nn.Sequential(torch.nn.Linear(feature, feature), torch.nn.GELU(),
-                                        torch.nn.Linear(feature, feature))
+        self.lgl1 = lgl(feature, 2)
+        self.lgl2 = lgl(feature, 2)
         self.normalization1 = torch.nn.LayerNorm(feature)
         self.normalization2 = torch.nn.LayerNorm(feature)
         self.normalization3 = torch.nn.LayerNorm(feature)
@@ -76,8 +74,7 @@ class decode_block(torch.nn.Module):
         super(decode_block, self).__init__()
         self.self_attention = attention_block(number, middle_dim, head, feature)
         self.encode_decode_attention = attention(head, feature, dropout=0.2)
-        self.lgl = torch.nn.Sequential(torch.nn.Linear(feature, feature), torch.nn.GELU(),
-                                       torch.nn.Linear(feature, feature))
+        self.lgl = lgl(feature, 2)
         self.normalization1 = torch.nn.LayerNorm(feature)
         self.normalization2 = torch.nn.LayerNorm(feature)
         self.dropout = torch.nn.Dropout(0.2)
