@@ -11,7 +11,7 @@ class lstm(torch.nn.Module):
         output_size = args.output_size
         n_dict = {'s': 1, 'm': 2, 'l': 3}
         n = n_dict[args.model_type]
-        assert input_dim == output_dim, f'! 输入的变量要和预测的变量一致 !'
+        assert input_dim == output_dim, f'! 输入变量要和预测变量一致 !'
         # 网络结构
         self.lstm0 = torch.nn.LSTM(input_size=input_size, hidden_size=output_size, num_layers=n, dropout=0.2)
 
@@ -27,8 +27,8 @@ if __name__ == '__main__':
     parser.add_argument('--model_type', default='m', type=str)
     parser.add_argument('--input_column', default='1,2,3', type=str)
     parser.add_argument('--output_column', default='1,2,3', type=str)
-    parser.add_argument('--input_size', default=512, type=int)
-    parser.add_argument('--output_size', default=256, type=int)
+    parser.add_argument('--input_size', default=256, type=int)
+    parser.add_argument('--output_size', default=64, type=int)
     args = parser.parse_args()
     args.input_column = args.input_column.split(',')
     args.output_column = args.output_column.split(',')
