@@ -102,12 +102,12 @@ class split_linear(torch.nn.Module):
 class series_encode(torch.nn.Module):  # 归一化
     def __init__(self, mean_input, std_input):
         super().__init__()
-        self.mean_input = mean_input
-        self.std_input = std_input
+        self.mean_input = torch.tensor(mean_input)
+        self.std_input = torch.tensor(std_input)
 
     def forward(self, x):
         x = x.permute(0, 2, 1)
-        x = (x - self.mean_input) / self.std_input
+        x = (x - self.mean_input.to(x.device)) / self.std_input.to(x.device)
         x = x.permute(0, 2, 1)
         return x
 
@@ -115,12 +115,12 @@ class series_encode(torch.nn.Module):  # 归一化
 class series_decode(torch.nn.Module):  # 反归一化
     def __init__(self, mean_output, std_output):
         super().__init__()
-        self.mean_output = mean_output
-        self.std_output = std_output
+        self.mean_output = torch.tensor(mean_output)
+        self.std_output = torch.tensor(std_output)
 
     def forward(self, x):
         x = x.permute(0, 2, 1)
-        x = x * self.std_output + self.mean_output
+        x = x * self.std_output.to(x.device) + self.mean_output.to(x.device)
         x = x.permute(0, 2, 1)
         return x
 
