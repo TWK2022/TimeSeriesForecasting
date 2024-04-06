@@ -20,9 +20,9 @@ class data_prepare:
     def load(self):
         # 读取数据
         try:
-            df = pd.read_csv(self.data_path, encoding='utf-8')
+            df = pd.read_csv(self.data_path, encoding='utf-8', index_col=0)
         except:
-            df = pd.read_csv(self.data_path, encoding='gbk')
+            df = pd.read_csv(self.data_path, encoding='gbk', index_col=0)
         input_data = np.array(df[self.input_column]).astype(np.float32)
         output_data = np.array(df[self.output_column]).astype(np.float32)
         # 划分数据集

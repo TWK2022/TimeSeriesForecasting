@@ -44,6 +44,7 @@ def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last{args.plot_len}'
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
+        plt.rcParams['axes.unicode_minus'] = False
         plt.title(name)
         plt.plot(true[i, :], color='green', label=f'{args.output_column[i]}_true')
         plt.plot(middle_plot[i, :], color='orange', label=f'{args.output_column[i]}_{middle}')
@@ -82,9 +83,9 @@ def predict_onnx():
     print(f'| 模型加载成功:{args.model_path} |')
     # 加载数据
     try:
-        df = pd.read_csv(args.data_path, encoding='utf-8')
+        df = pd.read_csv(args.data_path, encoding='utf-8', index_col=0)
     except:
-        df = pd.read_csv(args.data_path, encoding='gbk')
+        df = pd.read_csv(args.data_path, encoding='gbk', index_col=0)
     input_data = np.array(df[args.input_column]).astype(np.float32).T
     input_data = input_data[:, -args.plot_len - args.input_size:]  # 限定长度方便画图
     output_data = np.array(df[args.output_column]).astype(np.float32).T
