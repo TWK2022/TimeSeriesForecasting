@@ -107,7 +107,7 @@ class series_encode(torch.nn.Module):  # 归一化
 
     def forward(self, x):
         x = x.permute(0, 2, 1)
-        x = (x - self.mean_input.to(x.device)) / self.std_input.to(x.device)
+        x = (x - self.mean_input.type(x.dtype).to(x.device)) / self.std_input.type(x.dtype).to(x.device)
         x = x.permute(0, 2, 1)
         return x
 
@@ -120,7 +120,7 @@ class series_decode(torch.nn.Module):  # 反归一化
 
     def forward(self, x):
         x = x.permute(0, 2, 1)
-        x = x * self.std_output.to(x.device) + self.mean_output.to(x.device)
+        x = x * self.std_output.type(x.dtype).to(x.device) + self.mean_output.type(x.dtype).to(x.device)
         x = x.permute(0, 2, 1)
         return x
 
