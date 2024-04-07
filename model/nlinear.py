@@ -1,7 +1,6 @@
 # 根据nlinear改编:https://github.com/cure-lab/LTSF-Linear
 # 多变量异标签
 import torch
-from model.layer import lgl
 
 
 class nlinear(torch.nn.Module):
@@ -12,7 +11,7 @@ class nlinear(torch.nn.Module):
         input_size = args.input_size
         output_size = args.output_size
         # 网络结构
-        self.l0 = lgl(input_size, 2)
+        self.l0 = torch.nn.Linear(input_size, input_size)
         self.l1 = torch.nn.GELU()
         self.l2 = torch.nn.Linear(input_size, output_size)
         self.l3 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
