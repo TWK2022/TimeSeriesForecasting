@@ -1,6 +1,7 @@
 # 根据nlinear改编:https://github.com/cure-lab/LTSF-Linear
 # 多变量异标签
 import torch
+from model.layer import lgl
 
 
 class nlinear(torch.nn.Module):
@@ -11,15 +12,17 @@ class nlinear(torch.nn.Module):
         input_size = args.input_size
         output_size = args.output_size
         # 网络结构
-        self.l0 = torch.nn.Linear(input_size, output_size)
-        self.l1 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
+        self.l0 = lgl(input_size, 2)
+        self.l1 = torch.nn.Linear(input_size, output_size)
+        self.l2 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         series_last = x[:, :, -1:]
         x = x - series_last
         x = self.l0(x)
-        x = x + series_last
         x = self.l1(x)
+        x = x + series_last
+        x = self.l2(x)
         return x
 
 
