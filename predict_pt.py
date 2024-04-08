@@ -66,8 +66,9 @@ def draw_predict(last_data, last_output):
     pred = pred[:, input_cut:]
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last_predict'
-        plt.title(name)
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
+        plt.rcParams['axes.unicode_minus'] = False
+        plt.title(name)
         plt.plot(true[i, :], color='green', label=f'{args.output_column[i]}_true')
         plt.plot(pred[i, :], color='cyan', label=f'{args.output_column[i]}_pred')
         plt.legend()
