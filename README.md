@@ -26,11 +26,11 @@
 ### ETTh1.csv
 |      模型      | input_column | output_column | input_size | output_size | train_mse_decay | val_mse |
 |:------------:|:------------:|:-------------:|:----------:|:-----------:|:---------------:|:-------:|
-| crossformer  |     all      |      all      |     96     |     24      |      0.28       |  0.30   |
-| itransformer |     all      |      all      |     96     |     24      |      0.27       |  0.26   |
-|     lstm     |     all      |      all      |     96     |     24      |      0.54       |  0.44   |
-|   nlinear    |     all      |      all      |     96     |     24      |      0.28       |  0.26   |
-| crossformer  |     all      |      all      |    512     |     256     |      0.43       |  0.38   |
-| itransformer |     all      |      all      |    512     |     256     |      0.29       |  0.55   |
-|     lstm     |     all      |      all      |    512     |     256     |      0.57       |  0.48   |
-|   nlinear    |     all      |      all      |    512     |     256     |      0.44       |  0.35   |
+| crossformer  |     all      |      all      |     96     |     24      |      0.284      |  0.302  |
+| itransformer |     all      |      all      |     96     |     24      |      0.233      |  0.281  |
+|     lstm     |     all      |      all      |     96     |     24      |      0.545      |  0.485  |
+|   nlinear    |     all      |      all      |     96     |     24      |      0.256      |  0.275  |
+| crossformer  |     all      |      all      |    256     |     64      |      0.372      |  0.390  |
+| itransformer |     all      |      all      |    256     |     64      |      0.239      |  0.315  |
+|     lstm     |     all      |      all      |    256     |     64      |      0.543      |  0.459  |
+|   nlinear    |     all      |      all      |    256     |     64      |      0.373      |  0.420  |
