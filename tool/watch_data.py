@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser(description='|查看数据|')
 parser.add_argument('--data_path', default=r'../dataset/ETTh1.csv', type=str, help='|数据路径|')
 parser.add_argument('--column', default='HUFL,HULL,MUFL,MULL,LUFL,LULL,OT', type=str, help='|数据路径|')
-parser.add_argument('--show_len', default=2000, type=int, help='|显示的数据长度|')
+parser.add_argument('--show_len', default=500, type=int, help='|显示的数据长度|')
 args = parser.parse_args()
 args.column = args.column.split(',')
 # -------------------------------------------------------------------------------------------------------------------- #
