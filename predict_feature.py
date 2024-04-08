@@ -38,8 +38,9 @@ def draw(output_data, pred):
         plt.title(name)
         plt.plot(int_, color='green', label=f'{args.output_column[index]}_in')
         plt.plot(out_, color='cyan', label=f'{args.output_column[index]}_output')
+        plt.grid()
         plt.legend()
-        plt.savefig(args.save_path + '/' + name + '.jpg')
+        plt.savefig(args.save_path + f'/{name}_{args.output_column[index]}' + '.jpg')
         plt.close()
 
 
