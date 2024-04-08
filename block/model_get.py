@@ -7,12 +7,12 @@ def model_get(args):
         model_dict = torch.load(args.weight, map_location='cpu')
     else:
         choice_dict = {'crossformer': 'model_prepare(args).crossformer()',
+                       'diffusion_ts': 'model_prepare(args).diffusion_ts()',
                        'itransformer': 'model_prepare(args).itransformer()',
                        'linear': 'model_prepare(args).linear()',
                        'linear_conv': 'model_prepare(args).linear_conv()',
                        'lstm': 'model_prepare(args).lstm()',
-                       'nlinear': 'model_prepare(args).nlinear()',
-                       }
+                       'nlinear': 'model_prepare(args).nlinear()'}
         model = eval(choice_dict[args.model])
         model_dict = {}
         model_dict['model'] = model
@@ -30,6 +30,11 @@ class model_prepare:
     def crossformer(self):
         from model.crossformer import crossformer
         model = crossformer(self.args)
+        return model
+
+    def diffusion_ts(self):
+        from model.diffusion_ts import diffusion_ts
+        model = diffusion_ts(self.args)
         return model
 
     def itransformer(self):
