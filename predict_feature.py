@@ -14,7 +14,7 @@ parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, h
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量，可传入.txt|')
 parser.add_argument('--input_size', default=256, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=32, type=int, help='|输出长度|')
+parser.add_argument('--output_size', default=64, type=int, help='|输出长度|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
 args = parser.parse_args()
 args.input_column = read_column(args.input_column)  # column处理
