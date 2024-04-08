@@ -22,7 +22,7 @@ parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, h
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量，可传入.txt|')
 parser.add_argument('--input_size', default=256, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=32, type=int, help='|输出长度|')
+parser.add_argument('--output_size', default=64, type=int, help='|输出长度|')
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例|')
 parser.add_argument('--z_score_cycle', default=-1, type=int, help='|以训练集的周期长度计算mean和std，-1时用所有训练集|')
 parser.add_argument('--weight', default='last.pt', type=str, help='|已有模型的位置，如果没找到模型则会创建新模型|')
