@@ -8,12 +8,12 @@ import pandas as pd
 # 获取数据的时间格式为20240101，不能为2024-01-01
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|通过tushare获取最新股票数据以补全数据库|')
-parser.add_argument('--token', default='a805d200f18d9b04df4bb37ec08e1a116bb0690c0832cce427467dce', type=str,
+parser.add_argument('--token', default='', type=str,
                     help='|密钥|')
 parser.add_argument('--save_path', default='dataset', type=str, help='|数据保存的目录|')
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
 parser.add_argument('--start_time', default='20150101', type=str, help='|开始时间|')
-parser.add_argument('--end_time', default='20240406', type=str, help='|结束时间|')
+parser.add_argument('--end_time', default='20240410', type=str, help='|结束时间|')
 args = parser.parse_args()
 
 
@@ -55,6 +55,7 @@ def get_data(number_dict):
                 df.index = pd.DatetimeIndex(df.index)
                 df.to_csv(path, index=True, header=True)
         else:
+            print(f'| 新增数据: {path} |')
             df = tushare_to_df(pro, number_dict, key, args.start_time)
             df.to_csv(path, index=True, header=True)
 
