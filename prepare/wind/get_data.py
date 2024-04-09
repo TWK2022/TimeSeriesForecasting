@@ -19,7 +19,7 @@ import pandas as pd
 # assert False
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|通过WindPy获取最新股票数据以补全数据库|')
-parser.add_argument('--save_path', default='dataset', type=str, help='|数据保存的目录|')
+parser.add_argument('--save_path', default='../dataset', type=str, help='|数据保存的目录|')
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
 parser.add_argument('--variable', default='variable.yaml', type=str, help='|选用的变量|')
 parser.add_argument('--start_time', default='2010-01-01', type=str, help='|开始时间|')
