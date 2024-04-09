@@ -31,7 +31,7 @@ def tushare_to_df(pro, number_dict, key, start_time):
     df.index = pd.DatetimeIndex(df['日期'])
     df = df.drop(columns='日期')
     df = df.sort_index()
-    df.dropna(axis=0, how='any')
+    df = df.dropna(axis=0, how='any')
     return df
 
 
