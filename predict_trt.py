@@ -15,8 +15,8 @@ parser.add_argument('--model_path', default='best.trt', type=str, help='|trt模�
 parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量，可传入.txt|')
-parser.add_argument('--input_size', default=256, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=64, type=int, help='|输出长度|')
+parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
+parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
 parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，要与导出的模型对应，一般为1|')
 parser.add_argument('--float16', default=True, type=bool, help='|推理数据类型，要与导出的模型对应，False时为float32|')
 parser.add_argument('--plot_len', default=1000, type=int, help='|画图长度，取数据的倒数plot_len个|')
@@ -132,5 +132,6 @@ def predict_trt():
     print(f'| 画图保存位置:{args.save_path} |')
 
 
+# -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
     predict_trt()

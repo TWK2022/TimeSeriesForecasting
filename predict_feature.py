@@ -3,18 +3,18 @@ import torch
 import argparse
 import numpy as np
 import pandas as pd
-from model.layer import deploy
 import matplotlib.pyplot as plt
+from model.layer import deploy
 from block.util import read_column
 
 # -------------------------------------------------------------------------------------------------------------------- #
-parser = argparse.ArgumentParser(description='|pt模型推理|')
+parser = argparse.ArgumentParser(description='|预测未来|')
 parser.add_argument('--model_path', default='best.pt', type=str, help='|pt模型位置|')
 parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量，可传入.txt|')
-parser.add_argument('--input_size', default=256, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=64, type=int, help='|输出长度|')
+parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
+parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
 args = parser.parse_args()
 args.input_column = read_column(args.input_column)  # column处理
@@ -72,5 +72,6 @@ def predict_pt():
     print(f'| 画图保存位置:{args.save_path} |')
 
 
+# -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
     predict_pt()

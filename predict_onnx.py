@@ -13,8 +13,8 @@ parser.add_argument('--model_path', default='best.onnx', type=str, help='|onnx�
 parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量，可传入.txt|')
-parser.add_argument('--input_size', default=256, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=64, type=int, help='|输出长度|')
+parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
+parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
 parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，要与导出的模型对应|')
 parser.add_argument('--device', default='cuda', type=str, help='|推理设备|')
 parser.add_argument('--float16', default=True, type=bool, help='|推理数据类型，要与导出的模型对应，False时为float32|')
@@ -133,5 +133,6 @@ def predict_onnx():
     print(f'| 画图保存位置:{args.save_path} |')
 
 
+# -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
     predict_onnx()

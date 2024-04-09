@@ -6,7 +6,7 @@ from model.layer import deploy
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|将pt模型转为onnx，同时导出类别信息|')
 parser.add_argument('--weight', default='best.pt', type=str, help='|模型位置|')
-parser.add_argument('--input_size', default=256, type=int, help='|输入长度|')
+parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--input_column_num', default=2, type=int, help='|输入变量数量|')
 parser.add_argument('--batch', default=0, type=int, help='|输入图片批量，0为动态|')
 parser.add_argument('--sim', default=True, type=bool, help='|使用onnxsim压缩简化模型|')

@@ -14,8 +14,8 @@ parser.add_argument('--model_path', default='best.pt', type=str, help='|pt模型
 parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--output_column', default='mix', type=str, help='|选择预测的变量，可传入.txt|')
-parser.add_argument('--input_size', default=256, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=64, type=int, help='|输出长度|')
+parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
+parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
 parser.add_argument('--batch', default=64, type=int, help='|批量大小|')
 parser.add_argument('--device', default='cuda', type=str, help='|推理设备|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU处理数据的进程数，0只有一个主进程，一般为0、2、4、8|')
@@ -143,5 +143,6 @@ class torch_dataset(torch.utils.data.Dataset):
         return series
 
 
+# -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
     predict_pt()
