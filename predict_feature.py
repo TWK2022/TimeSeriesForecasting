@@ -34,7 +34,7 @@ def draw(output_data, pred):
         zero = torch.zeros(len(int_))
         out_ = np.concatenate([zero, out_], axis=0)
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
-        plt.rcParams['axes.unicode_minus'] = False
+        plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
         plt.title(name)
         plt.plot(int_, color='green', label=f'{args.output_column[index]}_in')
         plt.plot(out_, color='cyan', label=f'{args.output_column[index]}_output')

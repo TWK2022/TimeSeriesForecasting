@@ -44,7 +44,7 @@ def draw(pred_middle, pred_last, true, middle, last):  # pred为预测值，true
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last{args.plot_len}'
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
-        plt.rcParams['axes.unicode_minus'] = False
+        plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
         plt.title(name)
         plt.plot(true[i, :], color='green', label=f'{args.output_column[i]}_true')
         plt.plot(middle_plot[i, :], color='orange', label=f'{args.output_column[i]}_{middle}')
@@ -67,7 +67,7 @@ def draw_predict(last_data, last_output):
     for i in range(len(args.output_column)):
         name = f'{args.output_column[i]}_last_predict'
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
-        plt.rcParams['axes.unicode_minus'] = False
+        plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
         plt.title(name)
         plt.plot(true[i, :], color='green', label=f'{args.output_column[i]}_true')
         plt.plot(pred[i, :], color='cyan', label=f'{args.output_column[i]}_pred')
