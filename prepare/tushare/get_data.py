@@ -38,12 +38,12 @@ def tushare_to_df(pro, number_dict, key, start_time):
 def get_data(number_dict):
     tushare.set_token(args.token)  # 设置密钥
     pro = tushare.pro_api()  # 初始化接口
-    for key in number_dict:  # 补充旧数据
+    for key in number_dict:
         path = f'{args.save_path}/{key}.csv'
         if os.path.exists(path):
             df_old = pd.read_csv(path, index_col=0)
-            end_time_old = df_old.index[-1]  # 最后一天
-            if pd.DatetimeIndex([end_time_old])[0] >= pd.DatetimeIndex([args.end_time])[0]:  # 已经是最新数据
+            end_time_old = df_old.index[-1]
+            if pd.DatetimeIndex([end_time_old])[0] >= pd.DatetimeIndex([args.end_time])[0]:
                 print(f'| 已是最新数据: {path} |')
                 continue
             else:
