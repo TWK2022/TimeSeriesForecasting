@@ -27,7 +27,7 @@ def tushare_to_df(pro, number_dict, key, start_time):
     start_time = start_time.replace('-', '')
     df = pro.daily(ts_code=number_dict[key], start_date=start_time, end_date=args.end_time)
     df = df.drop(columns='ts_code')
-    df.columns = ['日期', '开盘价', '最高价', '最低价', '收盘价', '昨收价', '涨跌额', '涨跌幅', '成交量', '成交额']
+    df.columns = ['日期', '开盘价', '最高价', '最低价', '收盘价', '昨收价(前复权)', '涨跌额', '涨跌幅', '成交量', '成交额']
     df.index = pd.DatetimeIndex(df['日期'])
     df = df.drop(columns='日期')
     df = df.sort_index()
