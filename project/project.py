@@ -28,7 +28,7 @@ assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
-class project:
+class project_class:
     def __init__(self, args):
         self.rise = args.rise
         self.rise_max = args.rise_max
@@ -84,7 +84,6 @@ class project:
 
     def predict_true(self):  # 在预知未来情况下的完美收益
         self.state = 0
-        self.value = 0
         self.buy_list = []
         self.sell_list = []
         for index in range(self.input_size, self.input_data.shape[1] - self.output_size):  # index是预测的第一步
@@ -136,6 +135,6 @@ class project:
 
 # -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
-    model = project(args)
-    model.predict_true()
+    model = project_class(args)
     model.predict()
+    model.predict_true()
