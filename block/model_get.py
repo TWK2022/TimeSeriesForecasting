@@ -5,6 +5,11 @@ import torch
 def model_get(args):
     if os.path.exists(args.weight):
         model_dict = torch.load(args.weight, map_location='cpu')
+        if args.weight_again:
+            model_dict['epoch_finished'] = 0  # 已训练的轮数
+            model_dict['optimizer_state_dict'] = None  # 学习率参数
+            model_dict['ema_updates'] = 0  # ema参数
+            model_dict['standard'] = 999  # 评价指标
     else:
         choice_dict = {'crossformer': 'model_prepare(args).crossformer()',
                        'diffusion_ts': 'model_prepare(args).diffusion_ts()',
