@@ -14,6 +14,8 @@ parser.add_argument('--number', default='number.yaml', type=str, help='|选用�
 parser.add_argument('--start_time', default='20170101', type=str, help='|开始时间|')
 parser.add_argument('--end_time', default='20240601', type=str, help='|结束时间|')
 args = parser.parse_args()
+if not os.path.exists(args.save_path):
+    os.makedirs(args.save_path)
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
