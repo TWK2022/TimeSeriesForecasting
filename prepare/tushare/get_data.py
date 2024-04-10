@@ -11,7 +11,7 @@ parser = argparse.ArgumentParser(description='|通过tushare获取最新股票�
 parser.add_argument('--token', default='', type=str, help='|密钥|')
 parser.add_argument('--save_path', default='../dataset', type=str, help='|数据保存的目录|')
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
-parser.add_argument('--start_time', default='20150101', type=str, help='|开始时间|')
+parser.add_argument('--start_time', default='20170101', type=str, help='|开始时间|')
 parser.add_argument('--end_time', default='20240420', type=str, help='|结束时间|')
 args = parser.parse_args()
 
