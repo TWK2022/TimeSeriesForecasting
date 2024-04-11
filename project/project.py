@@ -7,6 +7,11 @@ from model.layer import deploy
 from block.util import read_column
 
 # -------------------------------------------------------------------------------------------------------------------- #
+# 交易策略:
+# a开头是人为制定的策略，可以加入人为的经验
+# b开头是根据模型预测结果制定的策略，考验模型的预测能力
+# 由于当天得到数据时股票已经收盘，因此以今明两天收盘价的平均值作为实际交易股价，这里存在误差
+# -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|测试|')
 parser.add_argument('--model_path', default='../best.pt', type=str, help='|pt模型位置|')
 parser.add_argument('--data_path', default=r'../prepare/dataset/华银电力_add.csv', type=str, help='|数据位置|')
@@ -14,9 +19,11 @@ parser.add_argument('--input_column', default='../input_column.txt', type=str, h
 parser.add_argument('--output_column', default='../output_column.txt', type=str, help='|选择预测的变量，可传入.txt|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
-parser.add_argument('--divide', default='9,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
-parser.add_argument('--rise', default=1.4, type=float, help='|上涨预期，大于预期才会买入，基准为1.4|')
-parser.add_argument('--rise_max', default=1.3, type=float, help='|达到预期收益，直接卖出|')
+parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
+parser.add_argument('--rise', default=1.3, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.3|')
+parser.add_argument('--decline', default=0.95, type=float, help='|下跌预期，小于预期才会卖出，基准为0.95|')
+parser.add_argument('--a_rise_max', default=1.3, type=float, help='|达到预期收益，直接卖出，数值太大时无效|')
+parser.add_argument('--a_rise_still', default=1.05, type=float, help='|第2天发现还在上涨，先不卖出，数值太大时无效|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
@@ -31,7 +38,9 @@ assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !
 class project_class:
     def __init__(self, args):
         self.rise = args.rise
-        self.rise_max = args.rise_max
+        self.decline = args.decline
+        self.a_rise_max = args.a_rise_max
+        self.a_rise_still = args.a_rise_still
         self.input_size = args.input_size
         self.output_size = args.output_size
         divide = args.divide
@@ -74,12 +83,14 @@ class project_class:
                 pred = self.model(tensor)[0][0].cpu().numpy()
                 now = self.output_data[0, index - 1]
                 next_ = self.output_data[0, index]
-                max_ = np.max(pred)
-                min_ = np.argmin(pred)
+                max_ = np.max(pred[3:-3])
+                min_ = np.min(pred[3:-3])
                 if max_ > self.rise * now:  # 预测上涨
                     self._rise(now, next_, pred)
-                elif min_ < now:  # 预测下降
+                elif min_ < self.decline * now:  # 预测下降
                     self._decline(now, next_, pred)
+                else:  # 预测小幅波动
+                    pass
             self._metric('模型', now)
 
     def predict_true(self):  # 在预知未来情况下的完美收益
@@ -90,44 +101,53 @@ class project_class:
             pred = self.output_data[0, index:index + self.output_size]
             now = self.output_data[0, index - 1]
             next_ = self.output_data[0, index]
-            max_ = np.max(pred)
-            min_ = np.min(pred)
+            max_ = np.max(pred[3:-3])
+            min_ = np.min(pred[3:-3])
             if max_ > self.rise * now:  # 预测上涨
                 self._rise(now, next_, pred)
-            elif min_ < now:  # 预测下降
+            elif min_ < self.decline * now:  # 预测下降
                 self._decline(now, next_, pred)
+            else:  # 预测小幅波动
+                pass
         self._metric('完美', now)
 
     def _rise(self, now, next_, pred):
         if self.state == 1:  # 已经买入
             return
-        if np.mean(pred[0:3]) < now:  # 还有下降空间，先不买入
+        # a人为策略
+        pass
+        # b模型策略
+        if now > np.mean(pred[0:3]):  # 预测还有下降空间，先不买入
             return
         # 买入
         self.state = 1
-        self.buy_list.append((now + next_) / 2)  # 以今明两天的平均值估算买入价格
+        self.buy_list.append((now + next_) / 2)
 
     def _decline(self, now, next_, pred):
         if self.state == 0:  # 没有买入
             return
-        if now > self.rise_max * self.buy_list[-1]:  # 达到预期收益，直接卖出
+        # a人为策略
+        if now > self.a_rise_max * self.buy_list[-1]:  # 达到预期收益，直接卖出
             self.state = 0
-            self.sell_list.append(now + pred[0] / 2)  # 以今明两天的平均值估算买入价格
+            self.sell_list.append(now + next_ / 2)
             return
-        if np.mean(pred[0:3]) > now:  # 还有上升空间，先不卖出
+        if now < self.a_rise_still * next_:  # 第2天发现依然有上涨趋势，先不卖出
+            return
+        # b模型策略
+        if now < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0
-        self.sell_list.append((now + next_) / 2)  # 以今明两天的平均值估算买入价格
+        self.sell_list.append((now + next_) / 2)
 
-    def _metric(self, name, now):
+    def _metric(self, name, now):  # 计算指标
         if len(self.buy_list) != len(self.sell_list):  # 最后一次还未卖出
             self.sell_list.append(now)
         buy = np.array(self.buy_list)
         sell = np.array(self.sell_list)
         value = sell - buy
-        ratio_sum = np.sum(value / buy)
-        ratio_mean = np.mean(value / buy)
+        ratio_sum = np.sum(value / buy) if len(buy) else 0
+        ratio_mean = np.mean(value / buy) if len(buy) else 0
         fault = value[np.where(value < 0, True, False)]
         print(f'| {name} | 总收益率:{ratio_sum:.2f} | 单次操作收益率:{ratio_mean:.2f} |'
               f' 操作次数:{len(value)} | 亏损次数:{len(fault)} |')
