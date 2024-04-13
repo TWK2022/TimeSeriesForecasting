@@ -3,7 +3,7 @@ import numpy as np
 import pandas as pd
 
 # -------------------------------------------------------------------------------------------------------------------- #
-parser = argparse.ArgumentParser(description='|计算5日、10日、20日、60日均线|')
+parser = argparse.ArgumentParser(description='|计算5日、10日、60日均线|')
 parser.add_argument('--data_path', default='dataset/华银电力.csv', type=str, help='|数据位置|')
 parser.add_argument('--column', default='收盘价,成交量', type=str, help='|变量选择|')
 args = parser.parse_args()
@@ -26,14 +26,12 @@ def count_data():
     value = df[args.column].values
     result_5, column_5 = count(data=value, lengh=5, column=args.column)
     result_10, column_10 = count(data=value, lengh=10, column=args.column)
-    result_20, column_20 = count(data=value, lengh=20, column=args.column)
     result_60, column_60 = count(data=value, lengh=60, column=args.column)
     lengh = len(result_60)
     result_5 = result_5[-lengh:]
     result_10 = result_10[-lengh:]
-    result_20 = result_20[-lengh:]
-    result = np.concatenate([result_5, result_10, result_20, result_60], axis=1)
-    column = column_5 + column_10 + column_20 + column_60
+    result = np.concatenate([result_5, result_10, result_60], axis=1)
+    column = column_5 + column_10 + column_60
     index = df.index[-lengh:]
     df_add = pd.DataFrame(result, columns=column, index=index)
     drop_index = df.index[:-lengh]
