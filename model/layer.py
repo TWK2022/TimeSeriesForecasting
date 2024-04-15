@@ -47,7 +47,7 @@ class clg(torch.nn.Module):
 
 class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
     def __init__(self, head, feature, dropout=0.2):
-        super(attention, self).__init__()
+        super().__init__()
         self.head = head
         self.divisor = math.sqrt(feature // self.head)
         self.query = torch.nn.Linear(feature, feature)

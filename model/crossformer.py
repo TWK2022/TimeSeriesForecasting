@@ -92,7 +92,7 @@ class decode_block(torch.nn.Module):
 
 class decode(torch.nn.Module):
     def __init__(self, number, segment, head, feature, middle_dim=10):
-        super(decode, self).__init__()
+        super().__init__()
         self.decode_layer1 = decode_block(number, head, feature, middle_dim)
         self.linear1 = torch.nn.Linear(feature, segment)
         self.decode_layer2 = decode_block(number, head, feature, middle_dim)
@@ -119,7 +119,7 @@ class decode(torch.nn.Module):
 
 class crossformer(torch.nn.Module):
     def __init__(self, args):
-        super(crossformer, self).__init__()
+        super().__init__()
         input_dim = len(args.input_column)
         output_dim = len(args.output_column)
         input_size = args.input_size

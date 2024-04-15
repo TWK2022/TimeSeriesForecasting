@@ -6,7 +6,7 @@ from model.layer import attention
 
 class encode_block(torch.nn.Module):
     def __init__(self, head, feature):
-        super(encode_block, self).__init__()
+        super().__init__()
         self.attention = attention(head, feature, dropout=0.2)
         self.conv1d1 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.conv1d2 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
@@ -29,7 +29,7 @@ class encode_block(torch.nn.Module):
 
 class itransformer(torch.nn.Module):
     def __init__(self, args):
-        super(itransformer, self).__init__()
+        super().__init__()
         input_dim = len(args.input_column)
         output_dim = len(args.output_column)
         input_size = args.input_size
