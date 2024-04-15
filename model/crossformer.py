@@ -6,7 +6,7 @@ from model.layer import attention, lgl
 
 class attention_block(torch.nn.Module):
     def __init__(self, number, middle_dim, head, feature):
-        super(attention_block, self).__init__()
+        super().__init__()
         self.param = torch.nn.Parameter(torch.randn(number, middle_dim, feature))
         self.time_attention = attention(head, feature, dropout=0.2)
         self.param_attention = attention(head, feature, dropout=0.2)
@@ -52,7 +52,7 @@ class merge_feature(torch.nn.Module):
 
 class encode(torch.nn.Module):
     def __init__(self, number, head, feature, middle_dim=10):
-        super(encode, self).__init__()
+        super().__init__()
         self.attention_block1 = attention_block(number, middle_dim, head, feature)
         self.merge1 = merge_feature(feature)
         self.attention_block2 = attention_block(number // 2, middle_dim, head, feature)
@@ -71,7 +71,7 @@ class encode(torch.nn.Module):
 
 class decode_block(torch.nn.Module):
     def __init__(self, number, head, feature, middle_dim=10):
-        super(decode_block, self).__init__()
+        super().__init__()
         self.self_attention = attention_block(number, middle_dim, head, feature)
         self.encode_decode_attention = attention(head, feature, dropout=0.2)
         self.lgl = lgl(feature, 2)
