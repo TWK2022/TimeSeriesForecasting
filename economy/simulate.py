@@ -8,6 +8,7 @@ from block.util import read_column
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 交易策略:
+# 参数通常只调节rise和人为策略
 # a开头是人为制定的策略，可以加入人为的经验
 # b开头是根据模型预测结果制定的策略，考验模型的预测能力
 # 由于当天得到数据时股票已经收盘，因此以今明两天收盘价的平均值作为实际交易股价，这里存在误差
@@ -20,7 +21,7 @@ parser.add_argument('--output_column', default='../output_column.txt', type=str,
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
-parser.add_argument('--rise', default=1.3, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.3|')
+parser.add_argument('--rise', default=1.2, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.2|')
 parser.add_argument('--a_rise_max', default=1.3, type=float, help='|达到预期收益，直接卖出，数值太大时无效|')
 parser.add_argument('--a_rise_still', default=1.05, type=float, help='|第2天发现还在上涨，先不卖出，数值太大时无效|')
 parser.add_argument('--a_decline_still', default=0.97, type=float, help='|第2天发现还在下降，先不买入，数值太小时无效|')
@@ -78,7 +79,7 @@ class project_class:
             self.state = 0
             self.buy_list = []
             self.sell_list = []
-            for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第一步
+            for index in range(self.input_size, self.input_data.shape[1] - 10):  # index是预测的第一步
                 tensor = torch.tensor(self.input_data[:, index - self.input_size:index]).unsqueeze(0)
                 pred = self.model(tensor)[0][0].cpu().numpy()
                 now = self.output_data[0, index - 1]
@@ -150,7 +151,7 @@ class project_class:
         ratio_sum = np.sum(value / buy) if len(buy) else 0
         ratio_mean = np.mean(value / buy) if len(buy) else 0
         fault = value[np.where(value < 0, True, False)]
-        print(f'| {name} | 总收益率:{ratio_sum:.2f} | 单次操作收益率:{ratio_mean:.2f} |'
+        print(f'| {name} | rise:{self.rise} | 总收益率:{ratio_sum:.2f} | 单次操作收益率:{ratio_mean:.2f} |'
               f' 操作次数:{len(value)} | 亏损次数:{len(fault)} |')
 
 
