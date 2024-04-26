@@ -1,7 +1,7 @@
 # 根据itransformer改编:https://github.com/thuml/iTransformer
 # 多变量异标签
 import torch
-from model.layer import attention
+from model.layer import attention, split_conv1d, split_linear
 
 
 class encode_block(torch.nn.Module):
@@ -42,7 +42,8 @@ class itransformer(torch.nn.Module):
         self.l1 = encode_block(head, feature)
         self.l2 = encode_block(head, feature)
         self.l3 = torch.nn.Linear(feature, output_size, bias=True)
-        self.l4 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
+        self.l4 = split_conv1d(input_dim, output_dim)
+        self.l5 = split_linear(output_dim, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         x = self.l0(x)  # (batch,input_dim,feature)
@@ -50,6 +51,7 @@ class itransformer(torch.nn.Module):
         x = self.l2(x)
         x = self.l3(x)  # (batch,input_dim,output_size)
         x = self.l4(x)  # (batch,output_dim,output_size)
+        x = self.l5(x)
         return x
 
 
