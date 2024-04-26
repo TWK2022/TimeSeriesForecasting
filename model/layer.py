@@ -84,16 +84,33 @@ class concat(torch.nn.Module):
         return x
 
 
-class split_linear(torch.nn.Module):
-    def __init__(self, dim, feature):
+class split_conv1d(torch.nn.Module):
+    def __init__(self, dim_in, dim_out):
         super().__init__()
-        self.input_dim = dim
-        for i in range(self.input_dim):
-            exec(f'self.linear{i} = torch.nn.Linear(feature, feature, bias=False)')
+        self.dim_in = dim_in
+        self.dim_out = dim_out
+        for i in range(self.dim_out):
+            exec(f'self.conv1d{i} = torch.nn.Conv1d(dim_in, 1, kernel_size=1, stride=1)')
+        self.concat = concat(dim=1)
 
     def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
         x_list = []
-        for i in range(self.input_dim):
+        for i in range(self.dim_out):
+            x_list.append(eval(f'self.conv1d{i}')(x))
+        x = self.concat(x_list)
+        return x
+
+
+class split_linear(torch.nn.Module):
+    def __init__(self, dim, feature):
+        super().__init__()
+        self.dim = dim
+        for i in range(self.dim):
+            exec(f'self.linear{i} = torch.nn.Linear(feature, feature, bias=True)')
+
+    def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
+        x_list = []
+        for i in range(self.dim):
             x_list.append(eval(f'self.linear{i}')(x[:, i, :]))
         x = torch.stack(x_list, dim=1)
         return x
