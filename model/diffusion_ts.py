@@ -2,7 +2,7 @@
 # 多变量异标签
 import math
 import torch
-from model.layer import attention, lgl
+from model.layer import attention, lgl, split_conv1d, split_linear
 
 
 class ada_norm(torch.nn.Module):
@@ -128,7 +128,8 @@ class diffusion_ts(torch.nn.Module):
         self.decode_block3 = decode_block(output_dim, head, output_size)
         self.normalization1 = torch.nn.LayerNorm(output_size)
         self.normalization2 = torch.nn.LayerNorm(output_size)
-        self.conv1d = torch.nn.Conv1d(3 * output_dim, output_dim, kernel_size=1, stride=1, bias=True)
+        self.split_conv1d = split_conv1d(3 * output_dim, output_dim)
+        self.split_linear = split_linear(output_dim, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         x0 = self.embedding(x)  # (batch,dim,input_size)
@@ -144,7 +145,8 @@ class diffusion_ts(torch.nn.Module):
         trend = self.normalization1(trend1 + trend2 + trend3)
         season = self.normalization2(season1 + season2 + season3)
         x = torch.concat([x, trend, season], dim=1)
-        x = self.conv1d(x)  # (batch,output_dim,output_size)
+        x = self.split_conv1d(x)  # (batch,output_dim,output_size)
+        x = self.split_linear(x)
         return x
 
 

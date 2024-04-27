@@ -1,5 +1,6 @@
-# 单变量自标签
+# 多变量异标签
 import torch
+from model.layer import split_conv1d, split_linear
 
 
 class linear(torch.nn.Module):
@@ -9,12 +10,15 @@ class linear(torch.nn.Module):
         output_dim = len(args.output_column)
         input_size = args.input_size
         output_size = args.output_size
-        assert input_dim == output_dim, f'! 输入变量要和预测变量一致 !'
         # 网络结构
-        self.linear = torch.nn.Linear(input_size, output_size)
+        self.l0 = torch.nn.Linear(input_size, output_size)
+        self.l1 = split_conv1d(input_dim, output_dim)
+        self.l2 = split_linear(output_dim, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
-        x = self.linear(x)
+        x = self.l0(x)  # (batch,input_dim,output_size)
+        x = self.l1(x)  # (batch,output_dim,output_size)
+        x = self.l2(x)
         return x
 
 
@@ -23,7 +27,7 @@ if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
     parser.add_argument('--input_column', default='1,2,3', type=str)
-    parser.add_argument('--output_column', default='1,2,3', type=str)
+    parser.add_argument('--output_column', default='1,2', type=str)
     parser.add_argument('--input_size', default=96, type=int)
     parser.add_argument('--output_size', default=24, type=int)
     args = parser.parse_args()

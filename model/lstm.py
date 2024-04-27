@@ -1,5 +1,6 @@
 # 单变量自标签
 import torch
+from model.layer import split_conv1d, split_linear
 
 
 class lstm(torch.nn.Module):
@@ -11,12 +12,15 @@ class lstm(torch.nn.Module):
         output_size = args.output_size
         n_dict = {'s': 1, 'm': 2, 'l': 3}
         n = n_dict[args.model_type]
-        assert input_dim == output_dim, f'! 输入变量要和预测变量一致 !'
         # 网络结构
-        self.lstm = torch.nn.LSTM(input_size=input_size, hidden_size=output_size, num_layers=n, dropout=0.2)
+        self.l0 = torch.nn.LSTM(input_size=input_size, hidden_size=output_size, num_layers=n, dropout=0.2)
+        self.l1 = split_conv1d(input_dim, output_dim)
+        self.l2 = split_linear(output_dim, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
-        x, (h_n, c_n) = self.lstm(x)
+        x, (h_n, c_n) = self.l0(x)
+        x = self.l1(x)  # (batch,output_dim,output_size)
+        x = self.l2(x)
         return x
 
 
@@ -26,7 +30,7 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--model_type', default='m', type=str)
     parser.add_argument('--input_column', default='1,2,3', type=str)
-    parser.add_argument('--output_column', default='1,2,3', type=str)
+    parser.add_argument('--output_column', default='1,2', type=str)
     parser.add_argument('--input_size', default=96, type=int)
     parser.add_argument('--output_size', default=24, type=int)
     args = parser.parse_args()

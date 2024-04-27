@@ -1,6 +1,7 @@
 # 根据nlinear改编:https://github.com/cure-lab/LTSF-Linear
 # 多变量异标签
 import torch
+from model.layer import split_conv1d, split_linear
 
 
 class nlinear(torch.nn.Module):
@@ -14,7 +15,8 @@ class nlinear(torch.nn.Module):
         self.l0 = torch.nn.Linear(input_size, input_size)
         self.l1 = torch.nn.GELU()
         self.l2 = torch.nn.Linear(input_size, output_size)
-        self.l3 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1, stride=1)
+        self.l3 = split_conv1d(input_dim, output_dim)
+        self.l4 = split_linear(output_dim, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         series_last = x[:, :, -1:]
@@ -24,6 +26,7 @@ class nlinear(torch.nn.Module):
         x = self.l2(x)
         x = x + series_last
         x = self.l3(x)
+        x = self.l4(x)
         return x
 
 
