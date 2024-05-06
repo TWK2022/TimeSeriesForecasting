@@ -72,9 +72,9 @@ class project_class:
         self.high_data = np.array(df['最高价']).astype(np.float32).T[boundary:len(df)]  # 最高价
         self.low_data = np.array(df['最低价']).astype(np.float32).T[boundary:len(df)]  # 最低价
         # 历史加权均值
-        close = df['收盘价']
-        ratio = 0.5 + np.arange(len(close)) / (len(close) - 1)
-        self.mean = np.mean(close * ratio)
+        close_data = df['收盘价']
+        ratio = 0.5 + np.arange(len(close_data)) / (len(close_data) - 1)
+        self.mean = np.mean(close_data * ratio)
         # 记录
         self.state = None  # 买卖状态
         self.buy_list = None  # 买入价格
