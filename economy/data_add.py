@@ -21,26 +21,26 @@ def count(data, lengh, column):
     return result, column
 
 
-def count_data():
-    df = pd.read_csv(args.data_path, index_col=0)
-    value = df[args.column].values
-    result_5, column_5 = count(data=value, lengh=5, column=args.column)
-    result_10, column_10 = count(data=value, lengh=10, column=args.column)
-    result_60, column_60 = count(data=value, lengh=60, column=args.column)
+def data_add(data_path, column, save_path):
+    df = pd.read_csv(data_path, index_col=0)
+    value = df[column].values
+    result_5, column_5 = count(data=value, lengh=5, column=column)
+    result_10, column_10 = count(data=value, lengh=10, column=column)
+    result_60, column_60 = count(data=value, lengh=60, column=column)
     lengh = len(result_60)
     result_5 = result_5[-lengh:]
     result_10 = result_10[-lengh:]
     result = np.concatenate([result_5, result_10, result_60], axis=1)
-    column = column_5 + column_10 + column_60
+    column_add = column_5 + column_10 + column_60
     index = df.index[-lengh:]
-    df_add = pd.DataFrame(result, columns=column, index=index)
+    df_add = pd.DataFrame(result, columns=column_add, index=index)
     drop_index = df.index[:-lengh]
     df = df.drop(index=drop_index)
     df = pd.concat([df, df_add], axis=1)
-    df.to_csv(args.save_path, header=True, index=True)
-    print(f'| 结果保存至:{args.save_path} |')
+    df.to_csv(save_path, header=True, index=True)
+    print(f'| 结果保存至:{save_path} |')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
-    count_data()
+    data_add(args.data_path, args.column, args.save_path)
