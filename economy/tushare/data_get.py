@@ -33,25 +33,27 @@ class data_get_class:
     def data_get(self):
         tushare.set_token(args.token)  # 设置密钥
         pro = tushare.pro_api()  # 初始化接口
-        for key in self.number_dict:
-            path = f'{args.save_path}/{key}.csv'
-            if os.path.exists(path):
-                df_old = pd.read_csv(path, index_col=0)
-                end_time_old = df_old.index[-1]
-                if pd.DatetimeIndex([end_time_old])[0] >= pd.DatetimeIndex([args.end_time])[0]:
-                    print(f'| 已是最新数据: {path} |')
-                    continue
+        for industry in self.number_dict:
+            industry_dict = self.number_dict[industry]
+            for key in industry_dict:
+                path = f'{args.save_path}/{key}.csv'
+                if os.path.exists(path):
+                    df_old = pd.read_csv(path, index_col=0)
+                    end_time_old = df_old.index[-1]
+                    if pd.DatetimeIndex([end_time_old])[0] >= pd.DatetimeIndex([args.end_time])[0]:
+                        print(f'| 已是最新数据: {path} |')
+                        continue
+                    else:
+                        print(f'| 补充数据: {path} |')
+                        df = self._tushare_to_df(pro, self.number_dict, key, end_time_old)
+                        df = df.drop(index=end_time_old)
+                        df = pd.concat([df_old, df])
+                        df.index = pd.DatetimeIndex(df.index)
+                        df.to_csv(path, index=True, header=True)
                 else:
-                    print(f'| 补充数据: {path} |')
-                    df = self._tushare_to_df(pro, self.number_dict, key, end_time_old)
-                    df = df.drop(index=end_time_old)
-                    df = pd.concat([df_old, df])
-                    df.index = pd.DatetimeIndex(df.index)
+                    print(f'| 新增数据: {path} |')
+                    df = self._tushare_to_df(pro, self.number_dict, key, args.start_time)
                     df.to_csv(path, index=True, header=True)
-            else:
-                print(f'| 新增数据: {path} |')
-                df = self._tushare_to_df(pro, self.number_dict, key, args.start_time)
-                df.to_csv(path, index=True, header=True)
 
     def _tushare_to_df(self, pro, number_dict, key, start_time):
         start_time = start_time.replace('-', '')
