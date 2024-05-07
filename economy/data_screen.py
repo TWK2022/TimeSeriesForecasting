@@ -34,7 +34,7 @@ def data_screen(data_dir, save_path, threshold):
         if close_metric > threshold:
             continue
         # 记录
-        result_list.append(file_list[index].split('.')[0] + f' {close_metric:.2f}\n')
+        result_list.append(f'{file_list[index].split(".")[0]} {close_metric:.2f}\n')
         close_metric_list.append(close_metric)
     result_list = sorted(result_list, key=lambda x: close_metric_list[result_list.index(x)])
     # 保存

@@ -103,6 +103,9 @@ def train_get(args, data_dict, model_dict, loss):
                 torch.save(model_dict, args.save_path)  # 保存最佳模型
                 print(f'| 保存最佳模型:{args.save_path} | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} |'
                       f' val_mse:{mse:.4f} |')
+                with open('log.txt', 'w', encoding='utf-8')as f:  # 记录日志
+                    f.write(f'最佳模型:{args.save_path}\n轮次:{epoch}\ntrain_loss:{train_loss:.4f}\n'
+                            f'val_loss:{val_loss:.4f}\nval_mse:{mse:.4f}')
             # wandb
             if args.wandb:
                 args.wandb_run.log({'metric/train_loss': train_loss,
