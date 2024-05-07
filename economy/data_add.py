@@ -24,7 +24,7 @@ def count(data, lengh, column):
 def data_add(data_dir, screen_path, column):
     with open(screen_path, 'r', encoding='utf-8') as f:
         path_list = [f'{data_dir}/{_.split()[0]}.csv' for _ in f.readlines()]
-        save_list = [f'{_[:-4]}._add.csv' for _ in path_list]
+        save_list = [f'{_[:-4]}_add.csv' for _ in path_list]
     for index, path in enumerate(path_list):
         df = pd.read_csv(path, index_col=0)
         value = df[column].values
