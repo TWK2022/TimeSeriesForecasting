@@ -16,7 +16,7 @@ def data_screen(data_dir, save_path):
     file_list = os.listdir(data_dir)
     screen_list = []
     for path in file_list:
-        if '_add' not in path:  # 原始数据
+        if '_add' not in path and '.csv' in path:  # 原始数据
             screen_list.append(path)
     file_list = screen_list
     path_list = [f'{data_dir}/{_}' for _ in file_list]
