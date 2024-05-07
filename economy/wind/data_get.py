@@ -30,7 +30,7 @@ args = parser.parse_args()
 
 # -------------------------------------------------------------------------------------------------------------------- #
 def read_yaml(path):  # 读取yaml文件
-    with open(path, 'r', encoding='utf-8')as f:
+    with open(path, 'r', encoding='utf-8') as f:
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
     return yaml_dict
 
@@ -75,7 +75,7 @@ def wind_to_df(number, column, variable, option, start_time, end_time, divide):
     return df
 
 
-def get_data(number_dict, variable_dict, start_time, end_time, save_path, divide):  # 从WindPy获取数据
+def data_get(number_dict, variable_dict, start_time, end_time, save_path, divide):  # 从WindPy获取数据
     name_list, number_list, column_list, variable, option = deal(number_dict, variable_dict)  # 参数处理
     WindPy.w.start()  # 默认命令超时时间为120秒，如需设置超时时间可以加入waitTime参数，例如waitTime=60,即设置命令超时时间为60秒
     assert WindPy.w.isconnected(), f'| WindPy.w.isconnected()={WindPy.w.isconnected()} |'
@@ -100,8 +100,9 @@ def get_data(number_dict, variable_dict, start_time, end_time, save_path, divide
             df.to_csv(file_name, index=True, header=True)
 
 
+# -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
     number_dict = read_yaml(args.number)  # 读取选用的股票号
     variable_dict = read_yaml(args.variable)  # 读取选用的变量
     divide = int(args.max_data // (len(variable_dict) * 0.7))  # 计算函数每次能获取的最大日期数，约0.7的比例为交易日
-    get_data(number_dict, variable_dict, args.start_time, args.end_time, args.save_path, divide)
+    data_get(number_dict, variable_dict, args.start_time, args.end_time, args.save_path, divide)
