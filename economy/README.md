@@ -12,11 +12,5 @@
 ### 6，economy/simulate.py
 >模拟交易
 ***
-### 训练测试模型
->```
->python run.py --data_path economy/dataset/***_add.csv --input_column input_column.txt --output_column output_column.txt --divide 19,1 --weight base --weight_again True --model_type l
->```
-### 训练最终模型
->```
->python run.py --data_path economy/dataset/***_add.csv --input_column input_column.txt --output_column output_column.txt --divide 19,1 --divide_all True --weight base --weight_again True --model_type l
->```
+### economy.py
+>集成
