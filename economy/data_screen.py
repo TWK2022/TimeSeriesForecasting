@@ -22,6 +22,7 @@ def data_screen(data_dir, save_path):
     path_list = [f'{data_dir}/{_}' for _ in file_list]
     # 筛选
     result_list = []
+    close_metric_list = []
     for index, path in enumerate(path_list):
         df = pd.read_csv(path, index_col=0)
         # 收盘价筛选
@@ -33,6 +34,8 @@ def data_screen(data_dir, save_path):
             continue
         # 记录
         result_list.append(file_list[index].split('.')[0] + f' {close_metric:.2f}\n')
+        close_metric_list.append(close_metric)
+    result_list = sorted(result_list, key=lambda x: close_metric_list[result_list.index(x)])
     # 保存
     with open(save_path, 'w', encoding='utf-8') as f:
         f.writelines(result_list)

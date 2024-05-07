@@ -45,26 +45,26 @@ class data_get_class:
                         continue
                     else:
                         print(f'| 补充数据: {path} |')
-                        df = self._tushare_to_df(pro, self.number_dict, key, end_time_old)
+                        df = self._tushare_to_df(pro, industry_dict, key, end_time_old)
                         df = df.drop(index=end_time_old)
                         df = pd.concat([df_old, df])
                         df.index = pd.DatetimeIndex(df.index)
                         df.to_csv(path, index=True, header=True)
                 else:
                     print(f'| 新增数据: {path} |')
-                    df = self._tushare_to_df(pro, self.number_dict, key, args.start_time)
+                    df = self._tushare_to_df(pro, industry_dict, key, args.start_time)
                     df.to_csv(path, index=True, header=True)
 
-    def _tushare_to_df(self, pro, number_dict, key, start_time):
+    def _tushare_to_df(self, pro, industry_dict, key, start_time):
         start_time = start_time.replace('-', '')
         # 基础信息
-        df = pro.daily(ts_code=number_dict[key], start_date=start_time, end_date=args.end_time)[self.daily_column]
+        df = pro.daily(ts_code=industry_dict[key], start_date=start_time, end_date=args.end_time)[self.daily_column]
         df.columns = self.daily_name
         df.index = pd.DatetimeIndex(df['日期'])
         df = df.drop(columns='日期')
         df = df.sort_index()
         # 指标
-        df_ = pro.daily_basic(ts_code=number_dict[key], start_date=start_time, end_date=args.end_time,
+        df_ = pro.daily_basic(ts_code=industry_dict[key], start_date=start_time, end_date=args.end_time,
                               fields=self.daily_basic_column)
         df_.columns = self.daily_basic_name
         df_.index = pd.DatetimeIndex(df_['日期'])

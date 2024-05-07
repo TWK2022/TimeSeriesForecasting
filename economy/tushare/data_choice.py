@@ -4,9 +4,9 @@ import argparse
 # -------------------------------------------------------------------------------------------------------------------- #
 # 筛选出某个行业的股票
 # -------------------------------------------------------------------------------------------------------------------- #
-parser = argparse.ArgumentParser(description='|通过tushare获取最新股票数据以补全数据库|')
-parser.add_argument('--yaml_path', default='all.yaml', type=str, help='|所有股票信息|')
-parser.add_argument('--save_path', default='data_choice.yaml', type=str, help='|保存位置|')
+parser = argparse.ArgumentParser(description='|选择股票|')
+parser.add_argument('--yaml_path', default='number_all.yaml', type=str, help='|所有股票信息|')
+parser.add_argument('--save_path', default='number.yaml', type=str, help='|保存位置|')
 parser.add_argument('--industry', default='船舶,航空', type=str, help='|行业，必选，如"A,B,C"|')
 parser.add_argument('--area', default='', type=str, help='|地区，空则不筛选，如"A、B、C"|')
 parser.add_argument('--time', default='', type=str, help='|上市时间，筛选time之前的，空则不筛选|')
@@ -26,14 +26,14 @@ def data_choice(args):
         dict_ = yaml_dict[industry]
         for name in dict_.keys():
             number = dict_[name][0]
-            area = dict_[name][1]
-            time = dict_[name][3]
-            type = dict_[name][4]
+            area = dict_[name][2]
+            type_ = dict_[name][3]
+            time = dict_[name][4]
             if args.area and area not in args.area:
                 continue
-            if args.time and time < args.time:
+            if args.type and type_ != args.type:
                 continue
-            if args.type and type != args.type:
+            if args.time and time < args.time:
                 continue
             result_dict[industry][name] = number
     with open(args.save_path, 'w', encoding='utf-8') as f:
