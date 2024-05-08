@@ -24,7 +24,7 @@ parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
 parser.add_argument('--run_test', default=False, type=bool)
 # simulate.py
-parser.add_argument('--simulate', default=False, type=bool)
+parser.add_argument('--simulate', default=True, type=bool)
 parser.add_argument('--rise', default=1.2, type=float)
 args = parser.parse_args()
 

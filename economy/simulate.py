@@ -55,7 +55,8 @@ class project_class:
         model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
                        model_dict['std_output']).eval().to(self.device)
         self.model = model.half() if self.device == 'cuda' else model.float()
-        print(f'| 模型:{model_path} | train_loss:{model_dict["train_loss"]:.4f} |')
+        print(f'| 模型:{model_path} | train_loss:{model_dict["train_loss"]:.4f} |'
+              f'val_loss:{model_dict["val_loss"]:.4f} |')
         # 数据
         try:
             df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
@@ -123,7 +124,7 @@ class project_class:
         if now * self.a_decline_still > next_:  # 第2天发现依然有下降趋势，先不买入
             return
         # b模型策略
-        if now > np.min(pred[0:np.argmax(pred)]):  # 预测还有下降空间，先不买入
+        if now > np.min(pred[0:np.argmax(pred) + 1]):  # 预测还有下降空间，先不买入
             return
         # c保守策略
         if self.safe and now > self.safe_mean * self.mean:  # 股价处于历史高位，先不买入
