@@ -1,5 +1,5 @@
 ## 经济
-### 1，economy/tushare/data_choice.py
+### 1，economy/tushare/industry_choice.py
 >选择股票
 ### 2，economy/tushare/data_get.py
 >获取数据
