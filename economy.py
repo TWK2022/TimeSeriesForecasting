@@ -6,8 +6,8 @@ import argparse
 # 需要先训练一个预训练模型:economy/model/base.pt
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|集成|')
-# economy/tushare/data_choice.py
-parser.add_argument('--data_choice', default=False, type=bool)
+# economy/tushare/industry_choice.py
+parser.add_argument('--industry_choice', default=False, type=bool)
 parser.add_argument('--industry', default='船舶,航空', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
@@ -30,9 +30,9 @@ def economy(args):
     path_tushare = f'{path}/economy/tushare'
     # economy/tushare目录
     os.chdir(path_tushare)
-    if args.data_choice:
-        print('economy/tushare/data_choice.py')
-        os.system(f'python data_choice.py --industry {args.industry}')
+    if args.industry_choice:
+        print('economy/tushare/industry_choice.py')
+        os.system(f'python industry_choice.py --industry {args.industry}')
     if args.data_get:
         print('economy/tushare/data_get.py')
         os.system(f'python data_get.py --token {args.token} --end_time {args.end_time}')
