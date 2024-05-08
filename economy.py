@@ -103,8 +103,9 @@ class economy_class:
                 if os.path.exists(model_path):  # 已有模型则不再训练
                     continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt '
-                          f'--output_column output_column.txt --divide 19,1 --weight economy/model_test/base_test.pt'
-                          f' --weight_again True --save_path economy/model_test/best.pt --model itransformer'
+                          f'--output_column output_column.txt --input_size 96 --output_size 12 --divide 19,1'
+                          f' --weight economy/model_test/base_test.pt --weight_again True'
+                          f' --save_path economy/model_test/best.pt --model itransformer'
                           f' --model_type l --epoch 30 --lr_end_epoch 30')
                 os.rename('economy/model_test/best.pt', model_path)  # 改为中文名
                 # 打开日志
