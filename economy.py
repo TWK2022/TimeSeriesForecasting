@@ -19,13 +19,17 @@ parser.add_argument('--data_screen', default=False, type=bool)
 parser.add_argument('--threshold', default=0.9, type=float)
 # economy/data_add.py
 parser.add_argument('--data_add', default=False, type=bool)
-# run.py | 训练基础测试模型
+# run.py | 训练测试基础模型
 parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
 parser.add_argument('--run_test', default=False, type=bool)
 # simulate.py
-parser.add_argument('--simulate', default=True, type=bool)
+parser.add_argument('--simulate', default=False, type=bool)
 parser.add_argument('--rise', default=1.2, type=float)
+# run.py | 训练正式基础模型
+parser.add_argument('--run_base', default=False, type=bool)
+# run.py | 训练正式模型
+parser.add_argument('--run', default=False, type=bool)
 args = parser.parse_args()
 
 
@@ -60,6 +64,12 @@ class economy_class:
         os.chdir(self.path_economy)
         if self.args.simulate:
             self._simulate()
+        # 原目录
+        os.chdir(self.path)
+        if self.args.run_base:
+            self._run_base()
+        if self.args.run:
+            self._run()
 
     def _industry_choice(self):
         print('economy/tushare/industry_choice.py')
@@ -78,7 +88,7 @@ class economy_class:
         os.system(f'python data_add.py')
 
     def _run_base_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
-        print('run.py | 训练基础测试模型')
+        print('run.py | 训练测试基础模型')
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
         with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
@@ -95,7 +105,7 @@ class economy_class:
 
     def _run_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
         print('run.py | 训练测试模型')
-        assert os.path.exists('economy/model_test/base_test.pt')
+        assert os.path.exists(f'{model_dir}/base_test.pt')
         with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
             screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
         if os.path.exists('economy/model.yaml'):
@@ -114,7 +124,7 @@ class economy_class:
                     continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size 24 --divide 19,1'
-                          f' --weight economy/model_test/base_test.pt --weight_again True'
+                          f' --weight {model_dir}/base_test.pt --weight_again True'
                           f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 30')
                 shutil.move('last.pt', model_path)
                 # 打开日志
@@ -141,11 +151,59 @@ class economy_class:
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
                     log = f.readlines()
-                income_sum = float(log[0].strip()[5:])
                 income_mean = float(log[1].strip()[8:])
                 # 记录模型信息
-                model_dict[industry][name][2:4] = [income_sum, income_mean]
+                model_dict[industry][name][2] = income_mean
                 with open('model.yaml', 'w', encoding='utf-8') as f:
+                    yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
+
+    def _run_base(self, data_dir='economy/dataset', model_dir='economy/model'):
+        print('run.py | 训练基础正式模型')
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
+        with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
+            screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
+        for industry in screen_dict:
+            name_list = screen_dict[industry].keys()
+            for name in name_list:
+                data_path = f'{data_dir}/{name}_add.csv'
+                os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
+                          f' --output_column output_column.txt --input_size 96 --output_size 24 --divide 19,1'
+                          f' --divide_all True --weight {model_dir}/base.pt --weight_again True'
+                          f' --model itransformer --model_type l --epoch 10 --lr_end_epoch 10')
+                shutil.move('last.pt', f'{model_dir}/base.pt')
+
+    def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
+        print('run.py | 训练正式模型')
+        assert os.path.exists(f'{model_dir}/base.pt')
+        with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
+            screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
+        if os.path.exists('economy/model.yaml'):
+            with open('economy/model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
+                model_dict = yaml.load(f, Loader=yaml.SafeLoader)
+            model_dict = model_dict if model_dict else {}  # 初始化
+        else:
+            model_dict = {}
+        for industry in screen_dict:
+            name_list = screen_dict[industry].keys()
+            model_dict[industry] = model_dict[industry] if model_dict.get(industry) else {}  # 初始化
+            for name in name_list:
+                data_path = f'{data_dir}/{name}_add.csv'
+                model_path = f'{model_dir}/{name}.pt'
+                if os.path.exists(model_path):  # 已有模型则不再训练
+                    continue
+                os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
+                          f' --output_column output_column.txt --input_size 96 --output_size 24 --divide 19,1'
+                          f' --divide_all True --weight {model_dir}/base.pt --weight_again True'
+                          f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 30')
+                shutil.move('last.pt', model_path)
+                # 打开日志
+                with open('log.txt', 'r', encoding='utf-8') as f:
+                    log = f.readlines()
+                val_loss = float(log[3].strip()[9:])
+                # 记录模型信息
+                model_dict[industry][name][3] = val_loss
+                with open('economy/model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
 
 
