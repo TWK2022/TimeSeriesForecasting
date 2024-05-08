@@ -18,7 +18,7 @@ parser.add_argument('--model_path', default='../best.pt', type=str, help='|pt模
 parser.add_argument('--data_path', default=r'dataset/北摩高科_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=12, type=int, help='|输出长度|')
+parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
 parser.add_argument('--rise', default=1.2, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.2|')
@@ -123,7 +123,7 @@ class project_class:
         if now * self.a_decline_still > next_:  # 第2天发现依然有下降趋势，先不买入
             return
         # b模型策略
-        if now < np.min(pred[0:np.argmax(pred)]):  # 预测还有下降空间，先不买入
+        if now > np.min(pred[0:np.argmax(pred)]):  # 预测还有下降空间，先不买入
             return
         # c保守策略
         if self.safe and now > self.safe_mean * self.mean:  # 股价处于历史高位，先不买入

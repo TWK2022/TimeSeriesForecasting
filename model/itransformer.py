@@ -46,10 +46,13 @@ class itransformer(torch.nn.Module):
         self.l5 = split_linear(output_dim, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
+        series_last = x[:, :, -1:]
+        x = x - series_last
         x = self.l0(x)  # (batch,input_dim,feature)
         x = self.l1(x)
         x = self.l2(x)
         x = self.l3(x)  # (batch,input_dim,output_size)
+        x = x + series_last
         x = self.l4(x)  # (batch,output_dim,output_size)
         x = self.l5(x)
         return x
