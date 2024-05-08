@@ -17,7 +17,7 @@ args.time = int(args.time) if args.time else 0
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
-def data_choice(args):
+def industry_choice(args):
     with open(args.yaml_path, 'r', encoding='utf-8') as f:
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
     result_dict = {}
@@ -43,4 +43,4 @@ def data_choice(args):
 
 # -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
-    data_choice(args)
+    industry_choice(args)
