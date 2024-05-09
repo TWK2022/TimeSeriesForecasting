@@ -28,7 +28,7 @@ parser.add_argument('--data_screen', default=False, type=bool)
 parser.add_argument('--close', default=1, type=float)
 parser.add_argument('--change', default=1, type=float)
 parser.add_argument('--volume', default=50000, type=float)
-parser.add_argument('--volume_ratio', default=0.8, type=float)
+parser.add_argument('--volume_ratio', default=1, type=float)
 # economy/data_add.py
 parser.add_argument('--data_add', default=False, type=bool)
 # run.py | 训练测试基础模型
@@ -37,7 +37,7 @@ parser.add_argument('--run_base_test', default=False, type=bool)
 parser.add_argument('--run_test', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
-parser.add_argument('--rise', default=1.2, type=float)
+parser.add_argument('--rise', default=1.1, type=float)
 # run.py | 训练正式基础模型
 parser.add_argument('--run_base', default=False, type=bool)
 # run.py | 训练正式模型
@@ -170,9 +170,8 @@ class economy_class:
                 with open('log.txt', 'r', encoding='utf-8') as f:
                     log = f.readlines()
                 error = int(log[3].strip()[5:])
-                last = int(log[4].strip()[7:])
                 # 记录模型信息
-                model_dict[industry][name][1] = True if not error and last else False
+                model_dict[industry][name][1] = True if not error else False
                 with open('model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
 
@@ -236,10 +235,10 @@ class economy_class:
                     continue
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
-                model_dict = torch.load(model_path, map_location='cpu')
-                model = model_dict['model']
-                model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
-                               model_dict['std_output']).eval()
+                dict_ = torch.load(model_path, map_location='cpu')
+                model = dict_['model']
+                model = deploy(model, dict_['mean_input'], dict_['mean_output'], dict_['std_input'],
+                               dict_['std_output']).eval()
                 df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
                 input_data = np.array(df[input_column]).astype(np.float32).T
                 input_data = input_data[:, -self.args.input_size:]
@@ -248,22 +247,25 @@ class economy_class:
                 close_data = close_data[-200:]
                 # 推理
                 with torch.no_grad():
-                    pred = model(tensor)[0].cpu().numpy()
+                    pred = model(tensor)[0][0].cpu().numpy()
                 # 画图
-                self._draw(pred, close_data, name)
-                print(f'| 画图保存位置:save_image |')
+                ratio = np.max(pred) / close_data[-1]
+                if ratio > 1.1:  # 有上涨空间
+                    save_path = f'save_image/{name}_{ratio:.2f}_{model_dict[industry][name][1]}_{model_dict[industry][name][1]}.jpg'
+                    self._draw(pred, close_data, name, save_path)
 
-    def _draw(self, pred, close_data, name):
+    def _draw(self, pred, close_data, name, save_path):
         zero = torch.zeros(len(close_data))
         pred = np.concatenate([zero, pred], axis=0)
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
         plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
         plt.title(name)
         plt.grid()
-        plt.legend()
         plt.plot(close_data, color='green', label='true')
         plt.plot(pred, color='cyan', label='pred')
-        plt.savefig(f'save_image/{name}_feature.jpg')
+        plt.savefig(save_path)
+        plt.close()
+        print(f'| 画图保存位置:{save_path} |')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #

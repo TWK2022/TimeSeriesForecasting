@@ -37,10 +37,10 @@ def draw(output_data, pred):
         plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
         plt.title(name)
         plt.grid()
-        plt.legend()
         plt.plot(true, color='green', label=f'{args.output_column[index]}_in')
         plt.plot(out_, color='cyan', label=f'{args.output_column[index]}_output')
         plt.savefig(args.save_path + f'/{name}_{args.output_column[index]}' + '.jpg')
+        plt.close()
 
 
 def predict_pt():

@@ -11,8 +11,7 @@ parser.add_argument('--history', default=100, type=int, help='|计算指标时�
 parser.add_argument('--close', default=1, type=float, help='|筛选价格<close*历史加权均值|')
 parser.add_argument('--change', default=1, type=float, help='|筛选平均换手率>change|')
 parser.add_argument('--volume', default=50000, type=float, help='|筛选平均成交量>volume|')
-parser.add_argument('--volume_ratio', default=0.8, type=float, help='|筛选近期量比>volume_ratio|')
-
+parser.add_argument('--volume_ratio', default=1, type=float, help='|筛选近期量比>volume_ratio|')
 args = parser.parse_args()
 
 
