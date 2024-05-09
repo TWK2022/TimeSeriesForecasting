@@ -1,12 +1,21 @@
 import os
 import yaml
+import torch
 import shutil
 import argparse
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from model.layer import deploy
+from block.util import read_column
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 集成
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|集成|')
+parser.add_argument('--input_column', default='input_column.txt', type=str)
+parser.add_argument('--input_size', default=96, type=int)
+parser.add_argument('--output_size', default=24, type=int)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
 parser.add_argument('--industry', default='船舶,航空,水运,电气设备', type=str)
@@ -33,6 +42,8 @@ parser.add_argument('--rise', default=1.2, type=float)
 parser.add_argument('--run_base', default=False, type=bool)
 # run.py | 训练正式模型
 parser.add_argument('--run', default=False, type=bool)
+# def feature
+parser.add_argument('--feature', default=False, type=bool)
 args = parser.parse_args()
 
 
@@ -44,7 +55,7 @@ class economy_class:
         self.path_economy = f'{self.path}/economy'
         self.path_tushare = f'{self.path}/economy/tushare'
 
-    def run(self):
+    def predict(self):
         # economy/tushare目录
         os.chdir(self.path_tushare)
         if self.args.industry_choice:
@@ -73,6 +84,8 @@ class economy_class:
             self._run_base()
         if self.args.run:
             self._run()
+        if self.args.feature:
+            self._feature()
 
     def _industry_choice(self):
         print('economy/tushare/industry_choice.py')
@@ -102,8 +115,8 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column 收盘价_5 --input_size 96 --output_size 24 --divide 19,1'
-                          f' --weight {model_dir}/base_test.pt --weight_again True'
+                          f' --output_column 收盘价_5 --input_size 96 --output_size {self.args.output_size}'
+                          f' --divide 19,1 --weight {model_dir}/base_test.pt --weight_again True'
                           f' --model itransformer --model_type l --epoch 10 --lr_end_epoch 10')
                 shutil.move('last.pt', f'{model_dir}/base_test.pt')
 
@@ -127,17 +140,16 @@ class economy_class:
                 if os.path.exists(model_path):  # 已有模型则不再训练
                     continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column output_column.txt --input_size 96 --output_size 24 --divide 19,1'
-                          f' --weight {model_dir}/base_test.pt --weight_again True'
+                          f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
+                          f' --divide 19,1 --weight {model_dir}/base_test.pt --weight_again True'
                           f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 30')
                 shutil.move('last.pt', model_path)
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
                     log = f.readlines()
-                train_loss = float(log[2].strip()[11:])
                 val_loss = float(log[3].strip()[9:])
                 # 记录模型信息
-                model_dict[industry][name] = [train_loss, val_loss, None, None]
+                model_dict[industry][name] = [val_loss, None, None]
                 with open('economy/model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
 
@@ -150,14 +162,17 @@ class economy_class:
         for industry in screen_dict:
             name_list = screen_dict[industry].keys()
             for name in name_list:
+                if model_dict[industry][name][0] > 0.1:  # 测试模型效果不好
+                    continue
                 os.system(f'python simulate.py --model_path model_test/{name}.pt --data_path dataset/{name}_add.csv'
                           f' --rise {self.args.rise}')
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
                     log = f.readlines()
-                income_mean = float(log[1].strip()[8:])
+                error = int(log[3].strip()[5:])
+                last = int(log[4].strip()[7:])
                 # 记录模型信息
-                model_dict[industry][name][2] = income_mean
+                model_dict[industry][name][1] = True if not error and last else False
                 with open('model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
 
@@ -172,33 +187,29 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column 收盘价_5 --input_size 96 --output_size 24 --divide 19,1'
-                          f' --divide_all True --weight {model_dir}/base.pt --weight_again True'
+                          f' --output_column 收盘价_5 --input_size 96 --output_size {self.args.output_size}'
+                          f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
                           f' --model itransformer --model_type l --epoch 10 --lr_end_epoch 10')
                 shutil.move('last.pt', f'{model_dir}/base.pt')
 
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
         print('run.py | 训练正式模型')
-        assert os.path.exists(f'{model_dir}/base.pt')
         with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
             screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        if os.path.exists('economy/model.yaml'):
-            with open('economy/model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
-                model_dict = yaml.load(f, Loader=yaml.SafeLoader)
-            model_dict = model_dict if model_dict else {}  # 初始化
-        else:
-            model_dict = {}
+        with open('economy/model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
+            model_dict = yaml.load(f, Loader=yaml.SafeLoader)
         for industry in screen_dict:
             name_list = screen_dict[industry].keys()
-            model_dict[industry] = model_dict[industry] if model_dict.get(industry) else {}  # 初始化
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
                 if os.path.exists(model_path):  # 已有模型则不再训练
                     continue
+                if model_dict[industry][name][0] > 0.1:  # 测试模型效果不好
+                    continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column output_column.txt --input_size 96 --output_size 24 --divide 19,1'
-                          f' --divide_all True --weight {model_dir}/base.pt --weight_again True'
+                          f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
+                          f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
                           f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 30')
                 shutil.move('best.pt', model_path)
                 # 打开日志
@@ -206,12 +217,56 @@ class economy_class:
                     log = f.readlines()
                 val_loss = float(log[3].strip()[9:])
                 # 记录模型信息
-                model_dict[industry][name][3] = val_loss
+                model_dict[industry][name][2] = val_loss
                 with open('economy/model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
+
+    def _feature(self, data_dir='economy/dataset', model_dir='economy/model'):
+        if not os.path.exists('save_image'):
+            os.makedirs('save_image')
+        with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
+            screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
+        with open('economy/model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
+            model_dict = yaml.load(f, Loader=yaml.SafeLoader)
+        input_column = read_column(self.args.input_column)  # column处理
+        for industry in screen_dict:
+            name_list = screen_dict[industry].keys()
+            for name in name_list:
+                if model_dict[industry][name][0] > 0.1:  # 测试模型效果不好
+                    continue
+                data_path = f'{data_dir}/{name}_add.csv'
+                model_path = f'{model_dir}/{name}.pt'
+                model_dict = torch.load(model_path, map_location='cpu')
+                model = model_dict['model']
+                model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
+                               model_dict['std_output']).eval()
+                df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
+                input_data = np.array(df[input_column]).astype(np.float32).T
+                input_data = input_data[:, -self.args.input_size:]
+                tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
+                close_data = np.array(df['收盘价']).astype(np.float32)
+                close_data = close_data[-200:]
+                # 推理
+                with torch.no_grad():
+                    pred = model(tensor)[0].cpu().numpy()
+                # 画图
+                self._draw(pred, close_data, name)
+                print(f'| 画图保存位置:save_image |')
+
+    def _draw(self, pred, close_data, name):
+        zero = torch.zeros(len(close_data))
+        pred = np.concatenate([zero, pred], axis=0)
+        plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
+        plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
+        plt.title(name)
+        plt.grid()
+        plt.legend()
+        plt.plot(close_data, color='green', label='true')
+        plt.plot(pred, color='cyan', label='pred')
+        plt.savefig(f'save_image/{name}_feature.jpg')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
     model = economy_class(args)
-    model.run()
+    model.predict()
