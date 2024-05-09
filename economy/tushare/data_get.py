@@ -27,8 +27,8 @@ class data_get_class:
         self.daily_column = ['trade_date', 'open', 'high', 'low', 'close', 'pre_close', 'change', 'pct_chg', 'vol']
         self.daily_name = ['日期', '开盘价', '最高价', '最低价', '收盘价', '昨收价(前复权)', '涨跌额', '涨跌幅',
                            '成交量']
-        self.daily_basic_column = 'trade_date,turnover_rate,turnover_rate_f,volume_ratio,pe_ttm,pb,ps_ttm'
-        self.daily_basic_name = ['日期', '换手率', '换手率(自由流通股)', '量比', '市盈率(ttm)', '市净率', '市销率(ttm)']
+        self.daily_basic_column = 'trade_date,turnover_rate,turnover_rate_f,volume_ratio'
+        self.daily_basic_name = ['日期', '换手率', '换手率(自由流通股)', '量比']
 
     def data_get(self):
         tushare.set_token(args.token)  # 设置密钥
@@ -72,7 +72,6 @@ class data_get_class:
         df_ = df_.sort_index()
         # 合并
         df = pd.concat([df, df_], axis=1)
-        df = df.dropna(axis=0, how='any')
         return df
 
 
