@@ -7,13 +7,18 @@ import pandas as pd
 parser = argparse.ArgumentParser(description='|筛选有上升潜力的股票|')
 parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
-parser.add_argument('--threshold', default=0.9, type=float, help='|筛选指标小于threshold的股票，1表示<=历史加权均值|')
+parser.add_argument('--history', default=100, type=int, help='|计算指标时采用最近history日内的数据|')
+parser.add_argument('--close', default=1, type=float, help='|筛选价格<close*历史加权均值|')
+parser.add_argument('--change', default=1, type=float, help='|筛选平均换手率>change|')
+parser.add_argument('--volume', default=50000, type=float, help='|筛选平均成交量>volume|')
+parser.add_argument('--volume_ratio', default=0.8, type=float, help='|筛选近期量比>volume_ratio|')
+
 args = parser.parse_args()
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
-def data_screen(yaml_path, save_path, threshold):
-    with open(yaml_path, 'r', encoding='utf-8') as f:
+def data_screen(args):
+    with open(args.yaml_path, 'r', encoding='utf-8') as f:
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
     result_dict = {}
     record_all = 0
@@ -22,28 +27,47 @@ def data_screen(yaml_path, save_path, threshold):
         industry_dict = yaml_dict[industry]
         record_all += len(industry_dict)
         result_dict[industry] = {}
-        for key in industry_dict:
+        for name in industry_dict:
             # 筛选
-            df = pd.read_csv(f'dataset/{key}.csv', index_col=0)
+            df = pd.read_csv(f'dataset/{name}.csv', index_col=0)
+            # 上市日期删选
+            if len(df) < args.history:
+                continue
+            # 加权均值
+            ratio = 0.1 + 1.9 * np.arange(args.history) / (args.history - 1)
             # 收盘价筛选
             close_data = df['收盘价'].values
-            ratio = 0.01 + 1.99 * np.arange(len(close_data[-100:])) / (len(close_data[-100:]) - 1)
-            mean = np.mean(close_data[-100:] * ratio)
-            close_metric = np.mean(close_data[-3:]) / mean
-            if close_metric > threshold:
+            mean = np.mean(close_data[-args.history:] * ratio)
+            close_last = np.mean(close_data[-3:]) / mean
+            if close_last > args.close:
+                continue
+            # 换手率筛选
+            change_data = df['换手率'].values
+            change_mean = np.mean(change_data[-args.history:] * ratio)
+            if change_mean < args.change:
+                continue
+            # 成交量筛选
+            volume_data = df['成交量'].values
+            volume_mean = np.mean(volume_data[-args.history:] * ratio)
+            if volume_mean < args.volume:
+                continue
+            # 量比筛选
+            volume_ratio_data = df['量比'].values
+            volume_ratio_last = np.mean(volume_ratio_data[-3:])
+            if volume_ratio_last < args.volume_ratio:
                 continue
             # 记录
-            result_dict[industry][key] = float(round(close_metric, 2))
+            result_dict[industry][name] = float(round(close_last, 2))
             record_screen += 1
         result_dict[industry] = dict(sorted(result_dict[industry].items(), key=lambda x: x[1]))
     # 保存
-    with open(save_path, 'w', encoding='utf-8') as f:
+    with open(args.save_path, 'w', encoding='utf-8') as f:
         yaml.dump(result_dict, f, allow_unicode=True, sort_keys=False)
     # 显示
     print(f'| 总数:{record_all} | 筛选数:{record_screen} |')
-    print(f'| 结果保存至:{save_path} |')
+    print(f'| 结果保存至:{args.save_path} |')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
-    data_screen(args.yaml_path, args.save_path, args.threshold)
+    data_screen(args)
