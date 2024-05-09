@@ -196,7 +196,7 @@ class economy_class:
                           f' --output_column output_column.txt --input_size 96 --output_size 24 --divide 19,1'
                           f' --divide_all True --weight {model_dir}/base.pt --weight_again True'
                           f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 30')
-                shutil.move('last.pt', model_path)
+                shutil.move('best.pt', model_path)
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
                     log = f.readlines()
