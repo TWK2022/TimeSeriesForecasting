@@ -9,14 +9,17 @@ import argparse
 parser = argparse.ArgumentParser(description='|集成|')
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='船舶,航空', type=str)
+parser.add_argument('--industry', default='船舶,航空,水运,电气设备', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
 parser.add_argument('--end_time', default='20240601', type=str)
 # economy/data_screen.py
 parser.add_argument('--data_screen', default=False, type=bool)
-parser.add_argument('--threshold', default=0.9, type=float)
+parser.add_argument('--close', default=1, type=float)
+parser.add_argument('--change', default=1, type=float)
+parser.add_argument('--volume', default=50000, type=float)
+parser.add_argument('--volume_ratio', default=0.8, type=float)
 # economy/data_add.py
 parser.add_argument('--data_add', default=False, type=bool)
 # run.py | 训练测试基础模型
@@ -81,7 +84,8 @@ class economy_class:
 
     def _data_screen(self):
         print('economy/data_screen.py')
-        os.system(f'python data_screen.py --threshold {self.args.threshold}')
+        os.system(f'python data_screen.py --close {self.args.close} --change {self.args.close}'
+                  f' --volume {self.args.close} --volume_ratio {self.args.close}')
 
     def _data_add(self):
         print('economy/data_add.py')
@@ -98,7 +102,7 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column output_column.txt --input_size 96 --output_size 24 --divide 19,1'
+                          f' --output_column 收盘价_5 --input_size 96 --output_size 24 --divide 19,1'
                           f' --weight {model_dir}/base_test.pt --weight_again True'
                           f' --model itransformer --model_type l --epoch 10 --lr_end_epoch 10')
                 shutil.move('last.pt', f'{model_dir}/base_test.pt')
@@ -168,7 +172,7 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column output_column.txt --input_size 96 --output_size 24 --divide 19,1'
+                          f' --output_column 收盘价_5 --input_size 96 --output_size 24 --divide 19,1'
                           f' --divide_all True --weight {model_dir}/base.pt --weight_again True'
                           f' --model itransformer --model_type l --epoch 10 --lr_end_epoch 10')
                 shutil.move('last.pt', f'{model_dir}/base.pt')
