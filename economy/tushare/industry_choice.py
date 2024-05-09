@@ -29,13 +29,15 @@ def industry_choice(args):
             area = dict_[name][2]
             type_ = dict_[name][3]
             time = dict_[name][4]
+            if 'ST' in name:
+                continue
             if args.area and area not in args.area:
                 continue
             if args.type and type_ != args.type:
                 continue
             if args.time and time < args.time:
                 continue
-            result_dict[industry][name.replace('*', '')] = number  # 需要去除*号
+            result_dict[industry][name] = number
     with open(args.save_path, 'w', encoding='utf-8') as f:
         yaml.dump(result_dict, f, allow_unicode=True)
     print(f'| 保存结果至:{args.save_path} |')
