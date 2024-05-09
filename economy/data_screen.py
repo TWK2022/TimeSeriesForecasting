@@ -27,8 +27,8 @@ def data_screen(yaml_path, save_path, threshold):
             df = pd.read_csv(f'dataset/{key}.csv', index_col=0)
             # 收盘价筛选
             close_data = df['收盘价'].values
-            ratio = 0.01 + 1.99 * np.arange(len(close_data)) / (len(close_data) - 1)
-            mean = np.mean(close_data * ratio)
+            ratio = 0.01 + 1.99 * np.arange(len(close_data[-100:])) / (len(close_data[-100:]) - 1)
+            mean = np.mean(close_data[-100:] * ratio)
             close_metric = np.mean(close_data[-3:]) / mean
             if close_metric > threshold:
                 continue

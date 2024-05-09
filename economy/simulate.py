@@ -15,7 +15,7 @@ from block.util import read_column
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|测试|')
 parser.add_argument('--model_path', default='../best.pt', type=str, help='|pt模型位置|')
-parser.add_argument('--data_path', default=r'dataset/北摩高科_add.csv', type=str, help='|数据位置|')
+parser.add_argument('--data_path', default=r'dataset/航发科技_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
@@ -72,8 +72,8 @@ class project_class:
         self.low_data = np.array(df['最低价']).astype(np.float32).T[boundary:len(df)]  # 最低价
         # 历史加权均值
         close_data = df['收盘价']
-        ratio = 0.01 + 1.99 * np.arange(len(close_data)) / (len(close_data) - 1)
-        self.mean = np.mean(close_data * ratio)
+        ratio = 0.01 + 1.99 * np.arange(len(close_data[-100:])) / (len(close_data[-100:]) - 1)
+        self.mean = np.mean(close_data[-100:] * ratio)
         # 记录
         self.state = None  # 买卖状态
         self.buy_list = None  # 买入价格
