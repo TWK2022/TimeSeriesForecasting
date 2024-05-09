@@ -29,19 +29,18 @@ if not os.path.exists(args.save_path):
 
 # -------------------------------------------------------------------------------------------------------------------- #
 def draw(output_data, pred):
-    for index, (int_, out_) in enumerate(zip(output_data, pred)):
+    for index, (true, out_) in enumerate(zip(output_data, pred)):
         name = args.data_path.split('/')[-1].split('.')[0]
-        zero = torch.zeros(len(int_))
+        zero = torch.zeros(len(true))
         out_ = np.concatenate([zero, out_], axis=0)
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
         plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
         plt.title(name)
-        plt.plot(int_, color='green', label=f'{args.output_column[index]}_in')
-        plt.plot(out_, color='cyan', label=f'{args.output_column[index]}_output')
         plt.grid()
         plt.legend()
+        plt.plot(true, color='green', label=f'{args.output_column[index]}_in')
+        plt.plot(out_, color='cyan', label=f'{args.output_column[index]}_output')
         plt.savefig(args.save_path + f'/{name}_{args.output_column[index]}' + '.jpg')
-        plt.close()
 
 
 def predict_pt():
