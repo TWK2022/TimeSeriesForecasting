@@ -7,9 +7,11 @@ import pandas as pd
 parser = argparse.ArgumentParser(description='|计算5日、10日、60日均线|')
 parser.add_argument('--data_dir', default='dataset', type=str, help='|数据目录|')
 parser.add_argument('--screen_path', default='data_screen.yaml', type=str, help='|data_screen.py中筛选出的结果|')
-parser.add_argument('--column', default='收盘价,成交量', type=str, help='|变量选择|')
+parser.add_argument('--column', default='收盘价,成交量', type=str, help='|选择计算的变量|')
+parser.add_argument('--delete_column', default='市盈率(ttm),市净率,市销率(ttm)', type=str, help='|删除的变量|')
 args = parser.parse_args()
 args.column = args.column.split(',')
+args.delete_column = args.delete_column.split(',')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -22,17 +24,17 @@ def count(data, lengh, column):
     return result, column
 
 
-def data_add(data_dir, screen_path, column):
-    with open(screen_path, 'r', encoding='utf-8') as f:
+def data_deal(args):
+    with open(args.screen_path, 'r', encoding='utf-8') as f:
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
     for industry in yaml_dict:
         for name in yaml_dict[industry].keys():
-            path = f'dataset/{name}.csv'
+            path = f'{args.data_dir}/{name}.csv'
             df = pd.read_csv(path, index_col=0)
-            value = df[column].values
-            result_5, column_5 = count(data=value, lengh=5, column=column)
-            result_10, column_10 = count(data=value, lengh=10, column=column)
-            result_60, column_60 = count(data=value, lengh=60, column=column)
+            value = df[args.column].values
+            result_5, column_5 = count(data=value, lengh=5, column=args.column)
+            result_10, column_10 = count(data=value, lengh=10, column=args.column)
+            result_60, column_60 = count(data=value, lengh=60, column=args.column)
             lengh = len(result_60)
             result_5 = result_5[-lengh:]
             result_10 = result_10[-lengh:]
@@ -43,10 +45,13 @@ def data_add(data_dir, screen_path, column):
             drop_index = df.index[:-lengh]
             df = df.drop(index=drop_index)
             df = pd.concat([df, df_add], axis=1)
-            df.to_csv(f'dataset/{name}_add.csv', header=True, index=True)
-            print(f'| 结果保存至:dataset/{name}_add.csv |')
+            for delete in args.delete_column:
+                if delete in df.columns:
+                    df = df.drop(columns=delete)
+            df.to_csv(f'{args.data_dir}/{name}_add.csv', header=True, index=True)
+            print(f'| 结果保存至:{args.data_dir}/{name}_add.csv |')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
-    data_add(args.data_dir, args.screen_path, args.column)
+    data_deal(args)
