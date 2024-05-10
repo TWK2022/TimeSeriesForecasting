@@ -32,7 +32,7 @@ def data_screen(args):
             if np.isnan(df.values[20:]).any():  # 部分变量刚上市时为nan不影响
                 continue
             # 上市日期删选
-            if len(df) < args.history:
+            if len(df) < 2 * args.history:
                 continue
             # 加权均值
             ratio = 0.1 + 1.9 * np.arange(args.history) / (args.history - 1)
