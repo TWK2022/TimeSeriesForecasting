@@ -5,7 +5,7 @@
 >获取数据
 ### 3，economy/data_screen.py
 >筛选股票
-### 4，economy/data_add.py
+### 4，economy/data_deal.py
 >补充数据
 ### 5，run.py
 >训练模型
