@@ -36,6 +36,7 @@ class data_prepare:
         else:
             train_input = input_data[0:boundary + add]  # 训练数据
             train_output = output_data[0:boundary + add]  # 训练标签
+        assert len(train_input) >= self.input_size + self.output_size  # 训练集不满足一个batch
         val_input = input_data[boundary:len(df)].copy()  # 验证数据
         val_output = output_data[boundary:len(df)].copy()  # 验证标签
         # 周期
