@@ -29,8 +29,9 @@ parser.add_argument('--close', default=1, type=float)
 parser.add_argument('--change', default=2, type=float)
 parser.add_argument('--volume', default=50000, type=float)
 parser.add_argument('--volume_ratio', default=0.8, type=float)
-# economy/data_add.py
-parser.add_argument('--data_add', default=False, type=bool)
+# economy/data_deal.py
+parser.add_argument('--data_deal', default=False, type=bool)
+parser.add_argument('--delete_column', default='市盈率(ttm),市净率,市销率(ttm)', type=str)
 # run.py | 训练测试基础模型
 parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
@@ -66,8 +67,8 @@ class economy_class:
         os.chdir(self.path_economy)
         if self.args.data_screen:
             self._data_screen()
-        if self.args.data_add:
-            self._data_add()
+        if self.args.data_deal:
+            self._data_deal()
         # 原目录
         os.chdir(self.path)
         if self.args.run_base_test:
@@ -100,9 +101,9 @@ class economy_class:
         os.system(f'python data_screen.py --close {self.args.close} --change {self.args.close}'
                   f' --volume {self.args.close} --volume_ratio {self.args.close}')
 
-    def _data_add(self):
-        print('economy/data_add.py')
-        os.system(f'python data_add.py')
+    def _data_deal(self):
+        print('economy/data_deal.py')
+        os.system(f'python data_deal.py --delete_column {self.args.delete_column}')
 
     def _run_base_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
         print('run.py | 训练测试基础模型')
@@ -251,7 +252,9 @@ class economy_class:
                 # 画图
                 ratio = np.max(pred) / close_data[-1]
                 if ratio > 1.1:  # 有上涨空间
-                    save_path = f'save_image/{name}_{ratio:.2f}_{model_dict[industry][name][1]}_{model_dict[industry][name][1]}.jpg'
+                    last_day = str(df.index[-1])
+                    name = f'{last_day}_{name}'
+                    save_path = f'save_image/{name}_{ratio:.2f}_{model_dict[industry][name][1]}.jpg'
                     self._draw(pred, close_data, name, save_path)
 
     def _draw(self, pred, close_data, name, save_path):
