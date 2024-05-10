@@ -163,7 +163,7 @@ class economy_class:
         for industry in screen_dict:
             name_list = screen_dict[industry].keys()
             for name in name_list:
-                if model_dict[industry][name][0] > 0.1:  # 测试模型效果不好
+                if model_dict[industry][name][0] > 0.2:  # 测试模型效果不好
                     continue
                 os.system(f'python simulate.py --model_path model_test/{name}.pt --data_path dataset/{name}_add.csv'
                           f' --rise {self.args.rise}')
@@ -205,7 +205,7 @@ class economy_class:
                 model_path = f'{model_dir}/{name}.pt'
                 if os.path.exists(model_path):  # 已有模型则不再训练
                     continue
-                if model_dict[industry][name][0] > 0.1:  # 测试模型效果不好
+                if model_dict[industry][name][0] > 0.2:  # 测试模型效果不好
                     continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
@@ -232,7 +232,7 @@ class economy_class:
         for industry in screen_dict:
             name_list = screen_dict[industry].keys()
             for name in name_list:
-                if model_dict[industry][name][0] > 0.1:  # 测试模型效果不好
+                if model_dict[industry][name][0] > 0.2:  # 测试模型效果不好
                     continue
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
@@ -253,9 +253,8 @@ class economy_class:
                 ratio = np.max(pred) / close_data[-1]
                 if ratio > 1.1:  # 有上涨空间
                     last_day = str(df.index[-1])
-                    name = f'{last_day}_{name}'
-                    save_path = f'save_image/{name}_{ratio:.2f}_{model_dict[industry][name][1]}.jpg'
-                    self._draw(pred, close_data, name, save_path)
+                    save_path = f'save_image/{last_day}_{name}_{ratio:.2f}_{model_dict[industry][name][1]}.jpg'
+                    self._draw(pred, close_data, f'{last_day}_{name}', save_path)
 
     def _draw(self, pred, close_data, name, save_path):
         zero = torch.zeros(len(close_data))
