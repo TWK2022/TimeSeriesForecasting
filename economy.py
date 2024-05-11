@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from model.layer import deploy
 from block.util import read_column
 
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 # -------------------------------------------------------------------------------------------------------------------- #
 # 集成
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -150,7 +151,9 @@ class economy_class:
                     log = f.readlines()
                 val_loss = float(log[3].strip()[9:])
                 # 记录模型信息
-                model_dict[industry][name] = [val_loss, None, None]
+                df = pd.read_csv(data_path, index_col=0)
+                time = str(df.index[-1])
+                model_dict[industry][name] = [time, val_loss, None]
                 with open('economy/model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
 
@@ -163,7 +166,7 @@ class economy_class:
         for industry in screen_dict:
             name_list = screen_dict[industry].keys()
             for name in name_list:
-                if model_dict[industry][name][0] > 0.2:  # 测试模型效果不好
+                if model_dict[industry][name][1] > 0.2:  # 测试模型效果不好
                     continue
                 os.system(f'python simulate.py --model_path model_test/{name}.pt --data_path dataset/{name}_add.csv'
                           f' --rise {self.args.rise}')
@@ -172,7 +175,7 @@ class economy_class:
                     log = f.readlines()
                 error = int(log[3].strip()[5:])
                 # 记录模型信息
-                model_dict[industry][name][1] = True if not error else False
+                model_dict[industry][name][2] = True if not error else False
                 with open('model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
 
@@ -205,21 +208,13 @@ class economy_class:
                 model_path = f'{model_dir}/{name}.pt'
                 if os.path.exists(model_path):  # 已有模型则不再训练
                     continue
-                if model_dict[industry][name][0] > 0.2:  # 测试模型效果不好
+                if model_dict[industry][name][1] > 0.2:  # 测试模型效果不好
                     continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
                           f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 30')
                 shutil.move('best.pt', model_path)
-                # 打开日志
-                with open('log.txt', 'r', encoding='utf-8') as f:
-                    log = f.readlines()
-                val_loss = float(log[3].strip()[9:])
-                # 记录模型信息
-                model_dict[industry][name][2] = val_loss
-                with open('economy/model.yaml', 'w', encoding='utf-8') as f:
-                    yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
 
     def _feature(self, data_dir='economy/dataset', model_dir='economy/model'):
         if not os.path.exists('save_image'):
@@ -232,7 +227,7 @@ class economy_class:
         for industry in screen_dict:
             name_list = screen_dict[industry].keys()
             for name in name_list:
-                if model_dict[industry][name][0] > 0.2:  # 测试模型效果不好
+                if model_dict[industry][name][1] > 0.2:  # 测试模型效果不好
                     continue
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
@@ -253,8 +248,17 @@ class economy_class:
                 ratio = np.max(pred) / close_data[-1]
                 if ratio > 1.1:  # 有上涨空间
                     last_day = str(df.index[-1])
-                    save_path = f'save_image/{last_day}_{name}_{ratio:.2f}_{model_dict[industry][name][1]}.jpg'
+                    judge = self._count(df['收盘价_5'].values, df['收盘价_10'].values)
+                    save_path = f'save_image/{last_day}_{name}_{judge}_{ratio:.2f}_{model_dict[industry][name][2]}.jpg'
                     self._draw(pred, close_data, f'{last_day}_{name}', save_path)
+
+    def _count(self, close_5, close_10):  # 判断金叉+和死叉1，+0表示今天金叉，+1表示昨天金叉
+        for index in range(len(close_5) - 1, 0, -1):
+            if close_5[index] > close_10[index] and close_5[index - 1] < close_10[index - 1]:
+                return f'+{len(close_5) - index + 1}'
+            if close_5[index] < close_10[index] and close_5[index - 1] > close_10[index - 1]:
+                return f'-{len(close_5) - index + 1}'
+        return 'None'
 
     def _draw(self, pred, close_data, name, save_path):
         zero = torch.zeros(len(close_data))
