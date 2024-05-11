@@ -153,7 +153,7 @@ class economy_class:
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
                 time = str(df.index[-1])
-                model_dict[industry][name] = [time, val_loss, None]
+                model_dict[industry][name] = [time, val_loss, None, None]
                 with open('economy/model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
 
@@ -215,6 +215,10 @@ class economy_class:
                           f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
                           f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 30')
                 shutil.move('best.pt', model_path)
+                # 记录模型信息
+                df = pd.read_csv(data_path, index_col=0)
+                time = str(df.index[-1])
+                model_dict[industry][name][3] = time 
 
     def _feature(self, data_dir='economy/dataset', model_dir='economy/model'):
         if not os.path.exists('save_image'):
