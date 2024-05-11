@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from model.layer import deploy
 from block.util import read_column
 
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 # -------------------------------------------------------------------------------------------------------------------- #
 # 集成
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -155,7 +154,7 @@ class economy_class:
                 time = str(df.index[-1])
                 model_dict[industry][name] = [time, val_loss, None, None]
                 with open('economy/model.yaml', 'w', encoding='utf-8') as f:
-                    yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
+                    yaml.dump(model_dict, f, allow_unicode=True)
 
     def _simulate(self):
         print('simulate.py')
@@ -177,7 +176,7 @@ class economy_class:
                 # 记录模型信息
                 model_dict[industry][name][2] = income_mean
                 with open('model.yaml', 'w', encoding='utf-8') as f:
-                    yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
+                    yaml.dump(model_dict, f, allow_unicode=True)
 
     def _run_base(self, data_dir='economy/dataset', model_dir='economy/model'):
         print('run.py | 训练基础正式模型')
@@ -218,7 +217,9 @@ class economy_class:
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
                 time = str(df.index[-1])
-                model_dict[industry][name][3] = time 
+                model_dict[industry][name][3] = time
+                with open('model.yaml', 'w', encoding='utf-8') as f:
+                    yaml.dump(model_dict, f, allow_unicode=True)
 
     def _feature(self, data_dir='economy/dataset', model_dir='economy/model'):
         if not os.path.exists('save_image'):
