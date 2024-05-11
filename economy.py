@@ -173,9 +173,9 @@ class economy_class:
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
                     log = f.readlines()
-                error = int(log[3].strip()[5:])
+                income_mean = round(float(log[1].strip()[8:]), 2)
                 # 记录模型信息
-                model_dict[industry][name][2] = True if not error else False
+                model_dict[industry][name][2] = income_mean
                 with open('model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True, sort_keys=False)
 
