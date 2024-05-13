@@ -10,7 +10,6 @@ parser.add_argument('--screen_path', default='data_screen.yaml', type=str, help=
 parser.add_argument('--column', default='收盘价,成交量', type=str, help='|选择计算的变量|')
 args = parser.parse_args()
 args.column = args.column.split(',')
-args.delete_column = args.delete_column.split(',')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
