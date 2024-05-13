@@ -8,7 +8,6 @@ parser = argparse.ArgumentParser(description='|计算5日、10日、60日均线|
 parser.add_argument('--data_dir', default='dataset', type=str, help='|数据目录|')
 parser.add_argument('--screen_path', default='data_screen.yaml', type=str, help='|data_screen.py中筛选出的结果|')
 parser.add_argument('--column', default='收盘价,成交量', type=str, help='|选择计算的变量|')
-parser.add_argument('--delete_column', default='市盈率(ttm),市净率,市销率(ttm)', type=str, help='|删除的变量|')
 args = parser.parse_args()
 args.column = args.column.split(',')
 args.delete_column = args.delete_column.split(',')
@@ -45,9 +44,6 @@ def data_deal(args):
             drop_index = df.index[:-lengh]
             df = df.drop(index=drop_index)
             df = pd.concat([df, df_add], axis=1)
-            for delete in args.delete_column:
-                if delete in df.columns:
-                    df = df.drop(columns=delete)
             df.to_csv(f'{args.data_dir}/{name}_add.csv', header=True, index=True)
             print(f'| 结果保存至:{args.data_dir}/{name}_add.csv |')
 
