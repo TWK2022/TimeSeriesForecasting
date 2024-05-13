@@ -168,7 +168,7 @@ class economy_class:
         for industry in screen_dict:
             name_list = screen_dict[industry].keys()
             for name in name_list:
-                if model_dict[industry][name][1] > 0.2:  # 测试模型效果不好
+                if model_dict[industry][name][1] > 0.3:  # 测试模型效果不好
                     continue
                 os.system(f'python simulate.py --model_path model_test/{name}.pt --data_path dataset/{name}_add.csv'
                           f' --rise {self.args.rise}')
@@ -210,7 +210,7 @@ class economy_class:
                 model_path = f'{model_dir}/{name}.pt'
                 if os.path.exists(model_path) and not self.args.run_again:
                     continue
-                if model_dict[industry][name][1] > 0.2:  # 测试模型效果不好
+                if model_dict[industry][name][1] > 0.3:  # 测试模型效果不好
                     continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
@@ -235,7 +235,7 @@ class economy_class:
         for industry in screen_dict:
             name_list = screen_dict[industry].keys()
             for name in name_list:
-                if model_dict[industry][name][1] > 0.2:  # 测试模型效果不好
+                if model_dict[industry][name][1] > 0.3:  # 测试模型效果不好
                     continue
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
