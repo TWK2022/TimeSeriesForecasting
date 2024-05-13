@@ -32,7 +32,6 @@ parser.add_argument('--volume', default=50000, type=float)
 parser.add_argument('--volume_ratio', default=0.8, type=float)
 # economy/data_deal.py
 parser.add_argument('--data_deal', default=False, type=bool)
-parser.add_argument('--delete_column', default='市盈率(ttm),市净率,市销率(ttm)', type=str)
 # run.py | 训练测试基础模型
 parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
@@ -106,7 +105,7 @@ class economy_class:
 
     def _data_deal(self):
         print('economy/data_deal.py')
-        os.system(f'python data_deal.py --delete_column {self.args.delete_column}')
+        os.system(f'python data_deal.py')
 
     def _run_base_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
         print('run.py | 训练测试基础模型')
