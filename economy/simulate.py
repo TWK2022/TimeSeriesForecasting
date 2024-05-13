@@ -25,7 +25,7 @@ parser.add_argument('--rise', default=1.2, type=float, help='|上涨预期，大
 parser.add_argument('--a_rise_still', default=1.05, type=float, help='|第2天发现还在上涨，先不卖出，数值太大无效|')
 parser.add_argument('--a_decline_still', default=0.97, type=float, help='|第2天发现还在下降，先不买入，数值太小无效|')
 parser.add_argument('--safe', default=True, type=bool, help='|True时启用保守策略，后面的参数都为保守策略|')
-parser.add_argument('--safe_mean', default=1.0, type=float, help='|股价小于[safe_mean*历史均值]才会买入，数值太大无效|')
+parser.add_argument('--safe_mean', default=1.2, type=float, help='|股价小于[safe_mean*历史均值]才会买入，数值太大无效|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
 args.input_column = read_column(args.input_column)  # column处理
