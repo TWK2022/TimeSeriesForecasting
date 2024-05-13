@@ -146,7 +146,7 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --weight {model_dir}/base_test.pt --weight_again True'
-                          f' --model itransformer --model_type l --epoch 50 --lr_end_epoch 30')
+                          f' --model itransformer --model_type l --epoch 50 --lr_end_epoch 50')
                 shutil.move('last.pt', model_path)
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
@@ -215,7 +215,7 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
-                          f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 50')
+                          f' --model itransformer --model_type l --epoch 50 --lr_end_epoch 50')
                 shutil.move('best.pt', model_path)
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
