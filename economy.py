@@ -26,8 +26,8 @@ parser.add_argument('--token', default='', type=str)
 parser.add_argument('--end_time', default='20240601', type=str)
 # economy/data_screen.py
 parser.add_argument('--data_screen', default=False, type=bool)
-parser.add_argument('--close', default=1, type=float)
-parser.add_argument('--change', default=2, type=float)
+parser.add_argument('--close', default=1.2, type=float)
+parser.add_argument('--change', default=1, type=float)
 parser.add_argument('--volume', default=50000, type=float)
 parser.add_argument('--volume_ratio', default=0.8, type=float)
 # economy/data_deal.py
