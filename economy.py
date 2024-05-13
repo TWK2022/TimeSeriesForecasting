@@ -18,7 +18,7 @@ parser.add_argument('--input_size', default=96, type=int)
 parser.add_argument('--output_size', default=24, type=int)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='汽车整车', type=str)
+parser.add_argument('--industry', default='水运,电气设备,船舶,港口,运输设备', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)

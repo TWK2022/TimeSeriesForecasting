@@ -7,7 +7,7 @@ import argparse
 parser = argparse.ArgumentParser(description='|选择股票|')
 parser.add_argument('--yaml_path', default='number_all.yaml', type=str, help='|所有股票信息|')
 parser.add_argument('--save_path', default='number.yaml', type=str, help='|保存位置|')
-parser.add_argument('--industry', default='汽车整车', type=str, help='|行业，必选，如"A,B,C"|')
+parser.add_argument('--industry', default='水运,电气设备,船舶,港口,运输设备', type=str, help='|行业，必选，如"A,B,C"|')
 parser.add_argument('--area', default='', type=str, help='|地区，空则不筛选，如"A、B、C"|')
 parser.add_argument('--time', default='', type=str, help='|上市时间，筛选time之前的，空则不筛选|')
 parser.add_argument('--type', default='其他', type=str, help='|企业类型，有其他、中央国企、地方国企，空则不筛选|')
