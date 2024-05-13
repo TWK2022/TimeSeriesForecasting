@@ -219,7 +219,7 @@ class economy_class:
                 df = pd.read_csv(data_path, index_col=0)
                 time = str(df.index[-1])
                 model_dict[industry][name][3] = time
-                with open('model.yaml', 'w', encoding='utf-8') as f:
+                with open('economy/model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True)
 
     def _feature(self, data_dir='economy/dataset', model_dir='economy/model'):
