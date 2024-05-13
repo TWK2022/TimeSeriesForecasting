@@ -30,6 +30,7 @@ def data_screen(args):
             df = pd.read_csv(f'dataset/{name}.csv', index_col=0)
             # 检查是否存在nan值
             if np.isnan(df.values[20:]).any():  # 部分变量刚上市时为nan不影响
+                print(f'| 存在nan值:dataset/{name}.csv |')
                 continue
             # 上市日期删选
             if len(df) < 2 * args.history:
