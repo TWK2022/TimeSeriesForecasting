@@ -146,7 +146,7 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --weight {model_dir}/base_test.pt --weight_again True'
-                          f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 50')
+                          f' --model itransformer --model_type l --epoch 50 --lr_end_epoch 30')
                 shutil.move('last.pt', model_path)
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
@@ -194,7 +194,7 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column 收盘价_5 --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
-                          f' --model itransformer --model_type l --epoch 50 --lr_end_epoch 50')
+                          f' --model itransformer --model_type l --epoch 50 --lr_end_epoch 30')
                 shutil.move('last.pt', f'{model_dir}/base.pt')
 
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
