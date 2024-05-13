@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from model.layer import deploy
 from block.util import read_column
 
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 # -------------------------------------------------------------------------------------------------------------------- #
 # 集成
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -36,6 +37,7 @@ parser.add_argument('--delete_column', default='市盈率(ttm),市净率,市销�
 parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
 parser.add_argument('--run_test', default=False, type=bool)
+parser.add_argument('--run_test_again', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
 parser.add_argument('--rise', default=1.1, type=float)
@@ -43,6 +45,7 @@ parser.add_argument('--rise', default=1.1, type=float)
 parser.add_argument('--run_base', default=False, type=bool)
 # run.py | 训练正式模型
 parser.add_argument('--run', default=False, type=bool)
+parser.add_argument('--run_again', default=False, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
 args = parser.parse_args()
@@ -138,7 +141,7 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
-                if os.path.exists(model_path):  # 已有模型则不再训练
+                if os.path.exists(model_path) and not self.args.run_test_again:
                     continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
@@ -205,7 +208,7 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
-                if os.path.exists(model_path):  # 已有模型则不再训练
+                if os.path.exists(model_path) and not self.args.run_again:
                     continue
                 if model_dict[industry][name][1] > 0.2:  # 测试模型效果不好
                     continue
@@ -259,9 +262,9 @@ class economy_class:
 
     def _count(self, close_5, close_10):  # 判断金叉+和死叉1，+0表示今天金叉，+1表示昨天金叉
         for index in range(len(close_5) - 1, 0, -1):
-            if close_5[index] > close_10[index] and close_5[index - 1] < close_10[index - 1]:
+            if close_5[index] >= close_10[index] and close_5[index - 1] < close_10[index - 1]:
                 return f'+{len(close_5) - index + 1}'
-            if close_5[index] < close_10[index] and close_5[index - 1] > close_10[index - 1]:
+            if close_5[index] <= close_10[index] and close_5[index - 1] > close_10[index - 1]:
                 return f'-{len(close_5) - index + 1}'
         return 'None'
 
