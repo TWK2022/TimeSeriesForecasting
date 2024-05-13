@@ -8,8 +8,8 @@ parser = argparse.ArgumentParser(description='|筛选有上升潜力的股票|')
 parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
 parser.add_argument('--history', default=100, type=int, help='|计算指标时采用最近history日内的数据|')
-parser.add_argument('--close', default=1, type=float, help='|筛选价格<close*历史加权均值|')
-parser.add_argument('--change', default=2, type=float, help='|筛选平均换手率>change|')
+parser.add_argument('--close', default=1.2, type=float, help='|筛选价格<close*历史加权均值|')
+parser.add_argument('--change', default=1, type=float, help='|筛选平均换手率>change|')
 parser.add_argument('--volume', default=50000, type=float, help='|筛选平均成交量>volume|')
 parser.add_argument('--volume_ratio', default=0.8, type=float, help='|筛选近期量比>volume_ratio|')
 args = parser.parse_args()
@@ -30,6 +30,7 @@ def data_screen(args):
             df = pd.read_csv(f'dataset/{name}.csv', index_col=0)
             # 检查是否存在nan值
             if np.isnan(df.values[20:]).any():  # 部分变量刚上市时为nan不影响
+                print(f'| 存在nan值:dataset/{name}.csv |')
                 continue
             # 上市日期删选
             if len(df) < 2 * args.history:

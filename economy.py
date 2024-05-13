@@ -9,7 +9,6 @@ import matplotlib.pyplot as plt
 from model.layer import deploy
 from block.util import read_column
 
-os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
 # -------------------------------------------------------------------------------------------------------------------- #
 # 集成
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -26,13 +25,12 @@ parser.add_argument('--token', default='', type=str)
 parser.add_argument('--end_time', default='20240601', type=str)
 # economy/data_screen.py
 parser.add_argument('--data_screen', default=False, type=bool)
-parser.add_argument('--close', default=1, type=float)
-parser.add_argument('--change', default=2, type=float)
+parser.add_argument('--close', default=1.2, type=float)
+parser.add_argument('--change', default=1, type=float)
 parser.add_argument('--volume', default=50000, type=float)
 parser.add_argument('--volume_ratio', default=0.8, type=float)
 # economy/data_deal.py
 parser.add_argument('--data_deal', default=False, type=bool)
-parser.add_argument('--delete_column', default='市盈率(ttm),市净率,市销率(ttm)', type=str)
 # run.py | 训练测试基础模型
 parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
@@ -101,12 +99,12 @@ class economy_class:
 
     def _data_screen(self):
         print('economy/data_screen.py')
-        os.system(f'python data_screen.py --close {self.args.close} --change {self.args.close}'
-                  f' --volume {self.args.close} --volume_ratio {self.args.close}')
+        os.system(f'python data_screen.py --close {self.args.close} --change {self.args.change}'
+                  f' --volume {self.args.volume} --volume_ratio {self.args.volume_ratio}')
 
     def _data_deal(self):
         print('economy/data_deal.py')
-        os.system(f'python data_deal.py --delete_column {self.args.delete_column}')
+        os.system(f'python data_deal.py')
 
     def _run_base_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
         print('run.py | 训练测试基础模型')
@@ -221,7 +219,7 @@ class economy_class:
                 df = pd.read_csv(data_path, index_col=0)
                 time = str(df.index[-1])
                 model_dict[industry][name][3] = time
-                with open('model.yaml', 'w', encoding='utf-8') as f:
+                with open('economy/model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True)
 
     def _feature(self, data_dir='economy/dataset', model_dir='economy/model'):
