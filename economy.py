@@ -142,11 +142,15 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
-                if os.path.exists(model_path) and not self.args.run_test_again:
-                    continue
+                weight = f'{model_dir}/base_test.pt'
+                if os.path.exists(model_path):
+                    if self.args.run_test_again:
+                        weight = model_path
+                    else:
+                        continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
-                          f' --divide 19,1 --weight {model_dir}/base_test.pt --weight_again True'
+                          f' --divide 19,1 --weight {weight} --weight_again True'
                           f' --model {self.args.model} --model_type {self.args.model_type}'
                           f' --epoch 30 --lr_end_epoch 30')
                 shutil.move('last.pt', model_path)
@@ -211,13 +215,17 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
-                if os.path.exists(model_path) and not self.args.run_again:
-                    continue
+                weight = f'{model_dir}/base.pt'
                 if model_dict[industry][name][1] > 0.3:  # 测试模型效果不好
                     continue
+                if os.path.exists(model_path):
+                    if self.args.run_again:
+                        weight = model_path
+                    else:
+                        continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
-                          f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
+                          f' --divide 19,1 --divide_all True --weight {weight} --weight_again True'
                           f' --model {self.args.model} --model_type {self.args.model_type}'
                           f' --epoch 30 --lr_end_epoch 30')
                 shutil.move('best.pt', model_path)
