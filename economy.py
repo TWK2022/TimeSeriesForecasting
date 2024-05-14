@@ -119,7 +119,7 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column 收盘价_5 --input_size 96 --output_size {self.args.output_size}'
+                          f' --output_column 收盘价 --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --weight {model_dir}/base_test.pt --weight_again True'
                           f' --model {self.args.model} --model_type {self.args.model_type}'
                           f' --epoch 10 --lr_end_epoch 10')
@@ -188,7 +188,7 @@ class economy_class:
                     yaml.dump(model_dict, f, allow_unicode=True)
 
     def _run_base(self, data_dir='economy/dataset', model_dir='economy/model'):
-        print('run.py | 训练基础正式模型')
+        print('run.py | 训练正式基础模型')
         if not os.path.exists(model_dir):
             os.makedirs(model_dir)
         with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
@@ -198,7 +198,7 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column 收盘价_5 --input_size 96 --output_size {self.args.output_size}'
+                          f' --output_column 收盘价 --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
                           f' --model {self.args.model} --model_type {self.args.model_type}'
                           f' --epoch 10 --lr_end_epoch 10')
@@ -206,6 +206,7 @@ class economy_class:
 
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
         print('run.py | 训练正式模型')
+        assert os.path.exists(f'{model_dir}/base.pt')
         with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
             screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
         with open('economy/model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
