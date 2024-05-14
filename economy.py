@@ -154,16 +154,15 @@ class economy_class:
                           f' --model {self.args.model} --model_type {self.args.model_type}'
                           f' --epoch 30 --lr_end_epoch 30')
                 shutil.move('last.pt', model_path)
-                # 打开日志
-                with open('log.txt', 'r', encoding='utf-8') as f:
-                    log = f.readlines()
-                val_loss = float(log[3].strip()[9:])
                 # 记录模型信息
+                dict_ = torch.load(model_path, map_location='cpu')
+                mse_true = float(dict_['val_mse'] * dict_['std_output'] + dict_['mean_output'])
                 df = pd.read_csv(data_path, index_col=0)
                 time = str(df.index[-1])
-                model_dict[industry][name] = [time, val_loss, None, None]
+                model_dict[industry][name] = [time, f'{mse_true:.4f}', None, None]
                 with open('economy/model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True)
+                del dict_, df
 
     def _simulate(self):
         print('simulate.py')
