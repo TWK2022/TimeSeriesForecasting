@@ -124,7 +124,7 @@ class crossformer(torch.nn.Module):
         output_dim = len(args.output_column)
         input_size = args.input_size
         output_size = args.output_size
-        n_dict = {'s': 64, 'm': 128, 'l': 256}
+        n_dict = {'s': 32, 'm': 64, 'l': 128}
         feature = n_dict[args.model_type]
         head = 8
         middle_dim = 10
