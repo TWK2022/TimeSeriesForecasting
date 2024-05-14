@@ -51,7 +51,7 @@ class merge_feature(torch.nn.Module):
 
 
 class encode(torch.nn.Module):
-    def __init__(self, number, head, feature, middle_dim=10):
+    def __init__(self, number, head, feature, middle_dim=5):
         super().__init__()
         self.attention_block1 = attention_block(number, middle_dim, head, feature)
         self.merge1 = merge_feature(feature)
@@ -70,7 +70,7 @@ class encode(torch.nn.Module):
 
 
 class decode_block(torch.nn.Module):
-    def __init__(self, number, head, feature, middle_dim=10):
+    def __init__(self, number, head, feature, middle_dim=5):
         super().__init__()
         self.self_attention = attention_block(number, middle_dim, head, feature)
         self.encode_decode_attention = attention(head, feature, dropout=0.2)
@@ -91,7 +91,7 @@ class decode_block(torch.nn.Module):
 
 
 class decode(torch.nn.Module):
-    def __init__(self, number, segment, head, feature, middle_dim=10):
+    def __init__(self, number, segment, head, feature, middle_dim=5):
         super().__init__()
         self.decode_layer1 = decode_block(number, head, feature, middle_dim)
         self.linear1 = torch.nn.Linear(feature, segment)
