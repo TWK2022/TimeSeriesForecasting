@@ -192,7 +192,7 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column 收盘价_5 --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
-                          f' --model itransformer --model_type l --epoch 50 --lr_end_epoch 30')
+                          f' --model itransformer --model_type l --epoch 10 --lr_end_epoch 10')
                 shutil.move('last.pt', f'{model_dir}/base.pt')
 
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
@@ -213,7 +213,7 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
-                          f' --model itransformer --model_type l --epoch 50 --lr_end_epoch 50')
+                          f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 30')
                 shutil.move('best.pt', model_path)
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
