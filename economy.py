@@ -20,9 +20,9 @@ parser.add_argument('--model', default='itransformer', type=str)
 parser.add_argument('--model_type', default='l', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='水运,电气设备,船舶,港口,运输设备', type=str)
+parser.add_argument('--industry', default='互联网,出版业,文教休闲', type=str)
 # economy/tushare/data_get.py
-parser.add_argument('--data_get', default=False, type=bool)
+parser.add_argument('--data_get', default=True, type=bool)
 parser.add_argument('--token', default='', type=str)
 parser.add_argument('--end_time', default='20240601', type=str)
 # economy/data_screen.py
