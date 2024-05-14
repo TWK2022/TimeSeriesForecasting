@@ -266,7 +266,7 @@ class economy_class:
                     pred = model(tensor)[0][0].cpu().numpy()
                 # 画图
                 ratio = np.max(pred) / close_data[-1]
-                if ratio > 1.1:  # 有上涨空间
+                if ratio > 1.2:  # 有上涨空间
                     last_day = str(df.index[-1])
                     judge = self._count(df['收盘价_5'].values, df['收盘价_10'].values)
                     save_path = f'save_image/{last_day}_{name}_{judge}_{ratio:.2f}_{model_dict[industry][name][2]}.jpg'
