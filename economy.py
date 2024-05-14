@@ -16,6 +16,8 @@ parser = argparse.ArgumentParser(description='|集成|')
 parser.add_argument('--input_column', default='input_column.txt', type=str)
 parser.add_argument('--input_size', default=96, type=int)
 parser.add_argument('--output_size', default=24, type=int)
+parser.add_argument('--model', default='itransformer', type=str)
+parser.add_argument('--model_type', default='l', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
 parser.add_argument('--industry', default='水运,电气设备,船舶,港口,运输设备', type=str)
@@ -119,7 +121,8 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column 收盘价_5 --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --weight {model_dir}/base_test.pt --weight_again True'
-                          f' --model itransformer --model_type l --epoch 10 --lr_end_epoch 10')
+                          f' --model {self.args.model} --model_type {self.args.model_type}'
+                          f' --epoch 10 --lr_end_epoch 10')
                 shutil.move('last.pt', f'{model_dir}/base_test.pt')
 
     def _run_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
@@ -144,7 +147,8 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --weight {model_dir}/base_test.pt --weight_again True'
-                          f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 30')
+                          f' --model {self.args.model} --model_type {self.args.model_type}'
+                          f' --epoch 30 --lr_end_epoch 30')
                 shutil.move('last.pt', model_path)
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
@@ -192,7 +196,8 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column 收盘价_5 --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
-                          f' --model itransformer --model_type l --epoch 10 --lr_end_epoch 10')
+                          f' --model {self.args.model} --model_type {self.args.model_type}'
+                          f' --epoch 10 --lr_end_epoch 10')
                 shutil.move('last.pt', f'{model_dir}/base.pt')
 
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
@@ -213,7 +218,8 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
-                          f' --model itransformer --model_type l --epoch 30 --lr_end_epoch 30')
+                          f' --model {self.args.model} --model_type {self.args.model_type}'
+                          f' --epoch 30 --lr_end_epoch 30')
                 shutil.move('best.pt', model_path)
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
