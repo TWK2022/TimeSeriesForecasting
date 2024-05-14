@@ -40,7 +40,7 @@ parser.add_argument('--run_test', default=False, type=bool)
 parser.add_argument('--run_test_again', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
-parser.add_argument('--rise', default=1.1, type=float)
+parser.add_argument('--rise', default=1.2, type=float)
 # run.py | 训练正式基础模型
 parser.add_argument('--run_base', default=False, type=bool)
 # run.py | 训练正式模型
