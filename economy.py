@@ -97,8 +97,7 @@ class economy_class:
 
     def _data_screen(self):
         print('economy/data_screen.py')
-        os.system(f'python data_screen.py --close {self.args.close} --change {self.args.change}'
-                  f' --volume {self.args.volume} --volume_ratio {self.args.volume_ratio}')
+        os.system(f'python data_screen.py')
 
     def _data_deal(self):
         print('economy/data_deal.py')
