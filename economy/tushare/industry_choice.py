@@ -10,7 +10,7 @@ parser.add_argument('--save_path', default='number.yaml', type=str, help='|保�
 parser.add_argument('--industry', default='水运,电气设备,船舶,港口,运输设备', type=str, help='|行业，必选，如"A,B,C"|')
 parser.add_argument('--area', default='', type=str, help='|地区，空则不筛选，如"A、B、C"|')
 parser.add_argument('--time', default='', type=str, help='|上市时间，筛选time之前的，空则不筛选|')
-parser.add_argument('--type', default='其他', type=str, help='|企业类型，有其他、中央国企、地方国企，空则不筛选|')
+parser.add_argument('--type', default='', type=str, help='|企业类型，有其他、中央国企、地方国企，空则不筛选|')
 args = parser.parse_args()
 args.industry = args.industry.split(',')
 args.time = int(args.time) if args.time else 0
@@ -21,6 +21,7 @@ def industry_choice(args):
     with open(args.yaml_path, 'r', encoding='utf-8') as f:
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
     result_dict = {}
+    record = 0
     for industry in args.industry:
         result_dict[industry] = {}
         dict_ = yaml_dict[industry]
@@ -38,9 +39,10 @@ def industry_choice(args):
             if args.time and time < args.time:
                 continue
             result_dict[industry][name] = number
+            record += 1
     with open(args.save_path, 'w', encoding='utf-8') as f:
         yaml.dump(result_dict, f, allow_unicode=True)
-    print(f'| 保存结果至:{args.save_path} |')
+    print(f'| 总数:{record} | 保存结果至:{args.save_path} |')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
