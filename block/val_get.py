@@ -11,10 +11,10 @@ def val_get(args, val_dataloader, model, loss, data_dict, ema, data_len):
         val_loss = 0
         tqdm_len = (data_len - args.input_size - args.output_size + 1 - 1) // (args.batch // args.device_number) + 1
         tqdm_show = tqdm.tqdm(total=tqdm_len)
-        for index, (series_batch, true_batch) in enumerate(val_dataloader):
+        for index, (series_batch, true_batch, special) in enumerate(val_dataloader):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
             true_batch = true_batch.to(args.device, non_blocking=args.latch)
-            pred_batch = model(series_batch)
+            pred_batch = model(series_batch) if 'special' not in args.model else model(series_batch, special)
             loss_batch = loss(pred_batch, true_batch)
             val_loss += loss_batch.item()
             pred.extend(pred_batch.cpu())
