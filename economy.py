@@ -252,7 +252,10 @@ class economy_class:
                 special = torch.tensor(close_data[-1])  # 假设第2天开盘价与昨日收盘价一致
                 # 推理
                 with torch.no_grad():
-                    pred = model(tensor, special)[0][0].cpu().numpy()
+                    if 'special' in self.args.model:
+                        pred = model(tensor, special)[0][0].cpu().numpy()
+                    else:
+                        pred = model(tensor)[0][0].cpu().numpy()
                 # 画图
                 ratio = np.max(pred) / close_data[-1]
                 if ratio > 1.2:  # 有上涨空间
