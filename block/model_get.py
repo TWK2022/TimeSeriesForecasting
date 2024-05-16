@@ -17,7 +17,8 @@ def model_get(args):
                        'linear': 'model_prepare(args).linear()',
                        'linear_conv': 'model_prepare(args).linear_conv()',
                        'lstm': 'model_prepare(args).lstm()',
-                       'nlinear': 'model_prepare(args).nlinear()'}
+                       'nlinear': 'model_prepare(args).nlinear()',
+                       'special_add': 'model_prepare(args).special_add()'}
         model = eval(choice_dict[args.model])
         model_dict = {}
         model_dict['model'] = model
@@ -60,4 +61,9 @@ class model_prepare:
     def nlinear(self):
         from model.nlinear import nlinear
         model = nlinear(self.args)
+        return model
+
+    def special_add(self):
+        from model.special_add import special_add
+        model = special_add(self.args)
         return model
