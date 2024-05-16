@@ -1,5 +1,6 @@
 # 特殊模型
 # 多变量单标签
+# 在股票收盘价预测中，加入第2天的开盘价可以大幅提高模型的准确率
 import torch
 from model.itransformer import itransformer
 
