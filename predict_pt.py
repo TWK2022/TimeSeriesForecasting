@@ -83,7 +83,8 @@ def predict_pt():
     model_dict = torch.load(args.model_path, map_location='cpu')
     model = model_dict['model']
     model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
-                   model_dict['std_output']).eval().to(args.device)
+                   model_dict['std_output'], model_dict['mean_special'],
+                   model_dict['std_special']).eval().to(args.device)
     model = model.half() if args.device == 'cuda' else model.float()
     epoch = model_dict['epoch_finished']
     rmse = round(model_dict['val_rmse'], 4)
