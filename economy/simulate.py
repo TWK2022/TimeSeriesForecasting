@@ -10,12 +10,11 @@ from block.util import read_column
 # 交易策略:
 # a开头是人为制定的策略，可以加入人为经验
 # b开头是根据模型预测结果制定的策略，考验模型的预测能力
-# c开头是人为制定的保守策略，通常会对c进行修改
-# 由于当天得到数据时股票已经收盘，因此以今明两天收盘价的平均值作为实际交易股价，这里存在误差
+# 以第2天的实际均价作为交易股价，这里存在误差
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|测试|')
 parser.add_argument('--model_path', default='../best.pt', type=str, help='|pt模型位置|')
-parser.add_argument('--data_path', default=r'dataset/航发科技_add.csv', type=str, help='|数据位置|')
+parser.add_argument('--data_path', default=r'dataset/弘元绿能_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
@@ -23,9 +22,7 @@ parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
 parser.add_argument('--rise', default=1.2, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.2|')
 parser.add_argument('--a_rise_still', default=1.05, type=float, help='|第2天发现还在上涨，先不卖出，数值太大无效|')
-parser.add_argument('--a_decline_still', default=0.97, type=float, help='|第2天发现还在下降，先不买入，数值太小无效|')
-parser.add_argument('--safe', default=True, type=bool, help='|True时启用保守策略，后面的参数都为保守策略|')
-parser.add_argument('--safe_mean', default=1.2, type=float, help='|股价小于[safe_mean*历史均值]才会买入，数值太大无效|')
+parser.add_argument('--a_mean', default=1.2, type=float, help='|股价小于[a_mean*历史均值]才会买入，数值太大无效|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
 args.input_column = read_column(args.input_column)  # column处理
@@ -42,9 +39,7 @@ class project_class:
         self.device = args.device
         self.rise = args.rise
         self.a_rise_still = args.a_rise_still
-        self.a_decline_still = args.a_decline_still
-        self.safe = args.safe
-        self.safe_mean = args.safe_mean
+        self.a_mean = args.a_mean
         divide = args.divide
         model_path = args.model_path
         data_path = args.data_path
@@ -53,7 +48,8 @@ class project_class:
         model_dict = torch.load(model_path, map_location='cpu')
         model = model_dict['model']
         model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
-                       model_dict['std_output']).eval().to(self.device)
+                       model_dict['std_output'], model_dict['mean_special'],
+                       model_dict['std_special']).eval().to(self.device)
         self.model = model.half() if self.device == 'cuda' else model.float()
         print(f'| 模型:{model_path} | train_loss:{model_dict["train_loss"]:.4f} |'
               f'val_loss:{model_dict["val_loss"]:.4f} |')
@@ -84,17 +80,19 @@ class project_class:
             self.state = 0
             self.buy_list = []
             self.sell_list = []
-            for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第一步
+            for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
                 tensor = torch.tensor(self.input_data[:, index - self.input_size:index]).unsqueeze(0).to(self.device)
-                pred = self.model(tensor)[0][0].cpu().numpy()
+                special = torch.tensor(self.open_data[index:index + 1]).to(self.device)
+                pred = self.model(tensor, special)[0][0].cpu().numpy()
                 now = self.close_data[index - 1]
-                next_ = self.close_data[index]
+                next_open = self.open_data[index]
+                next_close = self.close_data[index]
                 max_ = np.max(pred)
                 min_ = np.min(pred)
                 if max_ > self.rise * now:  # 预测上涨
-                    self._buy(now, next_, pred)
+                    self._buy(now, next_open, next_close, pred)
                 elif min_ < now:  # 预测下降
-                    self._sell(now, next_, pred)
+                    self._sell(now, next_open, next_close, pred)
                 else:  # 预测小幅波动
                     pass
             self._metric('模型', now, True)
@@ -103,48 +101,48 @@ class project_class:
         self.state = 0
         self.buy_list = []
         self.sell_list = []
-        for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第一步
+        for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
             pred = self.close_data[index:min(index + self.output_size, self.input_data.shape[1])]
             now = self.close_data[index - 1]
-            next_ = self.close_data[index]
+            next_open = self.open_data[index]
+            next_close = self.close_data[index]
             max_ = np.max(pred)
             min_ = np.min(pred)
             if max_ > self.rise * now:  # 预测上涨
-                self._buy(now, next_, pred)
+                self._buy(now, next_open, next_close, pred)
             elif min_ < now:  # 预测下降
-                self._sell(now, next_, pred)
+                self._sell(now, next_open, next_close, pred)
             else:  # 预测小幅波动
                 pass
         self._metric('理想', now, False)
 
-    def _buy(self, now, next_, pred):
+    def _buy(self, now, next_open, next_close, pred):
         if self.state == 1:  # 已经买入
             return
         # a人为策略
-        if now * self.a_decline_still > next_:  # 第2天发现依然有下降趋势，先不买入
+        if now > (next_open + next_close) / 2:  # 第2天发现有下降趋势，先不买入
+            return
+        if now > self.a_mean * self.mean:  # 股价处于历史高位，先不买入
             return
         # b模型策略
         if now > np.min(pred[0:np.argmax(pred) + 1]):  # 预测还有下降空间，先不买入
             return
-        # c保守策略
-        if self.safe and now > self.safe_mean * self.mean:  # 股价处于历史高位，先不买入
-            return
         # 买入
         self.state = 1
-        self.buy_list.append((now + next_) / 2)
+        self.buy_list.append((next_open + next_close) / 2)
 
-    def _sell(self, now, next_, pred):
+    def _sell(self, now, next_open, next_close, pred):
         if self.state == 0:  # 没有买入
             return
         # a人为策略
-        if now * self.a_rise_still < next_:  # 第2天发现依然有上涨趋势，先不卖出
+        if now * self.a_rise_still < (next_open + next_close) / 2:  # 第2天发现依然有上涨趋势，先不卖出
             return
         # b模型策略
         if now < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0
-        self.sell_list.append((now + next_) / 2)
+        self.sell_list.append((now + next_close) / 2)
 
     def _metric(self, name, now, record=False):  # 计算指标
         sell_last = 0
