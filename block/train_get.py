@@ -20,18 +20,18 @@ def train_get(args, data_dict, model_dict, loss):
     if args.ema:
         ema.updates = model_dict['ema_updates']
     # 数据集
-    train_dataset = torch_dataset(args, data_dict['train_input'], data_dict['train_output'])
+    train_dataset = torch_dataset(args, data_dict['train_input'], data_dict['train_output'], data_dict['train_special'])
     train_shuffle = False if args.distributed else True  # 分布式设置sampler后shuffle要为False
     train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset) if args.distributed else None
     train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch, shuffle=train_shuffle,
                                                    drop_last=True, pin_memory=args.latch, num_workers=args.num_worker,
-                                                   sampler=train_sampler)
-    val_dataset = torch_dataset(args, data_dict['val_input'], data_dict['val_output'])
+                                                   sampler=train_sampler, collate_fn=train_dataset.collate_fn)
+    val_dataset = torch_dataset(args, data_dict['val_input'], data_dict['val_output'], data_dict['val_special'])
     val_sampler = None  # 分布式时数据合在主GPU上进行验证
     val_batch = args.batch // args.device_number  # 分布式验证时batch要减少为一个GPU的量
     val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=val_batch, shuffle=False,
                                                  drop_last=False, pin_memory=args.latch, num_workers=args.num_worker,
-                                                 sampler=val_sampler)
+                                                 sampler=val_sampler, collate_fn=val_dataset.collate_fn)
     # 分布式初始化
     model = torch.nn.parallel.DistributedDataParallel(model, device_ids=[args.local_rank],
                                                       output_device=args.local_rank) if args.distributed else model
@@ -97,6 +97,9 @@ def train_get(args, data_dict, model_dict, loss):
             model_dict['val_loss'] = val_loss
             model_dict['val_mae'] = mae
             model_dict['val_mse'] = mse
+            if 'special' in args.model:
+                model_dict['mean_special'] = data_dict['mean_special']
+                model_dict['std_special'] = data_dict['std_special']
             torch.save(model_dict, 'last.pt')  # 保存最后一次训练的模型
             if val_loss < 1 and val_loss < model_dict['standard']:
                 model_dict['standard'] = val_loss
@@ -113,12 +116,13 @@ def train_get(args, data_dict, model_dict, loss):
 
 
 class torch_dataset(torch.utils.data.Dataset):
-    def __init__(self, args, input_data, output_data):
+    def __init__(self, args, input_data, output_data, special_data):
         self.model = args.model
-        self.input_data = input_data
-        self.output_data = output_data
         self.input_size = args.input_size
         self.output_size = args.output_size
+        self.input_data = input_data
+        self.output_data = output_data
+        self.special_data = special_data
 
     def __len__(self):
         return len(self.input_data) - self.input_size - self.output_size + 1
@@ -129,10 +133,18 @@ class torch_dataset(torch.utils.data.Dataset):
         series = torch.tensor(series.T, dtype=torch.float32)
         label = self.output_data[boundary:boundary + self.output_size]  # 输出标签
         label = torch.tensor(label.T, dtype=torch.float32)
-        special = self._special(boundary) if 'special' in self.model else None  # 加入特殊变量
+        # 加入特殊变量
+        special = None
+        if 'special' in self.model:
+            special = self.special_data[boundary]
+            special = torch.tensor(special, dtype=torch.float32)
         return series, label, special
 
-    def _special(self, boundary, column_index=0):
-        special = self.input_data[boundary][column_index]  # 需要更改
-        special = torch.tensor(special, dtype=torch.float32)
-        return special
+    def collate_fn(self, getitem_list):  # 自定义__getitem__合成方式
+        series_list = [_[0] for _ in getitem_list]
+        label_list = [_[1] for _ in getitem_list]
+        special_list = [_[2] for _ in getitem_list]
+        series_batch = torch.stack(series_list, dim=0)
+        label_batch = torch.stack(label_list, dim=0)
+        special_batch = torch.stack(special_list, dim=0) if 'special' in self.model else None
+        return series_batch, label_batch, special_batch
