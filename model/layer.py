@@ -117,16 +117,22 @@ class split_linear(torch.nn.Module):
 
 
 class series_encode(torch.nn.Module):  # 归一化
-    def __init__(self, mean_input, std_input):
+    def __init__(self, mean_input, std_input, mean_special=None, std_special=None):
         super().__init__()
         self.mean_input = torch.tensor(mean_input)
         self.std_input = torch.tensor(std_input)
+        self.mean_special = mean_special
+        self.std_special = std_special
 
-    def forward(self, x):
+    def forward(self, x, special=None):
         x = x.permute(0, 2, 1)
         x = (x - self.mean_input.type(x.dtype).to(x.device)) / self.std_input.type(x.dtype).to(x.device)
         x = x.permute(0, 2, 1)
-        return x
+        if special is None:
+            return x
+        else:
+            special = (special - self.mean_special) / self.std_special
+            return x, special
 
 
 class series_decode(torch.nn.Module):  # 反归一化
@@ -143,14 +149,18 @@ class series_decode(torch.nn.Module):  # 反归一化
 
 
 class deploy(torch.nn.Module):  # 对输入进行归一化，对输出进行反归一化
-    def __init__(self, model, mean_input, mean_output, std_input, std_output):
+    def __init__(self, model, mean_input, mean_output, std_input, std_output, mean_special=None, std_special=None):
         super().__init__()
-        self.series_encode = series_encode(mean_input, std_input)
+        self.series_encode = series_encode(mean_input, std_input, mean_special, std_special)
         self.model = model
         self.series_decode = series_decode(mean_output, std_output)
 
-    def forward(self, x):
-        x = self.series_encode(x)
-        x = self.model(x)
+    def forward(self, x, special=None):
+        if special is None:
+            x = self.series_encode(x)
+            x = self.model(x)
+        else:
+            x, special = self.series_encode(x, special)
+            x = self.model(x, special)
         x = self.series_decode(x)
         return x
