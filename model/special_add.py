@@ -20,7 +20,7 @@ class special_add(torch.nn.Module):
         if special is None:
             return x
         else:
-            special = special.unsqueeze(1).unsqueeze(2)
+            special = special.to(x.device).unsqueeze(1).unsqueeze(2)
             x = x - special
             x = self.l0(x)
             x = self.l1(x)
