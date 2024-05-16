@@ -42,19 +42,19 @@ def train_get(args, data_dict, model_dict, loss):
         train_loss = 0  # 记录损失
         if args.local_rank == 0:  # tqdm
             tqdm_show = tqdm.tqdm(total=step_epoch)
-        for index, (series_batch, true_batch) in enumerate(train_dataloader):
+        for index, (series_batch, true_batch, special) in enumerate(train_dataloader):
             series_batch = series_batch.to(args.device, non_blocking=args.latch)
             true_batch = true_batch.to(args.device, non_blocking=args.latch)
             if args.amp:
                 with torch.cuda.amp.autocast():
-                    pred_batch = model(series_batch)
+                    pred_batch = model(series_batch) if 'special' not in args.model else model(series_batch, special)
                     loss_batch = loss(pred_batch, true_batch)
                 args.amp.scale(loss_batch).backward()
                 args.amp.step(optimizer)
                 args.amp.update()
                 optimizer.zero_grad()
             else:
-                pred_batch = model(series_batch)
+                pred_batch = model(series_batch) if 'special' not in args.model else model(series_batch, special)
                 loss_batch = loss(pred_batch, true_batch)
                 loss_batch.backward()
                 optimizer.step()
@@ -114,6 +114,7 @@ def train_get(args, data_dict, model_dict, loss):
 
 class torch_dataset(torch.utils.data.Dataset):
     def __init__(self, args, input_data, output_data):
+        self.model = args.model
         self.input_data = input_data
         self.output_data = output_data
         self.input_size = args.input_size
@@ -125,7 +126,13 @@ class torch_dataset(torch.utils.data.Dataset):
     def __getitem__(self, index):
         boundary = index + self.input_size
         series = self.input_data[index:boundary]  # 输入数据
-        series = torch.tensor(series.T, dtype=torch.float32)  # 转换为tensor
+        series = torch.tensor(series.T, dtype=torch.float32)
         label = self.output_data[boundary:boundary + self.output_size]  # 输出标签
-        label = torch.tensor(label.T, dtype=torch.float32)  # 转换为tensor
-        return series, label
+        label = torch.tensor(label.T, dtype=torch.float32)
+        special = self._special(boundary) if 'special' in self.model else None  # 加入特殊变量
+        return series, label, special
+
+    def _special(self, boundary, column_index=0):
+        special = self.input_data[boundary][column_index]  # 需要更改
+        special = torch.tensor(special, dtype=torch.float32)
+        return special
