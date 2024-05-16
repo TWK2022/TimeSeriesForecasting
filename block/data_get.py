@@ -9,6 +9,7 @@ def data_get(args):
 
 class data_prepare:
     def __init__(self, args):
+        self.model = args.model
         self.data_path = args.data_path
         self.input_column = args.input_column
         self.output_column = args.output_column
@@ -64,4 +65,9 @@ class data_prepare:
         data_dict['mean_output'] = mean_output
         data_dict['std_input'] = std_input
         data_dict['std_output'] = std_output
+        # 特殊数据(需要根据情况更改)
+        data_dict['train_special'] = train_input[:, 0] if 'special' in self.model else None
+        data_dict['val_special'] = val_input[:, 0] if 'special' in self.model else None
+        data_dict['mean_special'] = mean_input[0] if 'special' in self.model else None
+        data_dict['std_special'] = std_input[0] if 'special' in self.model else None
         return data_dict
