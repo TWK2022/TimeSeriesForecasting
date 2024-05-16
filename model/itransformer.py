@@ -41,7 +41,7 @@ class itransformer(torch.nn.Module):
         self.l0 = torch.nn.Linear(input_size, feature)
         self.l1 = encode_block(head, feature)
         self.l2 = encode_block(head, feature)
-        self.l3 = torch.nn.Linear(feature, output_size, bias=True)
+        self.l3 = torch.nn.Linear(feature, output_size)
         self.l4 = split_conv1d(input_dim, output_dim)
         self.l5 = split_linear(output_dim, output_size)
 
