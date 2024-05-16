@@ -242,17 +242,17 @@ class economy_class:
                 model_path = f'{model_dir}/{name}.pt'
                 dict_ = torch.load(model_path, map_location='cpu')
                 model = dict_['model']
-                model = deploy(model, dict_['mean_input'], dict_['mean_output'], dict_['std_input'],
-                               dict_['std_output']).eval()
+                model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
+                               model_dict['std_output'], model_dict['mean_special'], model_dict['std_special']).eval()
                 df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
                 input_data = np.array(df[input_column]).astype(np.float32).T
                 input_data = input_data[:, -self.args.input_size:]
+                close_data = np.array(df['收盘价']).astype(np.float32)[-200:]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
-                close_data = np.array(df['收盘价']).astype(np.float32)
-                close_data = close_data[-200:]
+                special = torch.tensor(close_data[-1])  # 假设第2天开盘价与昨日收盘价一致
                 # 推理
                 with torch.no_grad():
-                    pred = model(tensor)[0][0].cpu().numpy()
+                    pred = model(tensor, special)[0][0].cpu().numpy()
                 # 画图
                 ratio = np.max(pred) / close_data[-1]
                 if ratio > 1.2:  # 有上涨空间
