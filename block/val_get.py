@@ -29,15 +29,15 @@ def val_get(args, val_dataloader, model, loss, data_dict, ema, data_len):
         pred = torch.stack(pred, dim=0)
         true = torch.stack(true, dim=0)
         # 计算总相对指标
-        mae, mse = metric(pred, true)
-        print(f'\n| 验证 | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_mse:{mse:.4f} |')
+        mae, rmse = metric(pred, true)
+        print(f'\n| 验证 | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_rmse:{rmse:.4f} |')
         # 计算各类别相对指标和真实指标
         for i in range(pred.shape[1]):
             column = args.output_column[i]
-            _mae, _mse = metric(pred[:, i], true[:, i])
+            _mae, _rmse = metric(pred[:, i], true[:, i])
             pred[:, i] = pred[:, i] * data_dict['std_output'][i] + data_dict['mean_output'][i]
             true[:, i] = true[:, i] * data_dict['std_output'][i] + data_dict['mean_output'][i]
-            _mae_true, _mse_true = metric(pred[:, i], true[:, i])
-            print('| 验证 | {} | mae:{:.4f} | mse:{:.4f} | mae_true:{:.4f} | mse_true:{:.4f} |'
-                  .format(column, _mae, _mse, _mae_true, _mse_true))
-    return val_loss, mae.item(), mse.item()
+            _mae_true, _rmse_true = metric(pred[:, i], true[:, i])
+            print('| 验证 | {} | mae:{:.4f} | rmse:{:.4f} | mae_true:{:.4f} | rmse_true:{:.4f} |'
+                  .format(column, _mae, _rmse, _mae_true, _rmse_true))
+    return val_loss, mae.item(), rmse.item()
