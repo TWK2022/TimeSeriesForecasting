@@ -13,8 +13,9 @@ from block.util import read_column
 # 以第2天的实际均价作为交易股价，这里存在误差
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|测试|')
-parser.add_argument('--model_path', default='../best.pt', type=str, help='|pt模型位置|')
-parser.add_argument('--data_path', default=r'dataset/弘元绿能_add.csv', type=str, help='|数据位置|')
+parser.add_argument('--special', default=True, type=bool, help='|特殊模型|')
+parser.add_argument('--model_path', default='../last.pt', type=str, help='|pt模型位置|')
+parser.add_argument('--data_path', default=r'dataset/三人行_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
@@ -34,6 +35,7 @@ assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !
 # -------------------------------------------------------------------------------------------------------------------- #
 class project_class:
     def __init__(self, args):
+        self.special = args.special
         self.input_size = args.input_size
         self.output_size = args.output_size
         self.device = args.device
@@ -83,7 +85,10 @@ class project_class:
             for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
                 tensor = torch.tensor(self.input_data[:, index - self.input_size:index]).unsqueeze(0).to(self.device)
                 special = torch.tensor(self.open_data[index:index + 1]).to(self.device)
-                pred = self.model(tensor, special)[0][0].cpu().numpy()
+                if self.special:
+                    pred = self.model(tensor, special)[0][0].cpu().numpy()
+                else:
+                    pred = self.model(tensor)[0][0].cpu().numpy()
                 now = self.close_data[index - 1]
                 next_open = self.open_data[index]
                 next_close = self.close_data[index]
@@ -135,7 +140,11 @@ class project_class:
         if self.state == 0:  # 没有买入
             return
         # a人为策略
-        if now * self.a_rise_still < (next_open + next_close) / 2:  # 第2天发现依然有上涨趋势，先不卖出
+        if now * self.a_rise_still < (next_open + next_close) / 2:  # 第2天发现有上涨趋势，先不卖出
+            return
+        if now > (next_open + next_close) / 2:  # 第2天发现有下降趋势，直接卖出
+            self.state = 0
+            self.sell_list.append((now + next_close) / 2)
             return
         # b模型策略
         if now < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出

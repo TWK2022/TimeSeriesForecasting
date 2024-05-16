@@ -1,6 +1,5 @@
 # 特殊模型
 # 多变量单标签
-# 在股票收盘价预测中，加入第2天的开盘价可以大幅提高模型的准确率
 import torch
 from model.itransformer import itransformer
 
@@ -21,11 +20,10 @@ class special_add(torch.nn.Module):
             return x
         else:
             special = special.to(x.device).unsqueeze(1).unsqueeze(2)
-            x = x - special
+            x = x + special
             x = self.l0(x)
             x = self.l1(x)
             x = self.l2(x)
-            x = x + special
             return x
 
 
