@@ -82,7 +82,8 @@ def train_get(args, data_dict, model_dict, loss):
         torch.cuda.empty_cache()
         # 验证
         if args.local_rank == 0:  # 分布式时只验证一次
-            val_loss, mae, mse = val_get(args, val_dataloader, model, loss, data_dict, ema, len(data_dict['val_input']))
+            val_loss, mae, rmse = val_get(args, val_dataloader, model, loss, data_dict, ema,
+                                          len(data_dict['val_input']))
         # 保存
         if args.local_rank == 0:  # 分布式时只保存一次
             model_dict['model'] = model.module if args.distributed else model
@@ -96,7 +97,7 @@ def train_get(args, data_dict, model_dict, loss):
             model_dict['train_loss'] = train_loss
             model_dict['val_loss'] = val_loss
             model_dict['val_mae'] = mae
-            model_dict['val_mse'] = mse
+            model_dict['val_rmse'] = rmse
             if 'special' in args.model:
                 model_dict['mean_special'] = data_dict['mean_special']
                 model_dict['std_special'] = data_dict['std_special']
@@ -105,13 +106,13 @@ def train_get(args, data_dict, model_dict, loss):
                 model_dict['standard'] = val_loss
                 torch.save(model_dict, args.save_path)  # 保存最佳模型
                 print(f'| 保存最佳模型:{args.save_path} | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} |'
-                      f' val_mse:{mse:.4f} |')
+                      f' val_rmse:{rmse:.4f} |')
             # wandb
             if args.wandb:
                 args.wandb_run.log({'metric/train_loss': train_loss,
                                     'metric/val_loss': val_loss,
                                     'metric/val_mae': mae,
-                                    'metric/val_mse': mse})
+                                    'metric/val_rmse': rmse})
         torch.distributed.barrier() if args.distributed else None  # 分布式时每轮训练后让所有GPU进行同步，快的GPU会在此等待
 
 
