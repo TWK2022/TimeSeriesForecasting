@@ -242,8 +242,8 @@ class economy_class:
                 model_path = f'{model_dir}/{name}.pt'
                 dict_ = torch.load(model_path, map_location='cpu')
                 model = dict_['model']
-                model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
-                               model_dict['std_output'], model_dict['mean_special'], model_dict['std_special']).eval()
+                model = deploy(model, dict_['mean_input'], dict_['mean_output'], dict_['std_input'],
+                               dict_['std_output'], dict_['mean_special'], dict_['std_special']).eval()
                 df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
                 input_data = np.array(df[input_column]).astype(np.float32).T
                 input_data = input_data[:, -self.args.input_size:]
