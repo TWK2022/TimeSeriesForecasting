@@ -17,7 +17,7 @@ class special_add(torch.nn.Module):
 
     def forward(self, x, special=None):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         x = self.model(x)
-        if special == None:
+        if special is None:
             return x
         else:
             special = special.unsqueeze(1).unsqueeze(2)
