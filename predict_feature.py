@@ -51,8 +51,8 @@ def predict_pt():
                    model_dict['std_output']).eval().to(args.device)
     model = model.half() if args.device == 'cuda' else model.float()
     epoch = model_dict['epoch_finished']
-    mse = round(model_dict['val_mse'], 4)
-    print(f'| 模型加载成功:{args.model_path} | epoch:{epoch} | mse:{mse}|')
+    rmse = round(model_dict['val_rmse'], 4)
+    print(f'| 模型加载成功:{args.model_path} | epoch:{epoch} | rmse:{rmse}|')
     # 加载数据
     try:
         df = pd.read_csv(args.data_path, encoding='utf-8', index_col=0)
