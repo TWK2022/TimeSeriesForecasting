@@ -6,7 +6,7 @@ import pandas as pd
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|计算5日、10日、60日均线|')
 parser.add_argument('--data_dir', default='dataset', type=str, help='|数据目录|')
-parser.add_argument('--screen_path', default='data_screen.yaml', type=str, help='|data_screen.py中筛选出的结果|')
+parser.add_argument('--number_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--column', default='收盘价,成交量', type=str, help='|选择计算的变量|')
 args = parser.parse_args()
 args.column = args.column.split(',')
@@ -23,7 +23,7 @@ def count(data, lengh, column):
 
 
 def data_deal(args):
-    with open(args.screen_path, 'r', encoding='utf-8') as f:
+    with open(args.number_path, 'r', encoding='utf-8') as f:
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
     for industry in yaml_dict:
         for name in yaml_dict[industry].keys():
