@@ -98,9 +98,8 @@ def train_get(args, data_dict, model_dict, loss):
             model_dict['val_loss'] = val_loss
             model_dict['val_mae'] = mae
             model_dict['val_rmse'] = rmse
-            if 'special' in args.model:
-                model_dict['mean_special'] = data_dict['mean_special']
-                model_dict['std_special'] = data_dict['std_special']
+            model_dict['mean_special'] = data_dict['mean_special']
+            model_dict['std_special'] = data_dict['std_special']
             torch.save(model_dict, 'last.pt')  # 保存最后一次训练的模型
             if val_loss < 1 and val_loss < model_dict['standard']:
                 model_dict['standard'] = val_loss
