@@ -25,10 +25,10 @@ parser.add_argument('--industry', default='互联网', type=str)
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
 parser.add_argument('--end_time', default='20240601', type=str)
-# economy/data_screen.py
-parser.add_argument('--data_screen', default=False, type=bool)
 # economy/data_deal.py
 parser.add_argument('--data_deal', default=False, type=bool)
+# economy/data_screen.py
+parser.add_argument('--data_screen', default=False, type=bool)
 # run.py | 训练测试基础模型
 parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
@@ -64,10 +64,10 @@ class economy_class:
             self._data_get()
         # economy目录
         os.chdir(self.path_economy)
-        if self.args.data_screen:
-            self._data_screen()
         if self.args.data_deal:
             self._data_deal()
+        if self.args.data_screen:
+            self._data_screen()
         # 原目录
         os.chdir(self.path)
         if self.args.run_base_test:
@@ -95,13 +95,13 @@ class economy_class:
         print('economy/tushare/data_get.py')
         os.system(f'python data_get.py --token {self.args.token} --end_time {self.args.end_time}')
 
-    def _data_screen(self):
-        print('economy/data_screen.py')
-        os.system(f'python data_screen.py')
-
     def _data_deal(self):
         print('economy/data_deal.py')
         os.system(f'python data_deal.py')
+
+    def _data_screen(self):
+        print('economy/data_screen.py')
+        os.system(f'python data_screen.py')
 
     def _run_base_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
         print('run.py | 训练测试基础模型')
@@ -268,9 +268,9 @@ class economy_class:
     def _count(self, close_5, close_10):  # 判断金叉+和死叉1，+0表示今天金叉，+1表示昨天金叉
         for index in range(len(close_5) - 1, 0, -1):
             if close_5[index] >= close_10[index] and close_5[index - 1] < close_10[index - 1]:
-                return f'+{len(close_5) - index + 1}'
+                return f'+{len(close_5) - index}'
             if close_5[index] <= close_10[index] and close_5[index - 1] > close_10[index - 1]:
-                return f'-{len(close_5) - index + 1}'
+                return f'-{len(close_5) - index}'
         return 'None'
 
     def _draw(self, pred, close_data, name, save_path):
