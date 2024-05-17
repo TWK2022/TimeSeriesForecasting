@@ -9,9 +9,8 @@ parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
 parser.add_argument('--history', default=100, type=int, help='|计算指标时采用最近history日内的数据|')
 parser.add_argument('--close', default=1, type=float, help='|筛选价格<close*历史加权均值|')
-parser.add_argument('--change', default=2, type=float, help='|筛选平均换手率>change|')
-parser.add_argument('--volume', default=30000, type=float, help='|筛选平均成交量>volume|')
-parser.add_argument('--volume_ratio', default=0.8, type=float, help='|筛选近期量比>volume_ratio|')
+parser.add_argument('--change', default=3, type=float, help='|筛选平均换手率，换手率和成交量要满足其一|')
+parser.add_argument('--volume', default=100000, type=float, help='|筛选平均成交量，换手率和成交量要满足其一|')
 args = parser.parse_args()
 
 
@@ -27,13 +26,12 @@ def data_screen(args):
         record_all += len(industry_dict)
         result_dict[industry] = {}
         for name in industry_dict:
-            df = pd.read_csv(f'dataset/{name}.csv', index_col=0)
+            df = pd.read_csv(f'dataset/{name}_add.csv', index_col=0)
             close_data = df['收盘价'].values
             change_data = df['换手率'].values
             volume_data = df['成交量'].values
-            volume_ratio_data = df['量比'].values
             # 检查是否存在nan值
-            if np.isnan(df.values[20:]).any():  # 部分变量刚上市时为nan不影响
+            if np.isnan(df.values).any():
                 print(f'| 存在nan值:dataset/{name}.csv |')
                 continue
             # 上市日期删选
@@ -45,20 +43,25 @@ def data_screen(args):
             mean = np.mean(close_data[-args.history:] * ratio)
             if close_data[-1] / mean > args.close:
                 continue
-            # 换手率筛选
+            # 换手率和成交量筛选
             change_mean = np.mean(change_data[-args.history:] * ratio)
-            if change_mean < args.change:
-                continue
-            # 成交量筛选
             volume_mean = np.mean(volume_data[-args.history:] * ratio)
-            if volume_mean < args.volume:
-                continue
-            # 量比筛选
-            volume_ratio_last = np.mean(volume_ratio_data[-3:])
-            if volume_ratio_last < args.volume_ratio:
+            if change_mean < args.change and volume_mean < args.volume:
                 continue
             # 连续3天上涨
             if close_data[-1] > close_data[-2] > close_data[-3]:
+                continue
+            # 5日均线和10日均线筛选
+            close_5 = df['收盘价_5'].values
+            close_10 = df['收盘价_10'].values
+            for index in range(len(close_5) - 1, 0, -1):
+                if close_5[index] >= close_10[index] and close_5[index - 1] < close_10[index - 1]:  # 上穿
+                    day = len(close_5) - index + 1
+                    break
+                if close_5[index] <= close_10[index] and close_5[index - 1] > close_10[index - 1]:  # 下穿
+                    day = -(len(close_5) - index + 1)
+                    break
+            if day > 2:  # 上穿超过2天
                 continue
             # 记录
             result_dict[industry][name] = float(round(close_data[-1] / mean, 2))
