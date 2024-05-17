@@ -61,7 +61,7 @@ def data_screen(args):
             if close_data[-1] > close_data[-2] > close_data[-3]:
                 continue
             # 记录
-            result_dict[industry][name] = float(round(close_data[-1], 2))
+            result_dict[industry][name] = float(round(close_data[-1] / mean, 2))
             record_screen += 1
         result_dict[industry] = dict(sorted(result_dict[industry].items(), key=lambda x: x[1]))
     # 保存

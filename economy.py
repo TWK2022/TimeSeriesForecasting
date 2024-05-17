@@ -261,7 +261,8 @@ class economy_class:
                 if ratio > 1.2:  # 有上涨空间
                     last_day = str(df.index[-1])
                     judge = self._count(df['收盘价_5'].values, df['收盘价_10'].values)
-                    save_path = f'save_image/{last_day}_{name}_{judge}_{ratio:.2f}_{model_dict[industry][name][2]}.jpg'
+                    save_path = f'save_image/{last_day}__{name}__{judge}__{ratio:.2f}' \
+                                f'__{model_dict[industry][name][2]}.jpg'
                     self._draw(pred, close_data, f'{last_day}_{name}', save_path)
 
     def _count(self, close_5, close_10):  # 判断金叉+和死叉1，+0表示今天金叉，+1表示昨天金叉
