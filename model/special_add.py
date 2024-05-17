@@ -10,7 +10,8 @@ class special_add(torch.nn.Module):
         output_size = args.output_size
         # 网络结构
         self.model = model(args) if model else itransformer(args)
-        self.linear = torch.nn.Linear(output_size, output_size)
+        self.linear0 = torch.nn.Linear(output_size, output_size)
+        self.linear1 = torch.nn.Linear(output_size, output_size)
 
     def forward(self, x, special=None):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         x = self.model(x)
@@ -18,8 +19,8 @@ class special_add(torch.nn.Module):
             return x
         else:
             special = special.to(x.device).unsqueeze(1).unsqueeze(2)
-            x = x + special
-            x = self.linear(x)
+            x = x + self.linear0(x - special)
+            x = self.linear1(x)
             return x
 
 
