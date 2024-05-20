@@ -9,8 +9,8 @@ parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
 parser.add_argument('--history', default=100, type=int, help='|计算指标时采用最近history日内的数据|')
 parser.add_argument('--close', default=1, type=float, help='|筛选价格<close*历史加权均值|')
-parser.add_argument('--change', default=3, type=float, help='|筛选平均换手率，换手率和成交量要满足其一|')
-parser.add_argument('--volume', default=100000, type=float, help='|筛选平均成交量，换手率和成交量要满足其一|')
+parser.add_argument('--change', default=2, type=float, help='|筛选平均换手率>change|')
+parser.add_argument('--volume', default=100000, type=float, help='|筛选平均成交量>volume|')
 args = parser.parse_args()
 
 
@@ -43,10 +43,13 @@ def data_screen(args):
             mean = np.mean(close_data[-args.history:] * ratio)
             if close_data[-1] / mean > args.close:
                 continue
-            # 换手率和成交量筛选
+            # 换手率筛选
             change_mean = np.mean(change_data[-args.history:] * ratio)
+            if change_mean < args.change:
+                continue
+            # 成交量筛选
             volume_mean = np.mean(volume_data[-args.history:] * ratio)
-            if change_mean < args.change and volume_mean < args.volume:
+            if volume_mean < args.volume:
                 continue
             # 连续3天上涨
             if close_data[-1] > close_data[-2] > close_data[-3]:
