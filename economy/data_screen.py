@@ -61,7 +61,7 @@ def data_screen(args):
                 if close_5[index] <= close_10[index] and close_5[index - 1] > close_10[index - 1]:  # 下穿
                     day = -(len(close_5) - index + 1)
                     break
-            if day > 2:  # 上穿超过2天
+            if day == -1:  # 刚刚下穿
                 continue
             # 记录
             result_dict[industry][name] = float(round(close_data[-1] / mean, 2))
