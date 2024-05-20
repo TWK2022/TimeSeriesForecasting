@@ -29,6 +29,7 @@ parser.add_argument('--end_time', default='20240601', type=str)
 parser.add_argument('--data_deal', default=False, type=bool)
 # economy/data_screen.py
 parser.add_argument('--data_screen', default=False, type=bool)
+parser.add_argument('--change', default=2, type=float)
 # run.py | 训练测试基础模型
 parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
@@ -101,7 +102,7 @@ class economy_class:
 
     def _data_screen(self):
         print('economy/data_screen.py')
-        os.system(f'python data_screen.py')
+        os.system(f'python data_screen.py --change {self.args.change}')
 
     def _run_base_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
         print('run.py | 训练测试基础模型')
