@@ -118,7 +118,7 @@ class economy_class:
                           f' --output_column 收盘价 --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --weight {model_dir}/base_test.pt --weight_again True'
                           f' --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch 10 --lr_end_epoch 30')
+                          f' --epoch 5 --lr_end_epoch 30')
                 shutil.move('last.pt', f'{model_dir}/base_test.pt')
 
     def _run_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
@@ -194,7 +194,7 @@ class economy_class:
                           f' --output_column 收盘价 --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
                           f' --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch 10 --lr_end_epoch 30')
+                          f' --epoch 5 --lr_end_epoch 30')
                 shutil.move('last.pt', f'{model_dir}/base.pt')
 
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
