@@ -20,7 +20,7 @@ parser.add_argument('--model', default='special_add', type=str)
 parser.add_argument('--model_type', default='l', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='互联网,元器件,通讯设备', type=str)
+parser.add_argument('--industry', default='互联网,元器件,通信设备', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
