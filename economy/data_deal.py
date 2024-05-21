@@ -30,6 +30,8 @@ def data_deal(args):
             path = f'{args.data_dir}/{name}.csv'
             df = pd.read_csv(path, index_col=0)
             value = df[args.column].values
+            if len(value) < 200:
+                continue
             result_5, column_5 = count(data=value, lengh=5, column=args.column)
             result_10, column_10 = count(data=value, lengh=10, column=args.column)
             result_60, column_60 = count(data=value, lengh=60, column=args.column)

@@ -20,7 +20,7 @@ parser.add_argument('--model', default='special_add', type=str)
 parser.add_argument('--model_type', default='l', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='互联网', type=str)
+parser.add_argument('--industry', default='互联网,元器件,通讯设备', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -29,7 +29,7 @@ parser.add_argument('--end_time', default='20240601', type=str)
 parser.add_argument('--data_deal', default=False, type=bool)
 # economy/data_screen.py
 parser.add_argument('--data_screen', default=False, type=bool)
-parser.add_argument('--change', default=2, type=float)
+parser.add_argument('--change', default=3, type=float)
 # run.py | 训练测试基础模型
 parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型

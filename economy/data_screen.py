@@ -1,3 +1,4 @@
+import os
 import yaml
 import argparse
 import numpy as np
@@ -9,7 +10,7 @@ parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
 parser.add_argument('--history', default=100, type=int, help='|计算指标时采用最近history日内的数据|')
 parser.add_argument('--close', default=1, type=float, help='|筛选价格<close*历史加权均值|')
-parser.add_argument('--change', default=2, type=float, help='|筛选平均换手率>change|')
+parser.add_argument('--change', default=3, type=float, help='|筛选平均换手率>change|')
 parser.add_argument('--volume', default=100000, type=float, help='|筛选平均成交量>volume|')
 args = parser.parse_args()
 
@@ -26,6 +27,9 @@ def data_screen(args):
         record_all += len(industry_dict)
         result_dict[industry] = {}
         for name in industry_dict:
+            if not os.path.exists(f'dataset/{name}_add.csv'):
+                print(f'| 不存在文件:dataset/{name}_add.csv |')
+                continue
             df = pd.read_csv(f'dataset/{name}_add.csv', index_col=0)
             close_data = df['收盘价'].values
             change_data = df['换手率'].values
