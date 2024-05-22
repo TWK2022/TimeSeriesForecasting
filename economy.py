@@ -255,7 +255,7 @@ class economy_class:
                 input_data = input_data[:, -self.args.input_size:]
                 close_data = np.array(df['收盘价']).astype(np.float32)[-200:]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
-                special = torch.tensor(close_data[-2:-1])  # 假设第2天开盘价与昨日收盘价一致
+                special = torch.tensor(1.02 * close_data[-2:-1])  # 假设第2天开盘小涨
                 # 推理
                 with torch.no_grad():
                     if 'special' in self.args.model:
