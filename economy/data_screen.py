@@ -36,7 +36,7 @@ def data_screen(args):
             volume_data = df['成交量'].values
             # 检查是否存在nan值
             if np.isnan(df.values).any():
-                print(f'| 存在nan值:dataset/{name}.csv |')
+                print(f'| 存在nan值:dataset/{name}_add.csv |')
                 continue
             # 上市日期删选
             if len(df) < 2 * args.history:

@@ -20,7 +20,7 @@ parser.add_argument('--model', default='special_add', type=str)
 parser.add_argument('--model_type', default='l', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='房产服务,电气设备', type=str)
+parser.add_argument('--industry', default='房产服务,装修装饰,电气设备', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -266,8 +266,9 @@ class economy_class:
                 ratio = np.max(pred) / close_data[-1]
                 if ratio > 1.2:  # 有上涨空间
                     last_day = str(df.index[-1])
-                    judge = self._count(df['收盘价_5'].values, df['收盘价_10'].values)
-                    save_path = f'save_image/{last_day}__{industry}__{name}__{judge}__{ratio:.2f}' \
+                    mean_judge = self._count(df['收盘价_5'].values, df['收盘价_10'].values)
+                    ttm_judge = '亏损' if df['市盈率ttm'].values[-1] == 0 else '盈利'
+                    save_path = f'save_image/{last_day}__{industry}__{name}__{ttm_judge}__{mean_judge}__{ratio:.2f}' \
                                 f'__{model_dict[industry][name][2]}.jpg'
                     self._draw(pred, close_data, f'{last_day}_{name}', save_path)
 
