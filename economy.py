@@ -150,7 +150,8 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --weight {weight} --weight_again True'
-                          f' --model {epoch} --lr_end_epoch {epoch} ')
+                          f' --model {self.args.model} --model_type {self.args.model_type}'
+                          f' --model {epoch} --lr_end_epoch {epoch}')
                 shutil.move('last.pt', model_path)
                 # 记录模型信息
                 dict_ = torch.load(model_path, map_location='cpu')
