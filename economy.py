@@ -139,16 +139,17 @@ class economy_class:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
                 weight = f'{model_dir}/base_test.pt'
+                epoch = 30
                 if os.path.exists(model_path):
                     if self.args.run_test_again:
                         weight = model_path
+                        epoch = 10
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --weight {weight} --weight_again True'
-                          f' --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch 30 --lr_end_epoch 30')
+                          f' --model {epoch} --lr_end_epoch {epoch} ')
                 shutil.move('last.pt', model_path)
                 # 记录模型信息
                 dict_ = torch.load(model_path, map_location='cpu')
@@ -210,16 +211,18 @@ class economy_class:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
                 weight = f'{model_dir}/base.pt'
+                epoch = 30
                 if os.path.exists(model_path):
                     if self.args.run_again:
                         weight = model_path
+                        epoch = 10
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
                           f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
                           f' --divide 19,1 --divide_all True --weight {weight} --weight_again True'
                           f' --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch 30 --lr_end_epoch 30')
+                          f' --epoch {epoch} --lr_end_epoch {epoch}')
                 shutil.move('best.pt', model_path)
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
