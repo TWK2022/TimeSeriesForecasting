@@ -35,7 +35,7 @@ parser.add_argument('--change', default=3, type=float)
 parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
 parser.add_argument('--run_test', default=False, type=bool)
-parser.add_argument('--run_test_again', default=False, type=bool)
+parser.add_argument('--run_test_again', default=True, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
 parser.add_argument('--rise', default=1.2, type=float)
@@ -43,7 +43,7 @@ parser.add_argument('--rise', default=1.2, type=float)
 parser.add_argument('--run_base', default=False, type=bool)
 # run.py | 训练正式模型
 parser.add_argument('--run', default=False, type=bool)
-parser.add_argument('--run_again', default=False, type=bool)
+parser.add_argument('--run_again', default=True, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
 parser.add_argument('--draw_threshold', default=1.15, type=float)
