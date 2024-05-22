@@ -46,6 +46,7 @@ parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=False, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
+parser.add_argument('--draw_threshold', default=1.15, type=float)
 args = parser.parse_args()
 
 
@@ -264,7 +265,7 @@ class economy_class:
                         pred = model(tensor)[0][0].cpu().numpy()
                 # 画图
                 ratio = np.max(pred) / close_data[-1]
-                if ratio > 1.2:  # 有上涨空间
+                if ratio > self.args.draw_threshold:  # 有上涨空间
                     last_day = str(df.index[-1])
                     mean_judge = self._count(df['收盘价_5'].values, df['收盘价_10'].values)
                     ttm_judge = '亏损' if df['市盈率ttm'].values[-1] == 0 else '盈利'
