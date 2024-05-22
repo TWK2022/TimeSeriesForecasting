@@ -13,13 +13,30 @@ args.column = args.column.split(',')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
-def count(data, lengh, column):
+def count(data, lengh, column):  # 计算均值
     result_list = []
     for index in range(len(data) - lengh + 1):
-        result_list.append(np.sum(data[index:index + lengh, :], axis=0) / lengh)
+        result_list.append(np.mean(data[index:index + lengh, :], axis=0))
     result = np.stack(result_list, axis=0)
     column = [f'{_}_{lengh}' for _ in column]
     return result, column
+
+
+def fix(data):  # 修复数据中间的单个nan值
+    judge_list = np.isnan(data)
+    if judge_list.any():  # 存在nan值
+        index_list = np.arange(1, len(data) - 1)[judge_list][1:-1]
+        for index in index_list:
+            data[index] = (data[index - 1] + data[index + 1]) / 2
+    return data
+
+
+def add_zero(data):  # 补充0值
+    judge_list = np.isnan(data)
+    if judge_list.any():  # 存在nan值
+        index_list = np.arange(len(data))[judge_list]
+        data[index_list] = 0
+    return data
 
 
 def data_deal(args):
@@ -30,8 +47,10 @@ def data_deal(args):
             path = f'{args.data_dir}/{name}.csv'
             df = pd.read_csv(path, index_col=0)
             value = df[args.column].values
+            # 数据太少舍弃
             if len(value) < 200:
                 continue
+            # 计算均线
             result_5, column_5 = count(data=value, lengh=5, column=args.column)
             result_10, column_10 = count(data=value, lengh=10, column=args.column)
             result_60, column_60 = count(data=value, lengh=60, column=args.column)
@@ -45,6 +64,12 @@ def data_deal(args):
             drop_index = df.index[:-lengh]
             df = df.drop(index=drop_index)
             df = pd.concat([df, df_add], axis=1)
+            # 补充数据
+            df['量比'] = fix(df['量比'])
+            df['市净率'] = add_zero(df['市净率'])
+            df['市盈率ttm'] = add_zero(df['市盈率ttm'])
+            df['市销率ttm'] = add_zero(df['市销率ttm'])
+            # 保存
             df.to_csv(f'{args.data_dir}/{name}_add.csv', header=True, index=True)
             print(f'| 结果保存至:{args.data_dir}/{name}_add.csv |')
 
