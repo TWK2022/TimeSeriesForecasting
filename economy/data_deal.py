@@ -1,3 +1,4 @@
+import os
 import yaml
 import argparse
 import numpy as np
@@ -45,6 +46,8 @@ def data_deal(args):
     for industry in yaml_dict:
         for name in yaml_dict[industry].keys():
             path = f'{args.data_dir}/{name}.csv'
+            if not os.path.exists(path):
+                print(f'| 文件不存在:{path} |')
             df = pd.read_csv(path, index_col=0)
             value = df[args.column].values
             # 数据太少舍弃
