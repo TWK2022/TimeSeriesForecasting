@@ -34,12 +34,9 @@ def industry_choice(args):
         dict_ = yaml_dict[industry]
         for name in dict_.keys():
             number = dict_[name][0]
-            area = dict_[name][2]
-            type_ = dict_[name][3]
-            time = dict_[name][4]
+            type_ = dict_[name][2]
+            time = dict_[name][3]
             if 'ST' in name:
-                continue
-            if args.area and area not in args.area:
                 continue
             if args.type and type_ != args.type:
                 continue
