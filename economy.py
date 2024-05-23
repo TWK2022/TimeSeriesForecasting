@@ -30,7 +30,7 @@ parser.add_argument('--data_deal', default=False, type=bool)
 # economy/data_screen.py
 parser.add_argument('--data_screen', default=False, type=bool)
 parser.add_argument('--close', default=1, type=float)
-parser.add_argument('--change', default=3, type=float)
+parser.add_argument('--change', default=2, type=float)
 # run.py | 训练测试基础模型
 parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
