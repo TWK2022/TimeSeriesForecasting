@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 
 # -------------------------------------------------------------------------------------------------------------------- #
-parser = argparse.ArgumentParser(description='|计算5日、10日、60日均线|')
+parser = argparse.ArgumentParser(description='|计算5日、10日、20日均线|')
 parser.add_argument('--data_dir', default='dataset', type=str, help='|数据目录|')
 parser.add_argument('--number_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--column', default='收盘价,成交量', type=str, help='|选择计算的变量|')
@@ -58,12 +58,12 @@ def data_deal(args):
             # 计算均线
             result_5, column_5 = count(data=value, lengh=5, column=args.column)
             result_10, column_10 = count(data=value, lengh=10, column=args.column)
-            result_60, column_60 = count(data=value, lengh=60, column=args.column)
-            lengh = len(result_60)
+            result_20, column_20 = count(data=value, lengh=20, column=args.column)
+            lengh = len(result_20)
             result_5 = result_5[-lengh:]
             result_10 = result_10[-lengh:]
-            result = np.concatenate([result_5, result_10, result_60], axis=1)
-            column_add = column_5 + column_10 + column_60
+            result = np.concatenate([result_5, result_10, result_20], axis=1)
+            column_add = column_5 + column_10 + column_20
             df_index = df.index[-lengh:]
             df_add = pd.DataFrame(result, columns=column_add, index=df_index)
             drop_index = df.index[:-lengh]
