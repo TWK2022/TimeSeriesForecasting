@@ -1,3 +1,4 @@
+import os
 import yaml
 import argparse
 
@@ -6,6 +7,7 @@ import argparse
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|选择股票|')
 parser.add_argument('--yaml_path', default='number_all.yaml', type=str, help='|所有股票信息|')
+parser.add_argument('--other_path', default='other.yaml', type=str, help='|自选股票信息(可选)|')
 parser.add_argument('--save_path', default='number.yaml', type=str, help='|保存位置|')
 parser.add_argument('--industry', default='水运,电气设备,船舶,港口,运输设备', type=str, help='|行业，必选，如"A,B,C"|')
 parser.add_argument('--area', default='', type=str, help='|地区，空则不筛选，如"A、B、C"|')
@@ -22,7 +24,12 @@ def industry_choice(args):
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
     result_dict = {}
     record = 0
-    for industry in args.industry:
+    if os.path.exists(args.other_path):  # 自选股票
+        with open(args.other_path, 'r', encoding='utf-8') as f:
+            other_dict = yaml.load(f, Loader=yaml.SafeLoader)
+        result_dict['自选'] = other_dict['自选']
+        record += len(other_dict['自选'])
+    for industry in args.industry:  # 行业选择
         result_dict[industry] = {}
         dict_ = yaml_dict[industry]
         for name in dict_.keys():
@@ -41,7 +48,7 @@ def industry_choice(args):
             result_dict[industry][name] = number
             record += 1
     with open(args.save_path, 'w', encoding='utf-8') as f:
-        yaml.dump(result_dict, f, allow_unicode=True)
+        yaml.dump(result_dict, f, allow_unicode=True, sort_keys=False)
     print(f'| 总数:{record} | 保存结果至:{args.save_path} |')
 
 
