@@ -48,6 +48,7 @@ def data_deal(args):
             path = f'{args.data_dir}/{name}.csv'
             if not os.path.exists(path):
                 print(f'| 文件不存在:{path} |')
+                continue
             df = pd.read_csv(path, index_col=0)
             value = df[args.column].values
             # 数据太少舍弃
