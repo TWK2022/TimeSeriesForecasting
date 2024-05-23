@@ -28,7 +28,7 @@ def data_screen(args):
         result_dict[industry] = {}
         for name in industry_dict:
             if not os.path.exists(f'dataset/{name}_add.csv'):
-                print(f'| 不存在文件:dataset/{name}_add.csv |')
+                print(f'| 文件不存在:dataset/{name}_add.csv |')
                 continue
             df = pd.read_csv(f'dataset/{name}_add.csv', index_col=0)
             close_data = df['收盘价'].values
