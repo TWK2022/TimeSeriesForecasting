@@ -68,10 +68,7 @@ class project_class:
         self.open_data = np.array(df['开盘价']).astype(np.float32).T[boundary:len(df)]  # 开盘价
         self.high_data = np.array(df['最高价']).astype(np.float32).T[boundary:len(df)]  # 最高价
         self.low_data = np.array(df['最低价']).astype(np.float32).T[boundary:len(df)]  # 最低价
-        # 历史加权均值
-        close_data = df['收盘价']
-        ratio = 0.1 + 1.9 * np.arange(len(close_data[-100:])) / (len(close_data[-100:]) - 1)
-        self.mean = np.mean(close_data[-100:] * ratio)
+        self.close_10_data = np.array(df['收盘价_10']).astype(np.float32).T[boundary:len(df)]  # 收盘价_10
         # 记录
         self.state = None  # 买卖状态
         self.buy_list = None  # 买入价格
@@ -90,14 +87,15 @@ class project_class:
                 else:
                     pred = self.model(tensor)[0][0].cpu().numpy()
                 now = self.close_data[index - 1]
+                now_10 = self.close_10_data[index - 1]
                 next_open = self.open_data[index]
                 next_close = self.close_data[index]
                 max_ = np.max(pred)
                 min_ = np.min(pred)
                 if max_ > self.rise * now:  # 预测上涨
-                    self._buy(now, next_open, next_close, pred)
+                    self._buy(now, now_10, next_open, next_close, pred)
                 elif min_ < now:  # 预测下降
-                    self._sell(now, next_open, next_close, pred)
+                    self._sell(now, now_10, next_open, next_close, pred)
                 else:  # 预测小幅波动
                     pass
             self._metric('模型', now, True)
@@ -109,25 +107,26 @@ class project_class:
         for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
             pred = self.close_data[index:min(index + self.output_size, self.input_data.shape[1])]
             now = self.close_data[index - 1]
+            now_10 = self.close_10_data[index - 1]
             next_open = self.open_data[index]
             next_close = self.close_data[index]
             max_ = np.max(pred)
             min_ = np.min(pred)
             if max_ > self.rise * now:  # 预测上涨
-                self._buy(now, next_open, next_close, pred)
+                self._buy(now, now_10, next_open, next_close, pred)
             elif min_ < now:  # 预测下降
-                self._sell(now, next_open, next_close, pred)
+                self._sell(now, now_10, next_open, next_close, pred)
             else:  # 预测小幅波动
                 pass
         self._metric('理想', now, False)
 
-    def _buy(self, now, next_open, next_close, pred):
+    def _buy(self, now, now_10, next_open, next_close, pred):
         if self.state == 1:  # 已经买入
             return
         # a人为策略
         if now > (next_open + next_close) / 2:  # 第2天发现有下降趋势，先不买入
             return
-        if now > self.a_mean * self.mean:  # 股价处于历史高位，先不买入
+        if now > self.a_mean * now_10:  # 股价处于历史高位，先不买入
             return
         # b模型策略
         if now > np.min(pred[0:np.argmax(pred) + 1]):  # 预测还有下降空间，先不买入
@@ -136,7 +135,7 @@ class project_class:
         self.state = 1
         self.buy_list.append((next_open + next_close) / 2)
 
-    def _sell(self, now, next_open, next_close, pred):
+    def _sell(self, now, now_10, next_open, next_close, pred):
         if self.state == 0:  # 没有买入
             return
         # a人为策略
