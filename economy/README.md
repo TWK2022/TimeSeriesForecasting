@@ -1,4 +1,9 @@
 ## 经济
+### 环境
+>torch：https://pytorch.org/get-started/previous-versions/
+>```
+>pip install tqdm wandb pandas matplotlib tushare -i https://pypi.tuna.tsinghua.edu.cn/simple
+>```
 ### 1，economy/tushare/industry_choice.py
 >选择股票
 ### 2，economy/tushare/data_get.py
