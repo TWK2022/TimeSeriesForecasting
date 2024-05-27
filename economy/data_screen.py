@@ -12,6 +12,7 @@ parser.add_argument('--close', default=1, type=float, help='|筛选价格<close*
 parser.add_argument('--change', default=2, type=float, help='|筛选平均换手率>change|')
 parser.add_argument('--volume', default=80000, type=float, help='|筛选平均成交量>volume|')
 parser.add_argument('--pe_ttm', default=0, type=float, help='|筛选市盈率ttm>pe_ttm，-1为不筛选，0为筛除亏损|')
+parser.add_argument('--other', default=False, type=bool, help='|自选股票是否需要筛选|')
 args = parser.parse_args()
 
 
@@ -41,6 +42,11 @@ def data_screen(args):
                 continue
             # 上市日期删选
             if len(df) < 200:
+                continue
+            # 自选股票
+            if not args.other and industry == '自选':
+                result_dict[industry][name] = float(round(close_data[-1] / close_10_data[-1], 2))
+                record_screen += 1
                 continue
             # 加权均值
             ratio = 0.1 + 1.9 * np.arange(30) / 29
