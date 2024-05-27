@@ -8,17 +8,17 @@ from block.util import read_column
 
 # -------------------------------------------------------------------------------------------------------------------- #
 # 交易策略:
-# a开头是人为制定的策略，可以加入人为经验
+# a开头是人为制定的策略，可以加入人为经验，这里存在主观性，不一定能达到
 # b开头是根据模型预测结果制定的策略，考验模型的预测能力
 # 以第2天的实际均价作为交易股价，这里存在误差
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|测试|')
 parser.add_argument('--special', default=True, type=bool, help='|特殊模型|')
 parser.add_argument('--model_path', default='../last.pt', type=str, help='|pt模型位置|')
-parser.add_argument('--data_path', default=r'dataset/三人行_add.csv', type=str, help='|数据位置|')
+parser.add_argument('--data_path', default=r'dataset/XX_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
+parser.add_argument('--output_size', default=12, type=int, help='|输出长度|')
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
 parser.add_argument('--rise', default=1.2, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.2|')

@@ -40,6 +40,13 @@ def add_zero(data):  # 补充0值
     return data
 
 
+def reciprocal(data, numerator):  # 求导数
+    judge_list = np.where(data == 0, False, True)
+    index_list = np.arange(len(data))[judge_list]
+    data[index_list] = numerator / data[index_list]
+    return data
+
+
 def data_deal(args):
     with open(args.number_path, 'r', encoding='utf-8') as f:
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
@@ -53,7 +60,7 @@ def data_deal(args):
             value = df[args.column].values
             # 数据太少舍弃
             if len(value) < 200:
-                print(f'| 数据太少:{name} |')
+                print(f'| 数据太少舍弃:{name} |')
                 continue
             # 计算均线
             result_5, column_5 = count(data=value, lengh=5, column=args.column)
@@ -75,6 +82,13 @@ def data_deal(args):
             df['市净率'] = add_zero(df['市净率'].values)
             df['市盈率ttm'] = add_zero(df['市盈率ttm'].values)
             df['市销率ttm'] = add_zero(df['市销率ttm'].values)
+            # 修改数据(由于亏损为0，原来值越小越好，现在改为值越大越好)
+            df['市净率'] = reciprocal(df['市净率'].values, 100)
+            df['市盈率ttm'] = reciprocal(df['市盈率ttm'].values, 1)
+            df['市销率ttm'] = reciprocal(df['市销率ttm'].values, 1)
+            df.rename(columns={'市净率': 'r市净率'}, inplace=True)
+            df.rename(columns={'市盈率ttm': 'r市盈率ttm'}, inplace=True)
+            df.rename(columns={'市销率ttm': 'r市销率ttm'}, inplace=True)
             # 保存
             df.to_csv(f'{args.data_dir}/{name}_add.csv', header=True, index=True)
             print(f'| 结果保存至:{args.data_dir}/{name}_add.csv |')
