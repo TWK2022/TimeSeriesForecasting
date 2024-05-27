@@ -136,7 +136,6 @@ class economy_class:
             model_dict = {}
         for industry in screen_dict:
             name_list = screen_dict[industry].keys()
-            model_dict[industry] = model_dict[industry] if model_dict.get(industry) else {}  # 初始化
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
@@ -159,7 +158,10 @@ class economy_class:
                 mae_true = round(float(dict_['val_mae'] * dict_['std_output']), 4)
                 df = pd.read_csv(data_path, index_col=0)
                 time = str(df.index[-1])
-                model_dict[industry][name] = [time, mae_true, None, None]
+                if model_dict.get(name):
+                    model_dict[name][0], model_dict[name][1] = time, mae_true
+                else:
+                    model_dict[name] = [time, mae_true, None, None]
                 with open('economy/model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True)
                 del dict_, df
@@ -183,7 +185,7 @@ class economy_class:
                     log = f.readlines()
                 income_mean = round(float(log[1].strip()[8:]), 2)
                 # 记录模型信息
-                model_dict[industry][name][2] = income_mean
+                model_dict[name][2] = income_mean
                 with open('model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True)
 
@@ -235,7 +237,7 @@ class economy_class:
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
                 time = str(df.index[-1])
-                model_dict[industry][name][3] = time
+                model_dict[name][3] = time
                 with open('economy/model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True)
 
