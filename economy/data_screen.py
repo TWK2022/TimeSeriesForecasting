@@ -8,7 +8,7 @@ import pandas as pd
 parser = argparse.ArgumentParser(description='|筛选有上升潜力的股票|')
 parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
-parser.add_argument('--close', default=1, type=float, help='|筛选价格<close*10日均线|')
+parser.add_argument('--close', default=1.1, type=float, help='|筛选价格<close*10日均线|')
 parser.add_argument('--change', default=2, type=float, help='|筛选平均换手率>change|')
 parser.add_argument('--volume', default=80000, type=float, help='|筛选平均成交量>volume|')
 parser.add_argument('--pe_ttm', default=0, type=float, help='|筛选市盈率ttm>pe_ttm，-1为不筛选，0为筛除亏损|')
@@ -61,8 +61,9 @@ def data_screen(args):
             volume_mean = np.mean(volume_data[-30:] * ratio)
             if volume_mean < args.volume:
                 continue
-            # 连续4天上涨
-            if close_data[-1] > close_data[-2] > close_data[-3] > close_data[-4]:
+            # 市盈率ttm筛选
+            pe_ttm = df['市盈率ttm'].values[-1]
+            if pe_ttm <= args.pe_ttm:
                 continue
             # 5日均线和10日均线筛选
             close_5 = df['收盘价_5'].values
@@ -75,10 +76,6 @@ def data_screen(args):
                     day = -(len(close_5) - index + 1)
                     break
             if day == -1 or day == -2:  # 刚刚下穿
-                continue
-            # 市盈率ttm筛选
-            pe_ttm = df['市盈率ttm'].values[-1]
-            if pe_ttm <= args.pe_ttm:
                 continue
             # 记录
             result_dict[industry][name] = float(round(close_data[-1] / close_10_data[-1], 2))
