@@ -9,10 +9,10 @@ parser = argparse.ArgumentParser(description='|选择股票|')
 parser.add_argument('--yaml_path', default='number_all.yaml', type=str, help='|所有股票信息|')
 parser.add_argument('--other_path', default='other.yaml', type=str, help='|自选股票信息(可选)|')
 parser.add_argument('--save_path', default='number.yaml', type=str, help='|保存位置|')
-parser.add_argument('--industry', default='水运,电气设备,船舶,港口,运输设备', type=str, help='|行业，必选，如"A,B,C"|')
+parser.add_argument('--industry', default='电气设备,元器件,半导体,化工原料', type=str, help='|行业，必选，如"A,B,C"|')
 parser.add_argument('--area', default='', type=str, help='|地区，空则不筛选，如"A、B、C"|')
 parser.add_argument('--time', default='', type=str, help='|上市时间，筛选time之前的，空则不筛选|')
-parser.add_argument('--type', default='', type=str, help='|企业类型，有其他、中央国企、地方国企，空则不筛选|')
+parser.add_argument('--type', default='其他', type=str, help='|企业类型，有其他、中央国企、地方国企，空则不筛选|')
 args = parser.parse_args()
 args.industry = args.industry.split(',')
 args.time = int(args.time) if args.time else 0
@@ -24,18 +24,24 @@ def industry_choice(args):
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
     result_dict = {}
     record = 0
-    if os.path.exists(args.other_path):  # 自选股票
+    other_list = []
+    # 自选股票
+    if os.path.exists(args.other_path):
         with open(args.other_path, 'r', encoding='utf-8') as f:
             other_dict = yaml.load(f, Loader=yaml.SafeLoader)
         result_dict['自选'] = other_dict['自选']
         record += len(other_dict['自选'])
-    for industry in args.industry:  # 行业选择
+        other_list = other_dict['自选'].values()
+    # 行业选择
+    for industry in args.industry:
         result_dict[industry] = {}
         dict_ = yaml_dict[industry]
         for name in dict_.keys():
             number = dict_[name][0]
             type_ = dict_[name][2]
             time = dict_[name][3]
+            if name in other_list:
+                continue
             if 'ST' in name:
                 continue
             if args.type and type_ != args.type:
@@ -44,6 +50,7 @@ def industry_choice(args):
                 continue
             result_dict[industry][name] = number
             record += 1
+    # 保存
     with open(args.save_path, 'w', encoding='utf-8') as f:
         yaml.dump(result_dict, f, allow_unicode=True, sort_keys=False)
     print(f'| 总数:{record} | 保存结果至:{args.save_path} |')
