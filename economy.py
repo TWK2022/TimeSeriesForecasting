@@ -20,7 +20,7 @@ parser.add_argument('--model', default='special_add', type=str)
 parser.add_argument('--model_type', default='l', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='房产服务,装修装饰,电气设备', type=str)
+parser.add_argument('--industry', default='电气设备,元器件', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -35,7 +35,7 @@ parser.add_argument('--change', default=2, type=float)
 parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
 parser.add_argument('--run_test', default=False, type=bool)
-parser.add_argument('--run_test_again', default=True, type=bool)
+parser.add_argument('--run_test_again', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
 parser.add_argument('--rise', default=1.2, type=float)
@@ -116,12 +116,14 @@ class economy_class:
             name_list = screen_dict[industry].keys()
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
-                os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column 收盘价 --input_size 96 --output_size {self.args.output_size}'
-                          f' --divide 19,1 --weight {model_dir}/base_test.pt --weight_again True'
-                          f' --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch 5 --lr_end_epoch 30')
-                shutil.move('last.pt', f'{model_dir}/base_test.pt')
+                weight = f'{model_dir}/base_test.pt'
+                epoch = 5
+                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
+                          f' --output_column 收盘价 --input_size {self.args.input_size}'
+                          f' --output_size {self.args.output_size} --divide 19,1 --weight {weight}'
+                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
+                          f' --epoch {epoch} --lr_end_epoch {2 * epoch}')
+                shutil.move('last.pt', weight)
 
     def _run_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
         print('run.py | 训练测试模型')
@@ -148,10 +150,10 @@ class economy_class:
                         epoch = 10
                     else:
                         continue
-                os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
-                          f' --divide 19,1 --weight {weight} --weight_again True'
-                          f' --model {self.args.model} --model_type {self.args.model_type}'
+                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
+                          f' --output_column 收盘价 --input_size {self.args.input_size}'
+                          f' --output_size {self.args.output_size} --divide 19,1 --weight {weight}'
+                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
                           f' --epoch {epoch} --lr_end_epoch {epoch}')
                 shutil.move('last.pt', model_path)
                 # 记录模型信息
@@ -173,7 +175,11 @@ class economy_class:
         for industry in screen_dict:
             name_list = screen_dict[industry].keys()
             for name in name_list:
-                os.system(f'python simulate.py --model_path model_test/{name}.pt --data_path dataset/{name}_add.csv'
+                model_path = f'model_test/{name}.pt'
+                data_path = f'dataset/{name}_add.csv'
+                os.system(f'python simulate.py --model_path {model_path} --data_path {data_path}'
+                          f' --input_column {self.args.input_column} --output_column 收盘价'
+                          f' --input_size {self.args.input_size} --output_size {self.args.output_size}'
                           f' --rise {self.args.rise}')
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
@@ -194,12 +200,14 @@ class economy_class:
             name_list = screen_dict[industry].keys()
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
-                os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column 收盘价 --input_size 96 --output_size {self.args.output_size}'
-                          f' --divide 19,1 --divide_all True --weight {model_dir}/base.pt --weight_again True'
-                          f' --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch 5 --lr_end_epoch 30')
-                shutil.move('last.pt', f'{model_dir}/base.pt')
+                weight = f'{model_dir}/base.pt'
+                epoch = 5
+                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
+                          f' --output_column 收盘价 --input_size {self.args.input_size}'
+                          f' --output_size {self.args.output_size} --divide 19,1 --divide_all True'
+                          f' --weight {weight} --weight_again True --model {self.args.model}'
+                          f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {2 * epoch}')
+                shutil.move('last.pt', weight)
 
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
         print('run.py | 训练正式模型')
@@ -221,10 +229,10 @@ class economy_class:
                         epoch = 10
                     else:
                         continue
-                os.system(f'python run.py --data_path {data_path} --input_column input_column.txt'
-                          f' --output_column output_column.txt --input_size 96 --output_size {self.args.output_size}'
-                          f' --divide 19,1 --divide_all True --weight {weight} --weight_again True'
-                          f' --model {self.args.model} --model_type {self.args.model_type}'
+                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
+                          f' --output_column 收盘价 --input_size {self.args.input_size}'
+                          f' --output_size {self.args.output_size} --divide 19,1 --divide_all True --weight {weight}'
+                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
                           f' --epoch {epoch} --lr_end_epoch {epoch}')
                 shutil.move('best.pt', model_path)
                 # 记录模型信息
