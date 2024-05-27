@@ -176,8 +176,8 @@ class economy_class:
                 model_path = f'model_test/{name}.pt'
                 data_path = f'dataset/{name}_add.csv'
                 os.system(f'python simulate.py --model_path {model_path} --data_path {data_path}'
-                          f' --input_column {self.args.input_column} --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --rise {self.args.rise}')
+                          f' --input_size {self.args.input_size} --output_size {self.args.output_size}'
+                          f' --rise {self.args.rise}')
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
                     log = f.readlines()
