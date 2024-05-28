@@ -277,7 +277,7 @@ class economy_class:
                     mean_judge = self._count(df['收盘价_5'].values, df['收盘价_10'].values)
                     ttm_judge = '亏损' if df['r市盈率ttm'].values[-1] == 0 else '盈利'
                     save_path = f'save_image/{last_day}__{industry}__{name}__{ttm_judge}__{mean_judge}__{ratio:.2f}' \
-                                f'__{model_dict[industry][name][2]}.jpg'
+                                f'__{model_dict[name][2]}.jpg'
                     self._draw(pred, close_data, f'{last_day}_{name}', save_path)
 
     def _count(self, close_5, close_10):  # 判断金叉+和死叉1，+0表示今天金叉，+1表示昨天金叉
