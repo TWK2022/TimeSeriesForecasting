@@ -275,7 +275,7 @@ class economy_class:
                 if ratio > self.args.draw_threshold:  # 有上涨空间
                     last_day = str(df.index[-1])
                     mean_judge = self._count(df['收盘价_5'].values, df['收盘价_10'].values)
-                    ttm_judge = '亏损' if df['市盈率ttm'].values[-1] == 0 else '盈利'
+                    ttm_judge = '亏损' if df['r市盈率ttm'].values[-1] == 0 else '盈利'
                     save_path = f'save_image/{last_day}__{industry}__{name}__{ttm_judge}__{mean_judge}__{ratio:.2f}' \
                                 f'__{model_dict[industry][name][2]}.jpg'
                     self._draw(pred, close_data, f'{last_day}_{name}', save_path)
