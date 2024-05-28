@@ -1,5 +1,4 @@
 import os
-import time
 import yaml
 import torch
 import shutil
