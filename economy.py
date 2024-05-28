@@ -142,7 +142,7 @@ class economy_class:
                 weight = f'{model_dir}/base_test.pt'
                 epoch = 30
                 if os.path.exists(model_path):
-                    if self.args.run_test_again:
+                    if self.args.run_test_again or not model_dict.get(name):
                         weight = model_path
                         epoch = 10
                     else:
