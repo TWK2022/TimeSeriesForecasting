@@ -165,6 +165,7 @@ class economy_class:
                     model_dict[name] = [time, mae_true, None, None]
                 with open('economy/model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True)
+                del dict_, df
 
     def _simulate(self):
         print('simulate.py')
