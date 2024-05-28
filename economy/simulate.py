@@ -22,8 +22,7 @@ parser.add_argument('--output_size', default=12, type=int, help='|输出长度|'
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
 parser.add_argument('--rise', default=1.2, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.2|')
-parser.add_argument('--a_rise_still', default=1.05, type=float, help='|第2天发现还在上涨，先不卖出，数值太大无效|')
-parser.add_argument('--a_mean', default=1.2, type=float, help='|股价小于[a_mean*历史均值]才会买入，数值太大无效|')
+parser.add_argument('--a_mean', default=1.2, type=float, help='|股价小于[a_mean*10日均线]才会买入，数值太大无效|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
 args.input_column = read_column(args.input_column)  # column处理
@@ -40,7 +39,6 @@ class project_class:
         self.output_size = args.output_size
         self.device = args.device
         self.rise = args.rise
-        self.a_rise_still = args.a_rise_still
         self.a_mean = args.a_mean
         divide = args.divide
         model_path = args.model_path
@@ -124,9 +122,9 @@ class project_class:
         if self.state == 1:  # 已经买入
             return
         # a人为策略
-        if now > (next_open + next_close) / 2:  # 第2天发现有下降趋势，先不买入
+        if now * 0.95 > next_close:  # 第2天发现有明显下降趋势，先不买入
             return
-        if now > self.a_mean * now_10:  # 股价处于历史高位，先不买入
+        if next_open > self.a_mean * now_10:  # 股价处于历史高位，先不买入
             return
         # b模型策略
         if now > np.min(pred[0:np.argmax(pred) + 1]):  # 预测还有下降空间，先不买入
@@ -139,18 +137,18 @@ class project_class:
         if self.state == 0:  # 没有买入
             return
         # a人为策略
-        if now * self.a_rise_still < (next_open + next_close) / 2:  # 第2天发现有上涨趋势，先不卖出
+        if next_open * 1.05 < next_close:  # 第2天发现有明显上涨趋势，先不卖出
             return
-        if now > (next_open + next_close) / 2:  # 第2天发现有下降趋势，直接卖出
+        if next_open * 0.95 > next_close:  # 第2天发现有明显下降趋势，直接卖出
             self.state = 0
-            self.sell_list.append((now + next_close) / 2)
+            self.sell_list.append((next_open + next_close) / 2)
             return
         # b模型策略
         if now < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0
-        self.sell_list.append((now + next_close) / 2)
+        self.sell_list.append((next_open + next_close) / 2)
 
     def _metric(self, name, now, record=False):  # 计算指标
         sell_last = 0
