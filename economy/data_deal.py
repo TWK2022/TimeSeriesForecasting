@@ -19,6 +19,7 @@ def count(data, lengh, column):  # 计算均值
     for index in range(len(data) - lengh + 1):
         result_list.append(np.mean(data[index:index + lengh, :], axis=0))
     result = np.stack(result_list, axis=0)
+    result = np.round(result, 2)
     column = [f'{_}_{lengh}' for _ in column]
     return result, column
 
@@ -44,12 +45,14 @@ def reciprocal(data, numerator):  # 求导数
     judge_list = np.where(data == 0, False, True)
     index_list = np.arange(len(data))[judge_list]
     data[index_list] = numerator / data[index_list]
+    data = np.round(data, 6)
     return data
 
 
 def data_deal(args):
     with open(args.number_path, 'r', encoding='utf-8') as f:
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
+    shangzheng = pd.read_csv(f'{args.data_dir}/上证指数.csv')['上证指数'].values
     for industry in yaml_dict:
         for name in yaml_dict[industry].keys():
             path = f'{args.data_dir}/{name}.csv'
@@ -89,6 +92,8 @@ def data_deal(args):
             df.rename(columns={'市盈率ttm': 'r市盈率ttm'}, inplace=True)
             df.rename(columns={'市净率': 'r市净率'}, inplace=True)
             df.rename(columns={'市销率ttm': 'r市销率ttm'}, inplace=True)
+            # 上证指数
+            df['上证指数'] = shangzheng[-len(df):]
             # 保存
             df.to_csv(f'{args.data_dir}/{name}_add.csv', header=True, index=True)
             print(f'| 结果保存至:{args.data_dir}/{name}_add.csv |')
