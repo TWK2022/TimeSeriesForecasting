@@ -11,7 +11,6 @@ parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|
 parser.add_argument('--close', default=1.1, type=float, help='|筛选价格<close*10日均线|')
 parser.add_argument('--change', default=2, type=float, help='|筛选平均换手率>change|')
 parser.add_argument('--volume', default=80000, type=float, help='|筛选平均成交量>volume|')
-parser.add_argument('--pe_ttm', default=True, type=bool, help='|筛选市盈率ttm为正|')
 parser.add_argument('--other', default=False, type=bool, help='|自选股票是否需要筛选|')
 args = parser.parse_args()
 
@@ -61,9 +60,11 @@ def data_screen(args):
             volume_mean = np.mean(volume_data[-30:] * ratio)
             if volume_mean < args.volume:
                 continue
-            # 市盈率ttm筛选
+            # 盈利情况筛选
             pe_ttm = df['r市盈率ttm'].values[-1]
-            if args.pe_ttm and pe_ttm == 0:
+            pb = df['r市净率'].values[-1]
+            ps_ttm = df['r市销率ttm'].values[-1]
+            if pe_ttm == 0 or pb == 0 or ps_ttm == 0:
                 continue
             # 5日均线和10日均线筛选
             close_5 = df['收盘价_5'].values
