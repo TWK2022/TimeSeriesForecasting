@@ -41,6 +41,7 @@ class data_get_class:
         df = df.drop(columns='trade_date').sort_index()
         df.rename(columns={'close': '上证指数'}, inplace=True)
         df.to_csv(f'{self.args.save_path}/上证指数.csv', index=True, header=True)
+        print(f'| 补充数据: {self.args.save_path}/上证指数.csv |')
         # 股票数据
         for industry in self.number_dict:
             industry_dict = self.number_dict[industry]
