@@ -9,9 +9,9 @@ parser = argparse.ArgumentParser(description='|选择股票|')
 parser.add_argument('--yaml_path', default='number_all.yaml', type=str, help='|所有股票信息|')
 parser.add_argument('--other_path', default='other.yaml', type=str, help='|自选股票信息(可选)|')
 parser.add_argument('--save_path', default='number.yaml', type=str, help='|保存位置|')
-parser.add_argument('--industry', default='电气设备,元器件,半导体,化工原料', type=str, help='|行业，必选，如"A,B,C"|')
+parser.add_argument('--industry', default='电气设备,元器件,化工原料,半导体', type=str, help='|行业，必选，如"A,B,C"|')
 parser.add_argument('--area', default='', type=str, help='|地区，空则不筛选，如"A、B、C"|')
-parser.add_argument('--time', default='', type=str, help='|上市时间，筛选time之前的，空则不筛选|')
+parser.add_argument('--time', default='20240101', type=str, help='|上市时间，筛选time之前的，空则不筛选|')
 parser.add_argument('--type', default='其他', type=str, help='|企业类型，有其他、中央国企、地方国企，空则不筛选|')
 args = parser.parse_args()
 args.industry = args.industry.split(',')
@@ -31,7 +31,7 @@ def industry_choice(args):
             other_dict = yaml.load(f, Loader=yaml.SafeLoader)
         result_dict['自选'] = other_dict['自选']
         record += len(other_dict['自选'])
-        other_list = other_dict['自选'].values()
+        other_list = other_dict['自选'].keys()
     # 行业选择
     for industry in args.industry:
         result_dict[industry] = {}
@@ -46,7 +46,7 @@ def industry_choice(args):
                 continue
             if args.type and type_ != args.type:
                 continue
-            if args.time and time < args.time:
+            if args.time and time > args.time:
                 continue
             result_dict[industry][name] = number
             record += 1
