@@ -48,7 +48,7 @@ def data_screen(args):
                 record_screen += 1
                 continue
             # 加权均值
-            ratio = 0.1 + 1.9 * np.arange(30) / 29
+            ratio = np.linspace(0.1, 1.9, 30)
             # 收盘价筛选
             if close_data[-1] > args.close * close_10_data[-1]:
                 continue
