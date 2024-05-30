@@ -20,7 +20,7 @@ parser.add_argument('--model', default='special_add', type=str)
 parser.add_argument('--model_type', default='l', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='电气设备,元器件,化工原料,半导体,水力发电,新型电力,小金属', type=str)
+parser.add_argument('--industry', default='电气设备,元器件,化工原料,半导体,小金属,航空', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -263,7 +263,7 @@ class economy_class:
                 input_data = input_data[:, -self.args.input_size:]
                 close_data = np.array(df['收盘价']).astype(np.float32)[-200:]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
-                special = torch.tensor(1.02 * close_data[-2:-1])  # 假设第2天开盘小涨
+                special = torch.tensor(1.01 * close_data[-2:-1])  # 假设第2天开盘小涨
                 # 推理
                 with torch.no_grad():
                     if 'special' in self.args.model:
