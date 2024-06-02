@@ -71,10 +71,10 @@ def data_screen(args):
             close_10 = df['收盘价_10'].values
             for index in range(len(close_5) - 1, 0, -1):
                 if close_5[index] >= close_10[index] and close_5[index - 1] < close_10[index - 1]:  # 上穿
-                    day = len(close_5) - index + 1
+                    day = len(close_5) - index
                     break
                 if close_5[index] <= close_10[index] and close_5[index - 1] > close_10[index - 1]:  # 下穿
-                    day = -(len(close_5) - index + 1)
+                    day = -(len(close_5) - index)
                     break
             if day == -1 or day == -2:  # 刚刚下穿
                 continue
