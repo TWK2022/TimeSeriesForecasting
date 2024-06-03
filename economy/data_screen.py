@@ -8,8 +8,7 @@ import pandas as pd
 parser = argparse.ArgumentParser(description='|筛选有上升潜力的股票|')
 parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
-parser.add_argument('--close_high', default=1.1, type=float, help='|筛选价格<close_high*10日均线|')
-parser.add_argument('--close_low', default=0.97, type=float, help='|筛选价格>close_low*10日均线|')
+parser.add_argument('--close', default=1.1, type=float, help='|筛选价格<close*10日均线|')
 parser.add_argument('--change', default=2, type=float, help='|筛选近期换手率>change|')
 parser.add_argument('--volume', default=80000, type=float, help='|筛选近期成交量>volume|')
 parser.add_argument('--fluctuate', default=1.03, type=float, help='|筛选近期最高价/最低价>fluctuate|')
@@ -52,9 +51,7 @@ def data_screen(args):
             # 加权均值
             ratio = np.linspace(0.1, 1.9, 10)
             # 收盘价筛选
-            if close_data[-1] > args.close_high * close_10_data[-1]:
-                continue
-            if close_data[-1] < args.close_low * close_10_data[-1]:
+            if close_data[-1] > args.close * close_10_data[-1]:
                 continue
             # 换手率筛选
             change_mean = np.mean(change_data[-10:] * ratio)
