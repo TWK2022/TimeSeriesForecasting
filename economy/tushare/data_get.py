@@ -1,4 +1,5 @@
 import os
+import time
 import yaml
 import tushare
 import argparse
@@ -13,6 +14,7 @@ parser.add_argument('--save_path', default='../dataset', type=str, help='|数据
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
 parser.add_argument('--start_time', default='20200101', type=str, help='|开始时间|')
 parser.add_argument('--end_time', default='20240601', type=str, help='|结束时间|')
+parser.add_argument('--frequency', default=200, type=int, help='|API每分钟可以调取的频率|')
 args = parser.parse_args()
 # -------------------------------------------------------------------------------------------------------------------- #
 if not os.path.exists(args.save_path):
@@ -43,6 +45,8 @@ class data_get_class:
         df.to_csv(f'{self.args.save_path}/上证指数.csv', index=True, header=True)
         print(f'| 补充数据: {self.args.save_path}/上证指数.csv |')
         # 股票数据
+        record_time = 1
+        time_start = time.time()
         for industry in self.number_dict:
             industry_dict = self.number_dict[industry]
             for key in industry_dict:
@@ -55,6 +59,7 @@ class data_get_class:
                         continue
                     else:
                         print(f'| 补充数据: {path} |')
+                        record_time += 1
                         df = self._tushare_to_df(pro, industry_dict, key, end_time_old)
                         df = df.drop(index=end_time_old)
                         df = pd.concat([df_old, df])
@@ -62,8 +67,13 @@ class data_get_class:
                         df.to_csv(path, index=True, header=True)
                 else:
                     print(f'| 新增数据: {path} |')
+                    record_time += 1
                     df = self._tushare_to_df(pro, industry_dict, key, self.args.start_time)
                     df.to_csv(path, index=True, header=True)
+                if record_time % self.args.frequency == 0:
+                    time_end = time.time()
+                    if time_end - time_start < 60:
+                        time.sleep(60 + time_start - time_end)
 
     def _tushare_to_df(self, pro, industry_dict, key, start_time):
         start_time = start_time.replace('-', '')

@@ -280,7 +280,7 @@ class economy_class:
                                 f'__{model_dict[name][2]}.jpg'
                     self._draw(pred, close_data, f'{last_day}_{name}', save_path)
 
-    def _count(self, close_5, close_10):  # 判断金叉+和死叉1，+0表示今天金叉，+1表示昨天金叉
+    def _count(self, close_5, close_10):  # 判断金叉+和死叉-，+1表示今天金叉，-2表示昨天死叉
         for index in range(len(close_5) - 1, 0, -1):
             if close_5[index] >= close_10[index] and close_5[index - 1] < close_10[index - 1]:
                 return f'+{len(close_5) - index}'
