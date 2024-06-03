@@ -14,7 +14,7 @@ from block.util import read_column
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|测试|')
 parser.add_argument('--special', default=True, type=bool, help='|特殊模型|')
-parser.add_argument('--model_path', default='../last.pt', type=str, help='|pt模型位置|')
+parser.add_argument('--model_path', default='model_test/XX.pt', type=str, help='|pt模型位置|')
 parser.add_argument('--data_path', default=r'dataset/XX_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
@@ -88,14 +88,10 @@ class project_class:
                 now_10 = self.close_10_data[index - 1]
                 next_open = self.open_data[index]
                 next_close = self.close_data[index]
-                max_ = np.max(pred)
-                min_ = np.min(pred)
-                if max_ > self.rise * now:  # 预测上涨
-                    self._buy(now, now_10, next_open, next_close, pred)
-                elif min_ < now:  # 预测下降
-                    self._sell(now, now_10, next_open, next_close, pred)
-                else:  # 预测小幅波动
-                    pass
+                if self.state == 0:  # 准备买入
+                    self._buy(now_10, next_open, next_close, pred)
+                elif self.state == 1:  # 准备卖出
+                    self._sell(now_10, next_open, next_close, pred)
             self._metric('模型', now, True)
 
     def predict_true(self):  # 在预知未来情况下的理想收益
@@ -108,34 +104,28 @@ class project_class:
             now_10 = self.close_10_data[index - 1]
             next_open = self.open_data[index]
             next_close = self.close_data[index]
-            max_ = np.max(pred)
-            min_ = np.min(pred)
-            if max_ > self.rise * now:  # 预测上涨
-                self._buy(now, now_10, next_open, next_close, pred)
-            elif min_ < now:  # 预测下降
-                self._sell(now, now_10, next_open, next_close, pred)
-            else:  # 预测小幅波动
-                pass
+            if self.state == 0:  # 准备买入
+                self._buy(now_10, next_open, next_close, pred)
+            elif self.state == 1:  # 准备卖出
+                self._sell(now_10, next_open, next_close, pred)
         self._metric('理想', now, False)
 
-    def _buy(self, now, now_10, next_open, next_close, pred):
-        if self.state == 1:  # 已经买入
-            return
+    def _buy(self, now_10, next_open, next_close, pred):
         # a人为策略
-        if now * 0.95 > next_close:  # 第2天发现有明显下降趋势，先不买入
+        if next_open * 0.95 > next_close:  # 第2天发现有明显下降趋势，先不买入
             return
         if next_open > self.a_mean * now_10:  # 股价处于历史高位，先不买入
             return
         # b模型策略
-        if now > np.min(pred[0:np.argmax(pred) + 1]):  # 预测还有下降空间，先不买入
+        if np.max(pred) < self.rise * next_open:  # 预测上涨幅度不大，先不买入
+            return
+        if next_open > np.min(pred[0:np.argmax(pred) + 1]):  # 预测还有下降空间，先不买入
             return
         # 买入
         self.state = 1
         self.buy_list.append((next_open + next_close) / 2)
 
-    def _sell(self, now, now_10, next_open, next_close, pred):
-        if self.state == 0:  # 没有买入
-            return
+    def _sell(self, now_10, next_open, next_close, pred):
         # a人为策略
         if next_open * 1.05 < next_close:  # 第2天发现有明显上涨趋势，先不卖出
             return
@@ -144,7 +134,7 @@ class project_class:
             self.sell_list.append((next_open + next_close) / 2)
             return
         # b模型策略
-        if now < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
+        if next_open < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0
