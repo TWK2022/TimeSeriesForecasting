@@ -12,7 +12,7 @@ parser.add_argument('--close_high', default=1.1, type=float, help='|筛选价格
 parser.add_argument('--close_low', default=0.97, type=float, help='|筛选价格>close_low*10日均线|')
 parser.add_argument('--change', default=2, type=float, help='|筛选近期换手率>change|')
 parser.add_argument('--volume', default=80000, type=float, help='|筛选近期成交量>volume|')
-parser.add_argument('--fluctuate', default=1.035, type=float, help='|筛选近期最高价/最低价>fluctuate|')
+parser.add_argument('--fluctuate', default=1.03, type=float, help='|筛选近期最高价/最低价>fluctuate|')
 parser.add_argument('--other', default=False, type=bool, help='|自选股票是否需要筛选|')
 args = parser.parse_args()
 
