@@ -37,6 +37,6 @@ if __name__ == '__main__':
     args.input_column = args.input_column.split(',')
     args.output_column = args.output_column.split(',')
     model = lstm(args)
-    tensor = torch.zeros((4, len(args.input_column), args.input_size), dtype=torch.float32)
+    tensor = torch.randn((4, len(args.input_column), args.input_size), dtype=torch.float32)
     print(model)
     print(model(tensor).shape)
