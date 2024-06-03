@@ -8,9 +8,11 @@ import pandas as pd
 parser = argparse.ArgumentParser(description='|筛选有上升潜力的股票|')
 parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
-parser.add_argument('--close', default=1.1, type=float, help='|筛选价格<close*10日均线|')
-parser.add_argument('--change', default=2, type=float, help='|筛选平均换手率>change|')
-parser.add_argument('--volume', default=80000, type=float, help='|筛选平均成交量>volume|')
+parser.add_argument('--close_high', default=1.1, type=float, help='|筛选价格<close_high*10日均线|')
+parser.add_argument('--close_low', default=0.97, type=float, help='|筛选价格>close_low*10日均线|')
+parser.add_argument('--change', default=2, type=float, help='|筛选近期换手率>change|')
+parser.add_argument('--volume', default=80000, type=float, help='|筛选近期成交量>volume|')
+parser.add_argument('--fluctuate', default=1.035, type=float, help='|筛选近期最高价/最低价>fluctuate|')
 parser.add_argument('--other', default=False, type=bool, help='|自选股票是否需要筛选|')
 args = parser.parse_args()
 
@@ -48,17 +50,24 @@ def data_screen(args):
                 record_screen += 1
                 continue
             # 加权均值
-            ratio = np.linspace(0.1, 1.9, 30)
+            ratio = np.linspace(0.1, 1.9, 10)
             # 收盘价筛选
-            if close_data[-1] > args.close * close_10_data[-1]:
+            if close_data[-1] > args.close_high * close_10_data[-1]:
+                continue
+            if close_data[-1] < args.close_low * close_10_data[-1]:
                 continue
             # 换手率筛选
-            change_mean = np.mean(change_data[-30:] * ratio)
+            change_mean = np.mean(change_data[-10:] * ratio)
             if change_mean < args.change:
                 continue
             # 成交量筛选
-            volume_mean = np.mean(volume_data[-30:] * ratio)
+            volume_mean = np.mean(volume_data[-10:] * ratio)
             if volume_mean < args.volume:
+                continue
+            # 波动量筛选
+            high = df['最高价'].values[-10:]
+            low = df['最低价'].values[-10:]
+            if np.mean(high / low) < args.fluctuate:
                 continue
             # 盈利情况筛选
             pe_ttm = df['r市盈率ttm'].values[-1]
