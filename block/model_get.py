@@ -18,6 +18,7 @@ def model_get(args):
                        'linear_conv': 'model_prepare(args).linear_conv()',
                        'lstm': 'model_prepare(args).lstm()',
                        'nlinear': 'model_prepare(args).nlinear()',
+                       'pathformer': 'model_prepare(args).pathformer()',
                        'special_add': 'model_prepare(args).special_add()'}
         model = eval(choice_dict[args.model])
         model_dict = {}
@@ -61,6 +62,11 @@ class model_prepare:
     def nlinear(self):
         from model.nlinear import nlinear
         model = nlinear(self.args)
+        return model
+
+    def pathformer(self):
+        from model.pathformer import pathformer
+        model = pathformer(self.args)
         return model
 
     def special_add(self):
