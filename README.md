@@ -30,3 +30,4 @@
 | itransformer |     all      |      all      |     96     |     24      |      0.224      |  0.265  |
 |     lstm     |     all      |      all      |     96     |     24      |      0.307      |  0.304  |
 |   nlinear    |     all      |      all      |     96     |     24      |      0.249      |  0.266  |
+|  pathformer  |     all      |      all      |     96     |     24      |      0.254      |  0.297  |
