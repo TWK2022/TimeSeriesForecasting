@@ -261,7 +261,7 @@ class economy_class:
                 df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
                 input_data = np.array(df[input_column]).astype(np.float32).T
                 input_data = input_data[:, -self.args.input_size:]
-                close_data = np.array(df['收盘价']).astype(np.float32)[-200:]
+                close_data = np.array(df['收盘价']).astype(np.float32)[-100:]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
                 special = torch.tensor(1.01 * close_data[-2:-1])  # 假设第2天开盘小涨
                 # 推理
@@ -275,8 +275,7 @@ class economy_class:
                 if ratio > self.args.draw_threshold or industry == '自选':  # 有上涨空间或自选股票
                     last_day = str(df.index[-1])
                     mean_judge = self._count(df['收盘价_5'].values, df['收盘价_10'].values)
-                    ttm_judge = '亏损' if df['r市盈率ttm'].values[-1] == 0 else '盈利'
-                    save_path = f'save_image/{last_day}__{industry}__{name}__{ttm_judge}__{mean_judge}__{ratio:.2f}' \
+                    save_path = f'save_image/{last_day}__{industry}__{name}__{mean_judge}__{ratio:.2f}' \
                                 f'__{model_dict[name][2]}.jpg'
                     self._draw(pred, close_data, f'{last_day}_{name}', save_path)
 
