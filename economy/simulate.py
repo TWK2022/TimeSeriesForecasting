@@ -10,7 +10,7 @@ from block.util import read_column
 # 交易策略:
 # a开头是人为制定的策略，可以加入人为经验，这里存在主观性，不一定能达到
 # b开头是根据模型预测结果制定的策略，考验模型的预测能力
-# 以第2天的实际均价作为交易股价，这里存在误差
+# 实际买入和卖出时的股价存在误差
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|测试|')
 parser.add_argument('--special', default=True, type=bool, help='|特殊模型|')
@@ -85,13 +85,10 @@ class project_class:
                 else:
                     pred = self.model(tensor)[0][0].cpu().numpy()
                 now = self.close_data[index - 1]
-                now_10 = self.close_10_data[index - 1]
-                next_open = self.open_data[index]
-                next_close = self.close_data[index]
                 if self.state == 0:  # 准备买入
-                    self._buy(now_10, next_open, next_close, pred)
+                    self._buy(index, pred)
                 elif self.state == 1:  # 准备卖出
-                    self._sell(now_10, next_open, next_close, pred)
+                    self._sell(index, pred)
             self._metric('模型', now, True)
 
     def predict_true(self):  # 在预知未来情况下的理想收益
@@ -101,44 +98,47 @@ class project_class:
         for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
             pred = self.close_data[index:min(index + self.output_size, self.input_data.shape[1])]
             now = self.close_data[index - 1]
-            now_10 = self.close_10_data[index - 1]
-            next_open = self.open_data[index]
-            next_close = self.close_data[index]
             if self.state == 0:  # 准备买入
-                self._buy(now_10, next_open, next_close, pred)
+                self._buy(index, pred)
             elif self.state == 1:  # 准备卖出
-                self._sell(now_10, next_open, next_close, pred)
+                self._sell(index, pred)
         self._metric('理想', now, False)
 
-    def _buy(self, now_10, next_open, next_close, pred):
+    def _buy(self, index, pred):
+        now_10 = self.close_10_data[index - 1]
+        next_close = self.close_data[index]
+        next_low = self.low_data[index]
+        value_low = np.mean([next_low, next_close])
         # a人为策略
-        if next_open * 0.95 > next_close:  # 第2天发现有明显下降趋势，先不买入
-            return
-        if next_open > self.a_mean * now_10:  # 股价处于历史高位，先不买入
+        if value_low > self.a_mean * now_10:  # 股价处于历史高位，先不买入
             return
         # b模型策略
-        if np.max(pred) < self.rise * next_open:  # 预测上涨幅度不大，先不买入
+        if value_low * self.rise > np.max(pred[0:3]):  # 预测上涨幅度不大，先不买入
             return
-        if next_open > np.min(pred[0:np.argmax(pred) + 1]):  # 预测还有下降空间，先不买入
+        if value_low > np.mean(pred[0:3]):  # 预测还有下降空间，先不买入
             return
         # 买入
         self.state = 1
-        self.buy_list.append((next_open + next_close) / 2)
+        self.buy_list.append(value_low)
 
-    def _sell(self, now_10, next_open, next_close, pred):
+    def _sell(self, index, pred):
+        now_close = self.close_data[index - 1]
+        next_close = self.close_data[index]
+        next_high = self.low_data[index]
+        value_high = np.mean([next_high, next_close])
         # a人为策略
-        if next_open * 1.05 < next_close:  # 第2天发现有明显上涨趋势，先不卖出
+        if next_close > now_close * 1.09:  # 第2天发现有明显上涨趋势，先不卖出
             return
-        if next_open * 0.95 > next_close:  # 第2天发现有明显下降趋势，直接卖出
+        if next_close < now_close * 0.95:  # 第2天发现有明显下降趋势，直接卖出
             self.state = 0
-            self.sell_list.append((next_open + next_close) / 2)
+            self.sell_list.append(value_high)
             return
         # b模型策略
-        if next_open < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
+        if value_high < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0
-        self.sell_list.append((next_open + next_close) / 2)
+        self.sell_list.append(value_high)
 
     def _metric(self, name, now, record=False):  # 计算指标
         sell_last = 0
