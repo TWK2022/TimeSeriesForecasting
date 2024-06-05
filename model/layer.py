@@ -121,8 +121,8 @@ class series_encode(torch.nn.Module):  # 归一化
         super().__init__()
         self.mean_input = torch.tensor(mean_input)
         self.std_input = torch.tensor(std_input)
-        self.mean_special = mean_special
-        self.std_special = std_special
+        self.mean_special = torch.tensor(mean_special)
+        self.std_special = torch.tensor(std_special)
 
     def forward(self, x, special=None):
         x = x.permute(0, 2, 1)
@@ -131,7 +131,8 @@ class series_encode(torch.nn.Module):  # 归一化
         if special is None:
             return x
         else:
-            special = (special - self.mean_special) / self.std_special
+            special = ((special - self.mean_special.type(x.dtype).to(x.device)) / self.std_special.type(x.dtype)
+                       .to(x.device))
             return x, special
 
 
