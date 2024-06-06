@@ -16,7 +16,7 @@ class data_prepare:
         self.input_size = args.input_size
         self.output_size = args.output_size
         self.divide = args.divide
-        self.divide_all = args.divide_all
+        self.divide_train = args.divide_train
         self.z_score_cycle = args.z_score_cycle
 
     def load(self):
@@ -31,10 +31,13 @@ class data_prepare:
         add = self.input_size + self.output_size - 1  # 输入数据后面的补足
         data_len = len(df) - add  # 输入数据的真实数量
         boundary = int(data_len * self.divide[0] / (self.divide[0] + self.divide[1]))  # 数据划分
-        if self.divide_all:
+        if self.divide_train == 1:  # 使用所有数据训练
             train_input = input_data  # 训练数据
             train_output = output_data  # 训练标签
-        else:
+        elif self.divide_train == 2:  # 使用验证集训练
+            train_input = input_data[boundary:len(df)]  # 训练数据
+            train_output = output_data[boundary:len(df)]  # 训练标签
+        else:  # 使用训练集训练
             train_input = input_data[0:boundary + add]  # 训练数据
             train_output = output_data[0:boundary + add]  # 训练标签
         assert len(train_input) >= self.input_size + self.output_size  # 训练集不满足一个batch
