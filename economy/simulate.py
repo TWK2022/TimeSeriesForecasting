@@ -1,312 +1,167 @@
 import os
-import yaml
 import torch
-import shutil
 import argparse
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 from model.layer import deploy
 from block.util import read_column
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 集成
+# 交易策略:
+# a开头是人为制定的策略，可以加入人为经验，这里存在主观性，不一定能达到
+# b开头是根据模型预测结果制定的策略，考验模型的预测能力
+# 实际买入和卖出时的股价存在误差
 # -------------------------------------------------------------------------------------------------------------------- #
-parser = argparse.ArgumentParser(description='|集成|')
-parser.add_argument('--input_column', default='input_column.txt', type=str)
-parser.add_argument('--input_size', default=96, type=int)
-parser.add_argument('--output_size', default=12, type=int)
-parser.add_argument('--model', default='special_add', type=str)
-parser.add_argument('--model_type', default='l', type=str)
-# economy/tushare/industry_choice.py
-parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='电气设备,运输设备,小金属,黄金,铝,铜,铅锌', type=str)
-# economy/tushare/data_get.py
-parser.add_argument('--data_get', default=False, type=bool)
-parser.add_argument('--token', default='', type=str)
-parser.add_argument('--end_time', default='20240601', type=str)
-# economy/data_deal.py
-parser.add_argument('--data_deal', default=False, type=bool)
-# economy/data_screen.py
-parser.add_argument('--data_screen', default=False, type=bool)
-# run.py | 训练测试基础模型
-parser.add_argument('--run_base_test', default=False, type=bool)
-# run.py | 训练测试模型
-parser.add_argument('--run_test', default=False, type=bool)
-parser.add_argument('--run_test_again', default=False, type=bool)
-# simulate.py
-parser.add_argument('--simulate', default=False, type=bool)
-parser.add_argument('--rise', default=1.1, type=float)
-# run.py | 训练正式基础模型
-parser.add_argument('--run_base', default=False, type=bool)
-# run.py | 训练正式模型
-parser.add_argument('--run', default=False, type=bool)
-parser.add_argument('--run_again', default=True, type=bool)
-# def feature
-parser.add_argument('--feature', default=False, type=bool)
-parser.add_argument('--draw_threshold', default=1.1, type=float)
+parser = argparse.ArgumentParser(description='|测试|')
+parser.add_argument('--special', default=True, type=bool, help='|特殊模型|')
+parser.add_argument('--model_path', default='model_test/XX.pt', type=str, help='|pt模型位置|')
+parser.add_argument('--data_path', default=r'dataset/XX_add.csv', type=str, help='|数据位置|')
+parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
+parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
+parser.add_argument('--output_size', default=12, type=int, help='|输出长度|')
+parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
+parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
+parser.add_argument('--rise', default=1.1, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.1|')
+parser.add_argument('--a_mean', default=1.2, type=float, help='|股价小于[a_mean*10日均线]才会买入，数值太大无效|')
 args = parser.parse_args()
+args.divide = list(map(int, args.divide.split(',')))
+args.input_column = read_column(args.input_column)  # column处理
+# -------------------------------------------------------------------------------------------------------------------- #
+assert os.path.exists(args.model_path), f'! model_path不存在:{args.model_path} !'
+assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !'
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
-class economy_class:
+class project_class:
     def __init__(self, args):
-        self.args = args
-        self.path = os.getcwd()
-        self.path_economy = f'{self.path}/economy'
-        self.path_tushare = f'{self.path}/economy/tushare'
+        self.special = args.special
+        self.input_size = args.input_size
+        self.output_size = args.output_size
+        self.device = args.device
+        self.rise = args.rise
+        self.a_mean = args.a_mean
+        divide = args.divide
+        model_path = args.model_path
+        data_path = args.data_path
+        input_column = args.input_column
+        # 模型
+        model_dict = torch.load(model_path, map_location='cpu')
+        model = model_dict['model']
+        model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
+                       model_dict['std_output'], model_dict['mean_special'],
+                       model_dict['std_special']).eval().to(self.device)
+        self.model = model.half() if self.device == 'cuda' else model.float()
+        print(f'| 模型:{model_path} | train_loss:{model_dict["train_loss"]:.4f} |'
+              f'val_loss:{model_dict["val_loss"]:.4f} |')
+        # 数据
+        try:
+            df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
+        except:
+            df = pd.read_csv(data_path, encoding='gbk', index_col=0)
+        add = self.input_size + self.output_size - 1  # 输入数据后面的补足
+        data_len = len(df) - add  # 输入数据的真实数量
+        boundary = int(data_len * divide[0] / (divide[0] + divide[1]))  # 数据划分
+        self.input_data = np.array(df[input_column]).astype(np.float32).T[:, boundary:len(df)]  # 模型输入
+        self.close_data = np.array(df['收盘价']).astype(np.float32).T[boundary:len(df)]  # 收盘价
+        self.open_data = np.array(df['开盘价']).astype(np.float32).T[boundary:len(df)]  # 开盘价
+        self.high_data = np.array(df['最高价']).astype(np.float32).T[boundary:len(df)]  # 最高价
+        self.low_data = np.array(df['最低价']).astype(np.float32).T[boundary:len(df)]  # 最低价
+        self.close_10_data = np.array(df['收盘价_10']).astype(np.float32).T[boundary:len(df)]  # 收盘价_10
+        # 记录
+        self.state = None  # 买卖状态
+        self.buy_list = None  # 买入价格
+        self.sell_list = None  # 卖出价格
 
-    def predict(self):
-        # economy/tushare目录
-        os.chdir(self.path_tushare)
-        if self.args.industry_choice:
-            self._industry_choice()
-        if self.args.data_get:
-            self._data_get()
-        # economy目录
-        os.chdir(self.path_economy)
-        if self.args.data_deal:
-            self._data_deal()
-        if self.args.data_screen:
-            self._data_screen()
-        # 原目录
-        os.chdir(self.path)
-        if self.args.run_base_test:
-            self._run_base_test()
-        if self.args.run_test:
-            self._run_test()
-        # economy目录
-        os.chdir(self.path_economy)
-        if self.args.simulate:
-            self._simulate()
-        # 原目录
-        os.chdir(self.path)
-        if self.args.run_base:
-            self._run_base()
-        if self.args.run:
-            self._run()
-        if self.args.feature:
-            self._feature()
-
-    def _industry_choice(self):
-        print('economy/tushare/industry_choice.py')
-        os.system(f'python industry_choice.py --industry {self.args.industry}')
-
-    def _data_get(self):
-        print('economy/tushare/data_get.py')
-        os.system(f'python data_get.py --token {self.args.token} --end_time {self.args.end_time}')
-
-    def _data_deal(self):
-        print('economy/data_deal.py')
-        os.system(f'python data_deal.py')
-
-    def _data_screen(self):
-        print('economy/data_screen.py')
-        os.system(f'python data_screen.py')
-
-    def _run_base_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
-        print('run.py | 训练测试基础模型')
-        if not os.path.exists(model_dir):
-            os.makedirs(model_dir)
-        with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
-            screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        for industry in screen_dict:
-            name_list = screen_dict[industry].keys()
-            for name in name_list:
-                data_path = f'{data_dir}/{name}_add.csv'
-                weight = f'{model_dir}/base_test.pt'
-                epoch = 20
-                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --weight {weight}'
-                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch {epoch} --lr_end_epoch {epoch}')
-                shutil.move('last.pt', weight)
-
-    def _run_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
-        print('run.py | 训练测试模型')
-        assert os.path.exists(f'{model_dir}/base_test.pt')
-        with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
-            screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        if os.path.exists('economy/model.yaml'):
-            with open('economy/model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
-                model_dict = yaml.load(f, Loader=yaml.SafeLoader)
-            model_dict = model_dict if model_dict else {}  # 初始化
-        else:
-            model_dict = {}
-        for industry in screen_dict:
-            name_list = screen_dict[industry].keys()
-            for name in name_list:
-                data_path = f'{data_dir}/{name}_add.csv'
-                model_path = f'{model_dir}/{name}.pt'
-                weight = f'{model_dir}/base_test.pt'
-                epoch = 30
-                if os.path.exists(model_path):
-                    if self.args.run_test_again or not model_dict.get(name):
-                        weight = model_path
-                        epoch = 10
-                    else:
-                        continue
-                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --weight {weight}'
-                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch {epoch} --lr_end_epoch {epoch}')
-                shutil.move('last.pt', model_path)
-                # 记录模型信息
-                dict_ = torch.load(model_path, map_location='cpu')
-                mae_true = round(float(dict_['val_mae'] * dict_['std_output']), 4)
-                df = pd.read_csv(data_path, index_col=0)
-                time = str(df.index[-1])
-                if model_dict.get(name):
-                    model_dict[name][0], model_dict[name][1] = time, mae_true
+    def predict(self):  # 在不预知未来情况下的模型收益
+        with torch.no_grad():
+            self.state = 0
+            self.buy_list = []
+            self.sell_list = []
+            for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
+                tensor = torch.tensor(self.input_data[:, index - self.input_size:index]).unsqueeze(0).to(self.device)
+                special = torch.tensor(self.open_data[index:index + 1]).to(self.device)
+                if self.special:
+                    pred = self.model(tensor, special)[0][0].cpu().numpy()
                 else:
-                    model_dict[name] = [time, mae_true, None, None]
-                with open('economy/model.yaml', 'w', encoding='utf-8') as f:
-                    yaml.dump(model_dict, f, allow_unicode=True)
-                del dict_, df
+                    pred = self.model(tensor)[0][0].cpu().numpy()
+                now = self.close_data[index - 1]
+                if self.state == 0:  # 准备买入
+                    self._buy(index, pred)
+                elif self.state == 1:  # 准备卖出
+                    self._sell(index, pred)
+            self._metric('模型', now, True)
 
-    def _simulate(self):
-        print('simulate.py')
-        with open('data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
-            screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        with open('model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
-            model_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        for industry in screen_dict:
-            name_list = screen_dict[industry].keys()
-            for name in name_list:
-                model_path = f'model_test/{name}.pt'
-                data_path = f'dataset/{name}_add.csv'
-                os.system(f'python simulate.py --model_path {model_path} --data_path {data_path}'
-                          f' --input_size {self.args.input_size} --output_size {self.args.output_size}'
-                          f' --rise {self.args.rise}')
-                # 打开日志
-                with open('log.txt', 'r', encoding='utf-8') as f:
-                    log = f.readlines()
-                income_mean = round(float(log[1].strip()[8:]), 2)
-                # 记录模型信息
-                model_dict[name][2] = income_mean
-                with open('model.yaml', 'w', encoding='utf-8') as f:
-                    yaml.dump(model_dict, f, allow_unicode=True)
+    def predict_true(self):  # 在预知未来情况下的理想收益
+        self.state = 0
+        self.buy_list = []
+        self.sell_list = []
+        for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
+            pred = self.close_data[index:min(index + self.output_size, self.input_data.shape[1])]
+            now = self.close_data[index - 1]
+            if self.state == 0:  # 准备买入
+                self._buy(index, pred)
+            elif self.state == 1:  # 准备卖出
+                self._sell(index, pred)
+        self._metric('理想', now, False)
 
-    def _run_base(self, data_dir='economy/dataset', model_dir='economy/model'):
-        print('run.py | 训练正式基础模型')
-        if not os.path.exists(model_dir):
-            os.makedirs(model_dir)
-        with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
-            screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        for industry in screen_dict:
-            name_list = screen_dict[industry].keys()
-            for name in name_list:
-                data_path = f'{data_dir}/{name}_add.csv'
-                weight = f'{model_dir}/base.pt'
-                epoch = 20
-                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1'
-                          f' --weight {weight} --weight_again True --model {self.args.model}'
-                          f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {epoch}')
-                shutil.move('last.pt', weight)
+    def _buy(self, index, pred):
+        now_10 = self.close_10_data[index - 1]
+        next_close = self.close_data[index]
+        next_low = self.low_data[index]
+        value_low = np.mean([next_low, next_close])
+        # a人为策略
+        if value_low > self.a_mean * now_10:  # 股价处于历史高位，先不买入
+            return
+        # b模型策略
+        if value_low * self.rise > np.max(pred[0:3]):  # 预测上涨幅度不大，先不买入
+            return
+        if value_low > np.mean(pred[0:3]):  # 预测还有下降空间，先不买入
+            return
+        # 买入
+        self.state = 1
+        self.buy_list.append(value_low)
 
-    def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
-        print('run.py | 训练正式模型')
-        assert os.path.exists(f'{model_dir}/base.pt')
-        with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
-            screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        with open('economy/model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
-            model_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        for industry in screen_dict:
-            name_list = screen_dict[industry].keys()
-            for name in name_list:
-                data_path = f'{data_dir}/{name}_add.csv'
-                model_path = f'{model_dir}/{name}.pt'
-                weight = f'{model_dir}/base.pt'
-                epoch = 30
-                if os.path.exists(model_path):
-                    if self.args.run_again:
-                        weight = model_path
-                        epoch = 10
-                    else:
-                        continue
-                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 2 --weight {weight}'
-                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch 50 --lr_end_epoch 50')  # 末尾数据加强训练
-                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --weight best.pt'
-                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch {epoch} --lr_end_epoch {epoch}')  # 所有数据训练
-                shutil.move('best.pt', model_path)
-                # 记录模型信息
-                df = pd.read_csv(data_path, index_col=0)
-                time = str(df.index[-1])
-                model_dict[name][3] = time
-                with open('economy/model.yaml', 'w', encoding='utf-8') as f:
-                    yaml.dump(model_dict, f, allow_unicode=True)
+    def _sell(self, index, pred):
+        now_close = self.close_data[index - 1]
+        next_close = self.close_data[index]
+        next_high = self.low_data[index]
+        value_high = np.mean([next_high, next_close])
+        # a人为策略
+        if next_close > now_close * 1.09:  # 第2天发现有明显上涨趋势，先不卖出
+            return
+        if next_close < now_close * 0.95:  # 第2天发现有明显下降趋势，直接卖出
+            self.state = 0
+            self.sell_list.append(value_high)
+            return
+        # b模型策略
+        if value_high < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
+            return
+        # 卖出
+        self.state = 0
+        self.sell_list.append(value_high)
 
-    def _feature(self, data_dir='economy/dataset', model_dir='economy/model'):
-        if not os.path.exists('save_image'):
-            os.makedirs('save_image')
-        with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
-            screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        with open('economy/model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
-            model_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        input_column = read_column(self.args.input_column)  # column处理
-        for industry in screen_dict:
-            name_list = screen_dict[industry].keys()
-            for name in name_list:
-                data_path = f'{data_dir}/{name}_add.csv'
-                model_path = f'{model_dir}/{name}.pt'
-                dict_ = torch.load(model_path, map_location='cpu')
-                model = dict_['model']
-                model = deploy(model, dict_['mean_input'], dict_['mean_output'], dict_['std_input'],
-                               dict_['std_output'], dict_['mean_special'], dict_['std_special']).eval()
-                df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
-                input_data = np.array(df[input_column]).astype(np.float32).T
-                input_data = input_data[:, -self.args.input_size:]
-                close_data = np.array(df['收盘价']).astype(np.float32)[-100:]
-                tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
-                special = torch.tensor(1.01 * close_data[-2:-1])  # 假设第2天开盘小涨
-                # 推理
-                with torch.no_grad():
-                    if 'special' in self.args.model:
-                        pred = model(tensor, special)[0][0].cpu().numpy()
-                    else:
-                        pred = model(tensor)[0][0].cpu().numpy()
-                # 画图
-                ratio = np.max(pred) / close_data[-1]
-                if ratio > self.args.draw_threshold or industry == '自选':  # 有上涨空间或自选股票
-                    last_day = str(df.index[-1])
-                    mean_judge = self._count(df['收盘价_5'].values, df['收盘价_10'].values)
-                    save_path = f'save_image/{last_day}__{industry}__{name}__{mean_judge}__{ratio:.2f}' \
-                                f'__{model_dict[name][2]}.jpg'
-                    self._draw(pred, close_data, f'{last_day}_{name}', save_path)
-
-    def _count(self, close_5, close_10):  # 判断金叉+和死叉-，+1表示今天金叉，-2表示昨天死叉
-        for index in range(len(close_5) - 1, 0, -1):
-            if close_5[index] >= close_10[index] and close_5[index - 1] < close_10[index - 1]:
-                return f'+{len(close_5) - index}'
-            if close_5[index] <= close_10[index] and close_5[index - 1] > close_10[index - 1]:
-                return f'-{len(close_5) - index}'
-        return 'None'
-
-    def _draw(self, pred, close_data, name, save_path):
-        zero = torch.zeros(len(close_data))
-        pred = np.concatenate([zero, pred], axis=0)
-        plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
-        plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
-        plt.title(name)
-        plt.grid()
-        plt.plot(close_data, color='green', label='true')
-        plt.plot(pred, color='cyan', label='pred')
-        plt.savefig(save_path)
-        plt.close()
-        print(f'| 画图保存位置:{save_path} |')
+    def _metric(self, name, now, record=False):  # 计算指标
+        sell_last = 0
+        if len(self.buy_list) != len(self.sell_list):  # 最后一次还未卖出
+            self.sell_list.append(now)
+            sell_last = 1
+        buy = np.array(self.buy_list)
+        sell = np.array(self.sell_list)
+        value = sell - buy
+        income_sum = np.sum(value / buy) if len(buy) else 0
+        income_mean = np.mean(value / buy) if len(buy) else 0
+        fault = value[np.where(value < 0, True, False)]
+        print(f'| {name} | rise:{self.rise} | 总收益率:{income_sum:.2f} | 单次操作收益率:{income_mean:.2f} |'
+              f' 操作次数:{len(value)} | 亏损次数:{len(fault)} | 最后是否持有:{sell_last} |')
+        # 记录日志
+        if record:
+            with open('log.txt', 'w', encoding='utf-8') as f:
+                f.write(f'总收益率:{income_sum:.2f}\n单次操作收益率:{income_mean:.2f}\n'
+                        f'操作次数:{len(value)}\n亏损次数:{len(fault)}\n最后是否持有:{sell_last}')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
-    model = economy_class(args)
+    model = project_class(args)
     model.predict()
+    model.predict_true()
