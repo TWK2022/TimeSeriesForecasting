@@ -115,12 +115,12 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 weight = f'{model_dir}/base_test.pt'
-                epoch = 5
+                epoch = 20
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column 收盘价 --input_size {self.args.input_size}'
                           f' --output_size {self.args.output_size} --divide 19,1 --weight {weight}'
                           f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch {epoch} --lr_end_epoch {2 * epoch}')
+                          f' --epoch {epoch} --lr_end_epoch {epoch}')
                 shutil.move('last.pt', weight)
 
     def _run_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
@@ -200,12 +200,12 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 weight = f'{model_dir}/base.pt'
-                epoch = 5
+                epoch = 20
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_all True'
+                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1'
                           f' --weight {weight} --weight_again True --model {self.args.model}'
-                          f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {2 * epoch}')
+                          f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {epoch}')
                 shutil.move('last.pt', weight)
 
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
@@ -230,9 +230,14 @@ class economy_class:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_all True --weight {weight}'
+                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 2 --weight {weight}'
                           f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch {epoch} --lr_end_epoch {epoch}')
+                          f' --epoch 50 --lr_end_epoch 50')  # 末尾数据加强训练
+                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
+                          f' --output_column 收盘价 --input_size {self.args.input_size}'
+                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --weight best.pt'
+                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
+                          f' --epoch {epoch} --lr_end_epoch {epoch}')  # 所有数据训练
                 shutil.move('best.pt', model_path)
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
