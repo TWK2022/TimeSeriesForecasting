@@ -18,7 +18,7 @@ class special_add(torch.nn.Module):
         if special is None:
             return x
         else:
-            special = special.to(x.device).unsqueeze(1).unsqueeze(2)
+            special = special.to(x.device).unsqueeze(1)
             x = x + self.linear0(x - special)
             x = self.linear1(x)
             return x
