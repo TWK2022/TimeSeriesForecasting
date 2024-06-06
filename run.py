@@ -24,7 +24,7 @@ parser.add_argument('--output_column', default='mix', type=str, help='|选择预
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例|')
-parser.add_argument('--divide_all', default=False, type=bool, help='|True时会使用所有数据训练，验证集不变|')
+parser.add_argument('--divide_train', default=1, type=int, help='|验证集不变，训练集：0正常，1使用所有数据，2使用验证数据|')
 parser.add_argument('--z_score_cycle', default=-1, type=int, help='|以训练集的周期长度计算mean和std，-1时用所有训练集|')
 parser.add_argument('--weight', default='last.pt', type=str, help='|已有模型的位置，如果没找到模型则会创建新模型|')
 parser.add_argument('--weight_again', default=False, type=bool, help='|True时会重置学习率等状态，在weight上重新训练|')
