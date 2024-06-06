@@ -17,8 +17,8 @@ def val_get(args, val_dataloader, model, loss, data_dict, ema, data_len):
             pred_batch = model(series_batch) if 'special' not in args.model else model(series_batch, special)
             loss_batch = loss(pred_batch, true_batch)
             val_loss += loss_batch.item()
-            pred.extend(pred_batch.cpu())
-            true.extend(true_batch.cpu())
+            pred.append(pred_batch.cpu())
+            true.append(true_batch.cpu())
             # tqdm
             tqdm_show.set_postfix({'val_loss': loss_batch.item()})  # 添加loss显示
             tqdm_show.update(1)  # 更新进度条
@@ -26,8 +26,8 @@ def val_get(args, val_dataloader, model, loss, data_dict, ema, data_len):
         tqdm_show.close()
         # 计算指标
         val_loss /= (index + 1)
-        pred = torch.stack(pred, dim=0)
-        true = torch.stack(true, dim=0)
+        pred = torch.concat(pred, dim=0)
+        true = torch.concat(true, dim=0)
         # 计算总相对指标
         mae, rmse = metric(pred, true)
         print(f'\n| 验证 | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_rmse:{rmse:.4f} |')
