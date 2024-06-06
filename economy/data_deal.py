@@ -53,6 +53,7 @@ def data_deal(args):
     with open(args.number_path, 'r', encoding='utf-8') as f:
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
     shangzheng = pd.read_csv(f'{args.data_dir}/上证指数.csv')['上证指数'].values
+    shangzheng_vol = pd.read_csv(f'{args.data_dir}/上证指数.csv')['上证成交量'].values
     for industry in yaml_dict:
         for name in yaml_dict[industry].keys():
             path = f'{args.data_dir}/{name}.csv'
@@ -94,6 +95,7 @@ def data_deal(args):
             df.rename(columns={'市销率ttm': 'r市销率ttm'}, inplace=True)
             # 上证指数
             df['上证指数'] = shangzheng[-len(df):]
+            df['上证成交量'] = shangzheng_vol[-len(df):]
             # 保存
             df.to_csv(f'{args.data_dir}/{name}_add.csv', header=True, index=True)
             print(f'| 结果保存至:{args.data_dir}/{name}_add.csv |')

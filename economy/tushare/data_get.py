@@ -38,10 +38,8 @@ class data_get_class:
         pro = tushare.pro_api()  # 初始化接口
         # 指数数据
         df = pro.index_daily(ts_code='000001.SH', start_date=self.args.start_time, end_date=self.args.end_time,
-                             fields=['trade_date', 'close'])
-        df.index = pd.DatetimeIndex(df['trade_date'].values)
-        df = df.drop(columns='trade_date').sort_index()
-        df.rename(columns={'close': '上证指数'}, inplace=True)
+                             fields=['trade_date', 'close', 'vol'])
+        df = pd.DataFrame(df.values[:, 1:3], columns=['上证指数', '上证成交量'], index=df['trade_date'].values).sort_index()
         df.to_csv(f'{self.args.save_path}/上证指数.csv', index=True, header=True)
         print(f'| 补充数据: {self.args.save_path}/上证指数.csv |')
         # 股票数据
