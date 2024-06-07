@@ -14,7 +14,7 @@ from block.util import read_column
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|测试|')
 parser.add_argument('--special', default=True, type=bool, help='|特殊模型|')
-parser.add_argument('--model_path', default='model_test/XX.pt', type=str, help='|pt模型位置|')
+parser.add_argument('--model_path', default='../last.pt', type=str, help='|pt模型位置|')
 parser.add_argument('--data_path', default=r'dataset/XX_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
@@ -22,7 +22,7 @@ parser.add_argument('--output_size', default=12, type=int, help='|输出长度|'
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
 parser.add_argument('--rise', default=1.1, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.1|')
-parser.add_argument('--a_mean', default=1.2, type=float, help='|股价小于[a_mean*10日均线]才会买入，数值太大无效|')
+parser.add_argument('--a_mean', default=1.1, type=float, help='|股价小于[a_mean*10日均线]才会买入，数值太大无效|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
 args.input_column = read_column(args.input_column)  # column处理
@@ -105,40 +105,42 @@ class project_class:
         self._metric('理想', now, False)
 
     def _buy(self, index, pred):
+        now = self.close_data[index - 1]
         now_10 = self.close_10_data[index - 1]
-        next_close = self.close_data[index]
+        next_open = self.open_data[index]
+        next_high = self.high_data[index]
         next_low = self.low_data[index]
-        value_low = np.mean([next_low, next_close])
+        buy_value = next_low * 1.02  # 理想买入价格
         # a人为策略
-        if value_low > self.a_mean * now_10:  # 股价处于历史高位，先不买入
+        if buy_value > self.a_mean * now_10:  # 股价处于历史高位，先不买入
+            return
+        if next_open < now * 1.01 and next_high < now * 1.01:  # 第2天发现低开且没有上涨趋势，先不买入
             return
         # b模型策略
-        if value_low * self.rise > np.max(pred[0:3]):  # 预测上涨幅度不大，先不买入
+        if buy_value * self.rise > np.max(pred[0:3]):  # 预测上涨幅度不大，先不买入
             return
-        if value_low > np.mean(pred[0:3]):  # 预测还有下降空间，先不买入
+        if buy_value > np.mean(pred[0:3]):  # 预测还有下降空间，先不买入
             return
         # 买入
         self.state = 1
-        self.buy_list.append(value_low)
+        self.buy_list.append(buy_value)
 
     def _sell(self, index, pred):
-        now_close = self.close_data[index - 1]
-        next_close = self.close_data[index]
-        next_high = self.low_data[index]
-        value_high = np.mean([next_high, next_close])
+        now = self.close_data[index - 1]
+        next_open = self.open_data[index]
+        next_high = self.high_data[index]
+        sell_value = next_high * 0.98  # 理想卖出价格
         # a人为策略
-        if next_close > now_close * 1.09:  # 第2天发现有明显上涨趋势，先不卖出
-            return
-        if next_close < now_close * 0.95:  # 第2天发现有明显下降趋势，直接卖出
+        if next_open < now and next_high < now:  # 第2天发现有明显下降趋势，直接卖出
             self.state = 0
-            self.sell_list.append(value_high)
+            self.sell_list.append(sell_value)
             return
         # b模型策略
-        if value_high < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
+        if sell_value < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0
-        self.sell_list.append(value_high)
+        self.sell_list.append(sell_value)
 
     def _metric(self, name, now, record=False):  # 计算指标
         sell_last = 0
