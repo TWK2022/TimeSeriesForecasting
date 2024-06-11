@@ -109,7 +109,6 @@ def data_deal(args):
             df['自定义指标1'] = (2 * df_count['close'] - df_count['high'] - df_count['low']) / df_count['open']
             # 补充数据
             df['量比'] = fix(df['量比'].values)
-            df['换手率(自由流通股)'] = fix(df['换手率(自由流通股)'].values)
             df['市盈率ttm'] = add_zero(df['市盈率ttm'].values)
             df['市净率'] = add_zero(df['市净率'].values)
             df['市销率ttm'] = add_zero(df['市销率ttm'].values)
