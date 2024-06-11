@@ -27,11 +27,10 @@ class data_get_class:
         self.args = args
         with open(args.number, 'r', encoding='utf-8') as f:
             self.number_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        self.daily_column = ['trade_date', 'open', 'high', 'low', 'close', 'pre_close', 'change', 'pct_chg', 'vol']
-        self.daily_name = ['日期', '开盘价', '最高价', '最低价', '收盘价', '昨收价(前复权)', '涨跌额', '涨跌幅', '成交量']
-        self.daily_basic_column = ['trade_date', 'turnover_rate', 'turnover_rate_f', 'volume_ratio', 'pe_ttm', 'pb',
-                                   'ps_ttm']
-        self.daily_basic_name = ['日期', '换手率', '换手率(自由流通股)', '量比', '市盈率ttm', '市净率', '市销率ttm']
+        self.daily_column = ['trade_date', 'open', 'high', 'low', 'close', 'pre_close', 'pct_chg', 'vol']
+        self.daily_name = ['日期', '开盘价', '最高价', '最低价', '收盘价', '昨收价(前复权)', '涨跌幅', '成交量']
+        self.daily_basic_column = ['trade_date', 'turnover_rate', 'volume_ratio', 'pe_ttm', 'pb', 'ps_ttm']
+        self.daily_basic_name = ['日期', '换手率', '量比', '市盈率ttm', '市净率', '市销率ttm']
 
     def data_get(self):
         tushare.set_token(self.args.token)  # 设置密钥
@@ -39,7 +38,8 @@ class data_get_class:
         # 指数数据
         df = pro.index_daily(ts_code='000001.SH', start_date=self.args.start_time, end_date=self.args.end_time,
                              fields=['trade_date', 'close', 'vol'])
-        df = pd.DataFrame(df.values[:, 1:3], columns=['上证指数', '上证成交量'], index=df['trade_date'].values).sort_index()
+        df = pd.DataFrame(df.values[:, 1:3], columns=['上证指数', '上证成交量'],
+                          index=df['trade_date'].values).sort_index()
         df.to_csv(f'{self.args.save_path}/上证指数.csv', index=True, header=True)
         print(f'| 补充数据: {self.args.save_path}/上证指数.csv |')
         # 股票数据
