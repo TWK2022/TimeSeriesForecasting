@@ -279,7 +279,7 @@ class economy_class:
                 ratio = np.max(pred[0:3]) / close_data[-1]
                 if ratio > self.args.draw_threshold or industry == '自选':  # 有上涨空间或自选股票
                     last_day = str(df.index[-1])
-                    mean_judge = self._count(df['收盘价_5'].values, df['收盘价_10'].values)
+                    mean_judge = self._count(df['收盘价_SMA_5'].values, df['收盘价_SMA_10'].values)
                     save_path = f'save_image/{last_day}__{industry}__{name}__{mean_judge}__{ratio:.2f}' \
                                 f'__{model_dict[name][2]}.jpg'
                     self._draw(pred, close_data, f'{last_day}_{name}', save_path)
