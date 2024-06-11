@@ -12,7 +12,7 @@ parser.add_argument('--save_path', default='number.yaml', type=str, help='|保�
 parser.add_argument('--industry', default='电气设备,运输设备,工程机械,医疗保健,小金属,黄金,铝,铜,铅锌', type=str, help='|行业，必选，如"A,B,C"|')
 parser.add_argument('--area', default='', type=str, help='|地区，空则不筛选，如"A、B、C"|')
 parser.add_argument('--time', default='20240101', type=str, help='|上市时间，筛选time之前的，空则不筛选|')
-parser.add_argument('--type', default='其他', type=str, help='|企业类型，有其他、中央国企、地方国企，空则不筛选|')
+parser.add_argument('--type', default='', type=str, help='|企业类型，有其他、中央国企、地方国企，空则不筛选|')
 args = parser.parse_args()
 args.industry = args.industry.split(',')
 args.time = int(args.time) if args.time else 0
