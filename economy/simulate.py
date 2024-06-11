@@ -66,7 +66,7 @@ class project_class:
         self.open_data = np.array(df['开盘价']).astype(np.float32).T[boundary:len(df)]  # 开盘价
         self.high_data = np.array(df['最高价']).astype(np.float32).T[boundary:len(df)]  # 最高价
         self.low_data = np.array(df['最低价']).astype(np.float32).T[boundary:len(df)]  # 最低价
-        self.close_10_data = np.array(df['收盘价_SMA_10']).astype(np.float32).T[boundary:len(df)]  # 收盘价_10
+        self.close_10_data = np.array(df['收盘价_SMA_10']).astype(np.float32).T[boundary:len(df)]  # 10日均线
         # 记录
         self.state = None  # 买卖状态
         self.buy_list = None  # 买入价格
