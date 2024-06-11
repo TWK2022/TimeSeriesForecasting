@@ -33,7 +33,7 @@ def data_screen(args):
                 continue
             df = pd.read_csv(f'dataset/{name}_add.csv', index_col=0)
             close_data = df['收盘价'].values
-            close_10_data = df['收盘价_10'].values
+            close_10_data = df['收盘价_SMA_10'].values
             change_data = df['换手率'].values
             volume_data = df['成交量'].values
             # 检查是否存在nan值
@@ -73,8 +73,8 @@ def data_screen(args):
             if pe_ttm == 0 or pb == 0 or ps_ttm == 0:
                 continue
             # 5日均线和10日均线筛选
-            close_5 = df['收盘价_5'].values
-            close_10 = df['收盘价_10'].values
+            close_5 = df['收盘价_SMA_5'].values
+            close_10 = df['收盘价_SMA_10'].values
             for index in range(len(close_5) - 1, 0, -1):
                 if close_5[index] >= close_10[index] and close_5[index - 1] < close_10[index - 1]:  # 上穿
                     day = len(close_5) - index
