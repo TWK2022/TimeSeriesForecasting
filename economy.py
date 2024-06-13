@@ -20,7 +20,7 @@ parser.add_argument('--model', default='special_add', type=str)
 parser.add_argument('--model_type', default='l', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='电气设备,运输设备,工程机械,医疗保健,小金属,黄金,铝,铜,铅锌', type=str)
+parser.add_argument('--industry', default='电气设备,运输设备,通信设备,工程机械,医疗保健,小金属,黄金,铝,铜,铅锌', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -276,7 +276,7 @@ class economy_class:
                     else:
                         pred = model(tensor)[0][0].cpu().numpy()
                 # 画图
-                ratio = np.max(pred[0:3]) / close_data[-1]
+                ratio = np.max(pred[0:5]) / close_data[-1]
                 if ratio > self.args.draw_threshold or industry == '自选':  # 有上涨空间或自选股票
                     last_day = str(df.index[-1])
                     mean_judge = self._count(df['收盘价_SMA_5'].values, df['收盘价_SMA_10'].values)
