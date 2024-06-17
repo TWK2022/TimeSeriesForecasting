@@ -22,7 +22,7 @@ parser.add_argument('--output_size', default=12, type=int, help='|输出长度|'
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
 parser.add_argument('--rise', default=1.1, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.1|')
-parser.add_argument('--a_mean', default=1.1, type=float, help='|股价小于[a_mean*10日均线]才会买入，数值太大无效|')
+parser.add_argument('--a', default=True, type=bool, help='|使用人为策略|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
 args.input_column = read_column(args.input_column)  # column处理
@@ -34,12 +34,7 @@ assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !
 # -------------------------------------------------------------------------------------------------------------------- #
 class project_class:
     def __init__(self, args):
-        self.special = args.special
-        self.input_size = args.input_size
-        self.output_size = args.output_size
-        self.device = args.device
-        self.rise = args.rise
-        self.a_mean = args.a_mean
+        self.args = args
         divide = args.divide
         model_path = args.model_path
         data_path = args.data_path
@@ -49,8 +44,8 @@ class project_class:
         model = model_dict['model']
         model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
                        model_dict['std_output'], model_dict['mean_special'],
-                       model_dict['std_special']).eval().to(self.device)
-        self.model = model.half() if self.device == 'cuda' else model.float()
+                       model_dict['std_special']).eval().to(self.args.device)
+        self.model = model.half() if self.args.device == 'cuda' else model.float()
         print(f'| 模型:{model_path} | train_loss:{model_dict["train_loss"]:.4f} |'
               f'val_loss:{model_dict["val_loss"]:.4f} |')
         # 数据
@@ -58,7 +53,7 @@ class project_class:
             df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
         except:
             df = pd.read_csv(data_path, encoding='gbk', index_col=0)
-        add = self.input_size + self.output_size - 1  # 输入数据后面的补足
+        add = self.args.input_size + self.args.output_size - 1  # 输入数据后面的补足
         data_len = len(df) - add  # 输入数据的真实数量
         boundary = int(data_len * divide[0] / (divide[0] + divide[1]))  # 数据划分
         self.input_data = np.array(df[input_column]).astype(np.float32).T[:, boundary:len(df)]  # 模型输入
@@ -73,14 +68,15 @@ class project_class:
         self.sell_list = None  # 卖出价格
 
     def predict(self):  # 在不预知未来情况下的模型收益
-        with torch.no_grad():
+        with (torch.no_grad()):
             self.state = 0
             self.buy_list = []
             self.sell_list = []
-            for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
-                tensor = torch.tensor(self.input_data[:, index - self.input_size:index]).unsqueeze(0).to(self.device)
-                special = torch.tensor(self.open_data[index:index + 1]).to(self.device)
-                if self.special:
+            for index in range(self.args.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
+                tensor = torch.tensor(self.input_data[:, index - self.args.input_size:index]
+                                      ).unsqueeze(0).to(self.args.device)
+                special = torch.tensor(self.open_data[index:index + 1]).to(self.args.device)
+                if self.args.special:
                     pred = self.model(tensor, special)[0][0].cpu().numpy()
                 else:
                     pred = self.model(tensor)[0][0].cpu().numpy()
@@ -95,8 +91,8 @@ class project_class:
         self.state = 0
         self.buy_list = []
         self.sell_list = []
-        for index in range(self.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
-            pred = self.close_data[index:min(index + self.output_size, self.input_data.shape[1])]
+        for index in range(self.args.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
+            pred = self.close_data[index:min(index + self.args.output_size, self.input_data.shape[1])]
             now = self.close_data[index - 1]
             if self.state == 0:  # 准备买入
                 self._buy(index, pred)
@@ -105,19 +101,15 @@ class project_class:
         self._metric('理想', now, False)
 
     def _buy(self, index, pred):
-        now = self.close_data[index - 1]
         now_10 = self.close_10_data[index - 1]
-        next_open = self.open_data[index]
-        next_high = self.high_data[index]
         next_low = self.low_data[index]
         buy_value = next_low * 1.02  # 理想买入价格
         # a人为策略
-        if buy_value > self.a_mean * now_10:  # 股价处于历史高位，先不买入
-            return
-        if next_open < now * 1.01 and next_high < now * 1.01:  # 第2天发现低开且没有上涨趋势，先不买入
-            return
+        if self.args.a:
+            if buy_value > 1.1 * now_10:  # 股价处于历史高位，先不买入
+                return
         # b模型策略
-        if buy_value * self.rise > np.max(pred[0:3]):  # 预测上涨幅度不大，先不买入
+        if buy_value * self.args.rise > np.max(pred[0:3]):  # 预测上涨幅度不大，先不买入
             return
         if buy_value > np.mean(pred[0:3]):  # 预测还有下降空间，先不买入
             return
@@ -131,10 +123,11 @@ class project_class:
         next_high = self.high_data[index]
         sell_value = next_high * 0.98  # 理想卖出价格
         # a人为策略
-        if next_open < now and next_high < now:  # 第2天发现有明显下降趋势，直接卖出
-            self.state = 0
-            self.sell_list.append(sell_value)
-            return
+        if self.args.a:
+            if next_open < now * 0.99 and next_high < now:  # 第2天发现有明显下降趋势，直接卖出
+                self.state = 0
+                self.sell_list.append(sell_value)
+                return
         # b模型策略
         if sell_value < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
             return
@@ -153,7 +146,7 @@ class project_class:
         income_sum = np.sum(value / buy) if len(buy) else 0
         income_mean = np.mean(value / buy) if len(buy) else 0
         fault = value[np.where(value < 0, True, False)]
-        print(f'| {name} | rise:{self.rise} | 总收益率:{income_sum:.2f} | 单次操作收益率:{income_mean:.2f} |'
+        print(f'| {name} | rise:{self.args.rise} | 总收益率:{income_sum:.2f} | 单次操作收益率:{income_mean:.2f} |'
               f' 操作次数:{len(value)} | 亏损次数:{len(fault)} | 最后是否持有:{sell_last} |')
         # 记录日志
         if record:
