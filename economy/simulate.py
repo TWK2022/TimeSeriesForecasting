@@ -18,10 +18,10 @@ parser.add_argument('--model_path', default='../last.pt', type=str, help='|pt模
 parser.add_argument('--data_path', default=r'dataset/XX_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=12, type=int, help='|输出长度|')
+parser.add_argument('--output_size', default=4, type=int, help='|输出长度|')
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
-parser.add_argument('--rise', default=1.1, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.1|')
+parser.add_argument('--rise', default=1.05, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.05|')
 parser.add_argument('--a', default=True, type=bool, help='|使用人为策略|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
@@ -56,12 +56,14 @@ class project_class:
         add = self.args.input_size + self.args.output_size - 1  # 输入数据后面的补足
         data_len = len(df) - add  # 输入数据的真实数量
         boundary = int(data_len * divide[0] / (divide[0] + divide[1]))  # 数据划分
-        self.input_data = np.array(df[input_column]).astype(np.float32).T[:, boundary:len(df)]  # 模型输入
-        self.close_data = np.array(df['收盘价']).astype(np.float32).T[boundary:len(df)]  # 收盘价
-        self.open_data = np.array(df['开盘价']).astype(np.float32).T[boundary:len(df)]  # 开盘价
-        self.high_data = np.array(df['最高价']).astype(np.float32).T[boundary:len(df)]  # 最高价
-        self.low_data = np.array(df['最低价']).astype(np.float32).T[boundary:len(df)]  # 最低价
-        self.close_10_data = np.array(df['收盘价_SMA_10']).astype(np.float32).T[boundary:len(df)]  # 10日均线
+        self.input_data = df[input_column].values.astype(np.float32).T[:, boundary:len(df)]  # 模型输入
+        self.close_data = df['收盘价'].values.astype(np.float32).T[boundary:len(df)]  # 收盘价
+        self.open_data = df['开盘价'].values.astype(np.float32).T[boundary:len(df)]  # 开盘价
+        self.high_data = df['最高价'].values.astype(np.float32).T[boundary:len(df)]  # 最高价
+        self.low_data = df['最低价'].values.astype(np.float32).T[boundary:len(df)]  # 最低价
+        self.close_SMA_5 = df['收盘价_SMA_5'].values.astype(np.float32).T[boundary:len(df)]  # 5日均线
+        self.shangzheng = df['上证指数'].values.astype(np.float32).T[boundary:len(df)]  # 上证指数
+        self.shangzheng_SMA_5 = df['上证指数_SMA_5'].values.astype(np.float32).T[boundary:len(df)]  # 上证指数5日均线
         # 记录
         self.state = None  # 买卖状态
         self.buy_list = None  # 买入价格
@@ -80,12 +82,12 @@ class project_class:
                     pred = self.model(tensor, special)[0][0].cpu().numpy()
                 else:
                     pred = self.model(tensor)[0][0].cpu().numpy()
-                now = self.close_data[index - 1]
+                close = self.close_data[index - 1]
                 if self.state == 0:  # 准备买入
                     self._buy(index, pred)
                 elif self.state == 1:  # 准备卖出
                     self._sell(index, pred)
-            self._metric('模型', now, True)
+            self._metric('模型', close, True)
 
     def predict_true(self):  # 在预知未来情况下的理想收益
         self.state = 0
@@ -93,20 +95,21 @@ class project_class:
         self.sell_list = []
         for index in range(self.args.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
             pred = self.close_data[index:min(index + self.args.output_size, self.input_data.shape[1])]
-            now = self.close_data[index - 1]
+            close = self.close_data[index - 1]
             if self.state == 0:  # 准备买入
                 self._buy(index, pred)
             elif self.state == 1:  # 准备卖出
                 self._sell(index, pred)
-        self._metric('理想', now, False)
+        self._metric('理想', close, False)
 
     def _buy(self, index, pred):
-        now_10 = self.close_10_data[index - 1]
+        close_SMA_5 = self.close_SMA_5[index - 1]
+        next_high = self.high_data[index]
         next_low = self.low_data[index]
-        buy_value = next_low * 1.02  # 理想买入价格
+        buy_value = next_low + 0.2 * (next_high - next_low)  # 估计买入价格
         # a人为策略
         if self.args.a:
-            if buy_value > 1.1 * now_10:  # 股价处于历史高位，先不买入
+            if buy_value > 1.08 * close_SMA_5:  # 股价处于历史高位，先不买入
                 return
         # b模型策略
         if buy_value * self.args.rise > np.max(pred[0:3]):  # 预测上涨幅度不大，先不买入
@@ -118,13 +121,14 @@ class project_class:
         self.buy_list.append(buy_value)
 
     def _sell(self, index, pred):
-        now = self.close_data[index - 1]
+        close = self.close_data[index - 1]
         next_open = self.open_data[index]
         next_high = self.high_data[index]
-        sell_value = next_high * 0.98  # 理想卖出价格
+        next_low = self.low_data[index]
+        sell_value = next_high - 0.2 * (next_high - next_low)  # 估计卖出价格
         # a人为策略
         if self.args.a:
-            if next_open < now * 0.99 and next_high < now:  # 第2天发现有明显下降趋势，直接卖出
+            if next_open < close * 0.99 and next_high < close:  # 第2天发现有明显下降趋势，直接卖出
                 self.state = 0
                 self.sell_list.append(sell_value)
                 return
@@ -135,10 +139,10 @@ class project_class:
         self.state = 0
         self.sell_list.append(sell_value)
 
-    def _metric(self, name, now, record=False):  # 计算指标
+    def _metric(self, name, close, record=False):  # 计算指标
         sell_last = 0
         if len(self.buy_list) != len(self.sell_list):  # 最后一次还未卖出
-            self.sell_list.append(now)
+            self.sell_list.append(close)
             sell_last = 1
         buy = np.array(self.buy_list)
         sell = np.array(self.sell_list)
