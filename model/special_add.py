@@ -18,9 +18,8 @@ class special_add(torch.nn.Module):
         if special is None:
             return x
         else:
-            special = special.to(x.device).unsqueeze(1)
-            x = x + self.linear0(x - special)
-            x = self.linear1(x)
+            special = special.unsqueeze(1).to(x.device)
+            x = x + special
             return x
 
 
@@ -38,6 +37,6 @@ if __name__ == '__main__':
     args.output_column = args.output_column.split(',')
     model = special_add(args)
     tensor = torch.randn((4, len(args.input_column), args.input_size), dtype=torch.float32)
-    special = torch.randn(4, dtype=torch.float32)
+    special = torch.randn((4, 1), dtype=torch.float32)
     print(model)
     print(model(tensor, special).shape)
