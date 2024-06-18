@@ -41,6 +41,11 @@ class data_prepare:
             mean_output = np.mean(output_data, axis=0)
             std_input = np.std(input_data, axis=0)
             std_output = np.std(output_data, axis=0)
+        elif self.args.z_score == 2:
+            mean_input = np.mean(val_input, axis=0)
+            mean_output = np.mean(val_output, axis=0)
+            std_input = np.std(val_input, axis=0)
+            std_output = np.std(val_output, axis=0)
         else:
             mean_input = np.mean(train_input, axis=0)
             mean_output = np.mean(train_output, axis=0)
