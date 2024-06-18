@@ -1,14 +1,18 @@
 # 特殊模型
 # 多变量单标签
 import torch
+from model.layer import lgl
 from model.itransformer import itransformer
 
 
 class special_add(torch.nn.Module):
     def __init__(self, args, model=None):
         super().__init__()
+        output_size = args.output_size
         # 网络结构
         self.model = model(args) if model else itransformer(args)
+        self.lgl0 = lgl(output_size)
+        self.lgl1 = lgl(output_size)
 
     def forward(self, x, special=None):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         x = self.model(x)
@@ -16,7 +20,8 @@ class special_add(torch.nn.Module):
             return x
         else:
             special = special.unsqueeze(1).to(x.device)
-            x = x + special
+            special = self.lgl0(x - special)
+            x = self.lgl1(x + special)
             return x
 
 
