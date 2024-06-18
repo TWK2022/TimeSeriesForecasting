@@ -20,7 +20,7 @@ parser.add_argument('--model', default='special_add', type=str)
 parser.add_argument('--model_type', default='l', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='电气设备,运输设备,通信设备,工程机械,医疗保健,小金属,黄金,铝,铜,铅锌', type=str)
+parser.add_argument('--industry', default='电气设备,运输设备,通信设备,工程机械,小金属,黄金,铝,铜,铅锌', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -36,7 +36,7 @@ parser.add_argument('--run_test', default=False, type=bool)
 parser.add_argument('--run_test_again', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
-parser.add_argument('--rise', default=1.1, type=float)
+parser.add_argument('--rise', default=1.05, type=float)
 # run.py | 训练正式基础模型
 parser.add_argument('--run_base', default=False, type=bool)
 # run.py | 训练正式模型
@@ -44,7 +44,8 @@ parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=True, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
-parser.add_argument('--draw_threshold', default=1.1, type=float)
+parser.add_argument('--next_open', default=1.01, type=float)
+parser.add_argument('--draw_threshold', default=1.05, type=float)
 args = parser.parse_args()
 
 
@@ -118,7 +119,7 @@ class economy_class:
                 epoch = 20
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --weight {weight}'
+                          f' --output_size {self.args.output_size} --divide 19,1 --z_score 1 --weight {weight}'
                           f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
                           f' --epoch {epoch} --lr_end_epoch {epoch}')
                 shutil.move('last.pt', weight)
@@ -149,7 +150,7 @@ class economy_class:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --weight {weight}'
+                          f' --output_size {self.args.output_size} --divide 19,1 --z_score 1 --weight {weight}'
                           f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
                           f' --epoch {epoch} --lr_end_epoch {epoch}')
                 shutil.move('last.pt', model_path)
@@ -203,7 +204,7 @@ class economy_class:
                 epoch = 20
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1'
+                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
                           f' --weight {weight} --weight_again True --model {self.args.model}'
                           f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {epoch}')
                 shutil.move('last.pt', weight)
@@ -230,14 +231,14 @@ class economy_class:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 2 --weight {weight}'
-                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch 50 --lr_end_epoch 50')  # 末尾数据加强训练
+                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 2 --z_score 1'
+                          f' --weight {weight} --weight_again True --model {self.args.model}'
+                          f' --model_type {self.args.model_type} --epoch 50 --lr_end_epoch 50')  # 末尾数据加强训练
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --weight best.pt'
-                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch {epoch} --lr_end_epoch {epoch}')  # 所有数据训练
+                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
+                          f' --weight best.pt --weight_again True --model {self.args.model}'
+                          f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {epoch}')  # 所有数据训练
                 shutil.move('best.pt', model_path)
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
@@ -268,7 +269,7 @@ class economy_class:
                 input_data = input_data[:, -self.args.input_size:]
                 close_data = np.array(df['收盘价']).astype(np.float32)[-100:]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
-                special = torch.tensor(1.01 * close_data[-2:-1])  # 假设第2天开盘小涨
+                special = torch.tensor(self.args.next_open * close_data[-2:-1])  # 设置第2天开盘价
                 # 推理
                 with torch.no_grad():
                     if 'special' in self.args.model:
