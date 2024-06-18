@@ -18,10 +18,12 @@ parser.add_argument('--model_path', default='../last.pt', type=str, help='|pt模
 parser.add_argument('--data_path', default=r'dataset/XX_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=4, type=int, help='|输出长度|')
+parser.add_argument('--output_size', default=12, type=int, help='|输出长度|')
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
 parser.add_argument('--rise', default=1.05, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.05|')
+parser.add_argument('--buy_scale', default=0.3, type=float, help='|买入价格估算=最低价+buy_scale*波动|')
+parser.add_argument('--sell_scale', default=0.3, type=float, help='|卖出价格估算=最高价-sell_scale*波动|')
 parser.add_argument('--a', default=True, type=bool, help='|使用人为策略|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
@@ -106,34 +108,26 @@ class project_class:
         close_SMA_5 = self.close_SMA_5[index - 1]
         next_high = self.high_data[index]
         next_low = self.low_data[index]
-        buy_value = next_low + 0.2 * (next_high - next_low)  # 估计买入价格
+        buy_value = next_low + self.args.buy_scale * (next_high - next_low)  # 估计买入价格
         # a人为策略
         if self.args.a:
-            if buy_value > 1.08 * close_SMA_5:  # 股价处于历史高位，先不买入
+            if buy_value > 1.05 * close_SMA_5:  # 股价处于历史高位，先不买入
                 return
         # b模型策略
         if buy_value * self.args.rise > np.max(pred[0:3]):  # 预测上涨幅度不大，先不买入
             return
-        if buy_value > np.mean(pred[0:3]):  # 预测还有下降空间，先不买入
+        if buy_value > np.min(pred[0:3]):  # 预测还有下降空间，先不买入
             return
         # 买入
         self.state = 1
         self.buy_list.append(buy_value)
 
     def _sell(self, index, pred):
-        close = self.close_data[index - 1]
-        next_open = self.open_data[index]
         next_high = self.high_data[index]
         next_low = self.low_data[index]
-        sell_value = next_high - 0.2 * (next_high - next_low)  # 估计卖出价格
-        # a人为策略
-        if self.args.a:
-            if next_open < close * 0.99 and next_high < close:  # 第2天发现有明显下降趋势，直接卖出
-                self.state = 0
-                self.sell_list.append(sell_value)
-                return
+        sell_value = next_high - self.args.sell_scale * (next_high - next_low)  # 估计卖出价格
         # b模型策略
-        if sell_value < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
+        if sell_value < np.max(pred[0:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0
