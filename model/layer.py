@@ -121,8 +121,9 @@ class series_encode(torch.nn.Module):  # 归一化
         super().__init__()
         self.mean_input = torch.tensor(mean_input)
         self.std_input = torch.tensor(std_input)
-        self.mean_special = torch.tensor(mean_special)
-        self.std_special = torch.tensor(std_special)
+        if mean_special is not None:
+            self.mean_special = torch.tensor(mean_special)
+            self.std_special = torch.tensor(std_special)
 
     def forward(self, x, special=None):
         x = x.permute(0, 2, 1)
