@@ -1,7 +1,7 @@
 # 根据crossformer改编:https://github.com/Thinklab-SJTU/Crossformer
 # 多变量异标签
 import torch
-from model.layer import attention, lgl, split_conv1d, split_linear
+from model.layer import attention, lgl, split_linear
 
 
 class attention_block(torch.nn.Module):
@@ -139,7 +139,7 @@ class crossformer(torch.nn.Module):
         self.encode = encode(input_number, head, feature, middle_dim=middle_dim)
         self.decode_input = torch.nn.Parameter(torch.randn(1, input_dim, output_number, feature))
         self.decode = decode(output_number, self.segment, head, feature, middle_dim=middle_dim)
-        self.split_conv1d = split_conv1d(input_dim, output_dim)
+        self.conv1d = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
         self.split_linear = split_linear(output_dim, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
@@ -153,7 +153,7 @@ class crossformer(torch.nn.Module):
         x = self.decode(decode_input, encode_list)  # (batch,input_dim,output_number,segment)
         batch, dim, n, segment = x.shape
         x = x.reshape(batch, dim, -1)  # (batch,input_dim,output_size)
-        x = self.split_conv1d(x)  # (batch,output_dim,output_size)
+        x = self.conv1d(x)  # (batch,output_dim,output_size)
         x = self.split_linear(x)
         return x
 

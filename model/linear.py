@@ -1,6 +1,6 @@
 # 多变量异标签
 import torch
-from model.layer import split_conv1d, split_linear
+from model.layer import split_linear
 
 
 class linear(torch.nn.Module):
@@ -12,7 +12,7 @@ class linear(torch.nn.Module):
         output_size = args.output_size
         # 网络结构
         self.l0 = torch.nn.Linear(input_size, output_size)
-        self.l1 = split_conv1d(input_dim, output_dim)
+        self.l1 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
         self.l2 = split_linear(output_dim, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)

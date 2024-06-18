@@ -1,6 +1,6 @@
 # 单变量自标签
 import torch
-from model.layer import split_conv1d, split_linear
+from model.layer import split_linear
 
 
 class lstm(torch.nn.Module):
@@ -14,7 +14,7 @@ class lstm(torch.nn.Module):
         n = n_dict[args.model_type]
         # 网络结构
         self.l0 = torch.nn.LSTM(input_size=input_size, hidden_size=output_size, num_layers=n, dropout=0.2)
-        self.l1 = split_conv1d(input_dim, output_dim)
+        self.l1 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
         self.l2 = split_linear(output_dim, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)

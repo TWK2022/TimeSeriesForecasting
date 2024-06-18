@@ -3,7 +3,7 @@
 import math
 import torch
 import numpy as np
-from model.layer import attention, split_conv1d, split_linear
+from model.layer import attention, split_linear
 
 
 class AMS(torch.nn.Module):
@@ -339,7 +339,7 @@ class pathformer(torch.nn.Module):
         self.AMS1 = AMS(input_size, input_dim=input_dim, feature=feature, layer_number=2)
         self.AMS2 = AMS(input_size, input_dim=input_dim, feature=feature, layer_number=3)
         self.linear_out = torch.nn.Linear(feature * input_size, output_size)
-        self.split_conv1d = split_conv1d(input_dim, output_dim)
+        self.conv1d = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
         self.split_linear = split_linear(output_dim, output_size)
 
     def forward(self, x):
@@ -350,7 +350,7 @@ class pathformer(torch.nn.Module):
         x = self.AMS2(x)
         x = x.permute(0, 2, 1, 3).reshape(x.shape[0], x.shape[2], -1)
         x = self.linear_out(x)
-        x = self.split_conv1d(x)  # (batch,output_dim,output_size)
+        x = self.conv1d(x)  # (batch,output_dim,output_size)
         x = self.split_linear(x)
         return x
 
