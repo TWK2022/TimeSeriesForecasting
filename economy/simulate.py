@@ -13,7 +13,7 @@ from block.util import read_column
 # 实际买入和卖出时的股价存在误差
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|测试|')
-parser.add_argument('--special', default=True, type=bool, help='|特殊模型|')
+parser.add_argument('--special', default=False, type=bool, help='|特殊模型|')
 parser.add_argument('--model_path', default='../last.pt', type=str, help='|pt模型位置|')
 parser.add_argument('--data_path', default=r'dataset/XX_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
@@ -21,7 +21,7 @@ parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--output_size', default=12, type=int, help='|输出长度|')
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
-parser.add_argument('--rise', default=1.05, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.05|')
+parser.add_argument('--rise', default=1.1, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.1|')
 parser.add_argument('--buy_scale', default=0.3, type=float, help='|买入价格估算=最低价+buy_scale*波动|')
 parser.add_argument('--sell_scale', default=0.3, type=float, help='|卖出价格估算=最高价-sell_scale*波动|')
 parser.add_argument('--a', default=True, type=bool, help='|使用人为策略|')

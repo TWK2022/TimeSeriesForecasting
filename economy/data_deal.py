@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 
 # -------------------------------------------------------------------------------------------------------------------- #
-parser = argparse.ArgumentParser(description='|计算5日、10日、20日均线|')
+parser = argparse.ArgumentParser(description='|补充数据|')
 parser.add_argument('--data_dir', default='dataset', type=str, help='|数据目录|')
 parser.add_argument('--number_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--column', default='收盘价,成交量', type=str, help='|选择计算的变量|')
@@ -127,7 +127,7 @@ def data_deal(args):
             df.rename(columns={'市净率': 'r市净率'}, inplace=True)
             df.rename(columns={'市销率ttm': 'r市销率ttm'}, inplace=True)
             # 去除不需要的部分
-            df = df[30:]
+            df = df[60:]
             # 保存
             df.to_csv(f'{args.data_dir}/{name}_add.csv', header=True, index=True)
             print(f'| 结果保存至:{args.data_dir}/{name}_add.csv |')
