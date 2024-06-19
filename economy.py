@@ -41,7 +41,7 @@ parser.add_argument('--run_again', default=True, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
 parser.add_argument('--next_open', default=1.00, type=float)
-parser.add_argument('--draw_threshold', default=1.1, type=float)
+parser.add_argument('--draw_threshold', default=1.05, type=float)
 args = parser.parse_args()
 
 
