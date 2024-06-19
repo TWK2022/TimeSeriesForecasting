@@ -29,22 +29,18 @@ parser.add_argument('--end_time', default='20240601', type=str)
 parser.add_argument('--data_deal', default=False, type=bool)
 # economy/data_screen.py
 parser.add_argument('--data_screen', default=False, type=bool)
-# run.py | 训练测试基础模型
-parser.add_argument('--run_base_test', default=False, type=bool)
 # run.py | 训练测试模型
 parser.add_argument('--run_test', default=False, type=bool)
 parser.add_argument('--run_test_again', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
 parser.add_argument('--rise', default=1.05, type=float)
-# run.py | 训练正式基础模型
-parser.add_argument('--run_base', default=False, type=bool)
 # run.py | 训练正式模型
 parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=True, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
-parser.add_argument('--next_open', default=1.01, type=float)
+parser.add_argument('--next_open', default=1.00, type=float)
 parser.add_argument('--draw_threshold', default=1.05, type=float)
 args = parser.parse_args()
 
@@ -72,8 +68,6 @@ class economy_class:
             self._data_screen()
         # 原目录
         os.chdir(self.path)
-        if self.args.run_base_test:
-            self._run_base_test()
         if self.args.run_test:
             self._run_test()
         # economy目录
@@ -82,8 +76,6 @@ class economy_class:
             self._simulate()
         # 原目录
         os.chdir(self.path)
-        if self.args.run_base:
-            self._run_base()
         if self.args.run:
             self._run()
         if self.args.feature:
@@ -105,28 +97,10 @@ class economy_class:
         print('economy/data_screen.py')
         os.system(f'python data_screen.py')
 
-    def _run_base_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
-        print('run.py | 训练测试基础模型')
-        if not os.path.exists(model_dir):
-            os.makedirs(model_dir)
-        with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
-            screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        for industry in screen_dict:
-            name_list = screen_dict[industry].keys()
-            for name in name_list:
-                data_path = f'{data_dir}/{name}_add.csv'
-                weight = f'{model_dir}/base_test.pt'
-                epoch = 20
-                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --z_score 1 --weight {weight}'
-                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch {epoch} --lr_end_epoch {epoch}')
-                shutil.move('last.pt', weight)
-
     def _run_test(self, data_dir='economy/dataset', model_dir='economy/model_test'):
         print('run.py | 训练测试模型')
-        assert os.path.exists(f'{model_dir}/base_test.pt')
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
         with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
             screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
         if os.path.exists('economy/model.yaml'):
@@ -141,7 +115,7 @@ class economy_class:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
                 weight = f'{model_dir}/base_test.pt'
-                epoch = 30
+                epoch = 50
                 if os.path.exists(model_path):
                     if self.args.run_test_again or not model_dict.get(name):
                         weight = model_path
@@ -153,6 +127,7 @@ class economy_class:
                           f' --output_size {self.args.output_size} --divide 19,1 --z_score 1 --weight {weight}'
                           f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
                           f' --epoch {epoch} --lr_end_epoch {epoch}')
+                shutil.copyfile('last.pt', f'{model_dir}/base_test.pt')
                 shutil.move('last.pt', model_path)
                 # 记录模型信息
                 dict_ = torch.load(model_path, map_location='cpu')
@@ -190,28 +165,10 @@ class economy_class:
                 with open('model.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True)
 
-    def _run_base(self, data_dir='economy/dataset', model_dir='economy/model'):
-        print('run.py | 训练正式基础模型')
-        if not os.path.exists(model_dir):
-            os.makedirs(model_dir)
-        with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
-            screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        for industry in screen_dict:
-            name_list = screen_dict[industry].keys()
-            for name in name_list:
-                data_path = f'{data_dir}/{name}_add.csv'
-                weight = f'{model_dir}/base.pt'
-                epoch = 20
-                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
-                          f' --weight {weight} --weight_again True --model {self.args.model}'
-                          f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {epoch}')
-                shutil.move('last.pt', weight)
-
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
         print('run.py | 训练正式模型')
-        assert os.path.exists(f'{model_dir}/base.pt')
+        if not os.path.exists(model_dir):
+            os.makedirs(model_dir)
         with open('economy/data_screen.yaml', 'r', encoding='utf-8') as f:  # 股票选择
             screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
         with open('economy/model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
@@ -222,7 +179,7 @@ class economy_class:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
                 weight = f'{model_dir}/base.pt'
-                epoch = 30
+                epoch = 50
                 if os.path.exists(model_path):
                     if self.args.run_again:
                         weight = model_path
@@ -231,7 +188,7 @@ class economy_class:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column 收盘价 --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 1,1 --divide_train 2 --z_score 1'
+                          f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 1'
                           f' --weight {weight} --weight_again True --model {self.args.model}'
                           f' --model_type {self.args.model_type} --epoch 30 --lr_end_epoch 30')  # 末尾数据加强训练
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
@@ -239,6 +196,7 @@ class economy_class:
                           f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
                           f' --weight best.pt --weight_again True --model {self.args.model}'
                           f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {epoch}')  # 所有数据训练
+                shutil.copyfile('last.pt', f'{model_dir}/base.pt')
                 shutil.move('best.pt', model_path)
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
