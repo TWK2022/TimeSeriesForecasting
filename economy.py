@@ -34,14 +34,14 @@ parser.add_argument('--run_test', default=False, type=bool)
 parser.add_argument('--run_test_again', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
-parser.add_argument('--rise', default=1.05, type=float)
+parser.add_argument('--rise', default=1.1, type=float)
 # run.py | 训练正式模型
 parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=True, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
 parser.add_argument('--next_open', default=1.00, type=float)
-parser.add_argument('--draw_threshold', default=1.05, type=float)
+parser.add_argument('--draw_threshold', default=1.1, type=float)
 args = parser.parse_args()
 
 
@@ -196,7 +196,7 @@ class economy_class:
                           f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
                           f' --weight best.pt --weight_again True --model {self.args.model}'
                           f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {epoch}')  # 所有数据训练
-                shutil.copyfile('last.pt', f'{model_dir}/base.pt')
+                shutil.move('last.pt', f'{model_dir}/base.pt')
                 shutil.move('best.pt', model_path)
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
