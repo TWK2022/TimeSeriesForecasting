@@ -9,9 +9,7 @@ import pandas as pd
 parser = argparse.ArgumentParser(description='|补充数据|')
 parser.add_argument('--data_dir', default='dataset', type=str, help='|数据目录|')
 parser.add_argument('--number_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
-parser.add_argument('--column', default='收盘价,成交量', type=str, help='|选择计算的变量|')
 args = parser.parse_args()
-args.column = args.column.split(',')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -52,9 +50,8 @@ def data_deal(args):
                 print(f'| 文件不存在:{path} |')
                 continue
             df = pd.read_csv(path, index_col=0)
-            value = df[args.column].values
             # 数据太少舍弃
-            if len(value) < 200:
+            if len(df) < 200:
                 print(f'| 数据太少舍弃:{name} |')
                 continue
             # 上证指数
@@ -69,6 +66,16 @@ def data_deal(args):
             df['收盘价_SMA_20'] = finta.TA.SMA(df_count, 20, column='close')
             df['收盘价_SMA_30'] = finta.TA.SMA(df_count, 30, column='close')
             df['收盘价_SMA_60'] = finta.TA.SMA(df_count, 60, column='close')
+            df['最高价_SMA_5'] = finta.TA.SMA(df_count, 5, column='close')
+            df['最高价_SMA_10'] = finta.TA.SMA(df_count, 10, column='close')
+            df['最高价_SMA_20'] = finta.TA.SMA(df_count, 20, column='close')
+            df['最高价_SMA_30'] = finta.TA.SMA(df_count, 30, column='close')
+            df['最高价_SMA_60'] = finta.TA.SMA(df_count, 60, column='close')
+            df['最低价_SMA_5'] = finta.TA.SMA(df_count, 5, column='close')
+            df['最低价_SMA_10'] = finta.TA.SMA(df_count, 10, column='close')
+            df['最低价_SMA_20'] = finta.TA.SMA(df_count, 20, column='close')
+            df['最低价_SMA_30'] = finta.TA.SMA(df_count, 30, column='close')
+            df['最低价_SMA_60'] = finta.TA.SMA(df_count, 60, column='close')
             df['成交量_SMA_5'] = finta.TA.SMA(df_count, 5, column='volume')
             df['成交量_SMA_10'] = finta.TA.SMA(df_count, 10, column='volume')
             df['成交量_SMA_20'] = finta.TA.SMA(df_count, 20, column='volume')
@@ -85,6 +92,16 @@ def data_deal(args):
             df['收盘价_EMA_20'] = finta.TA.EMA(df_count, 20, column='close')
             df['收盘价_EMA_30'] = finta.TA.EMA(df_count, 30, column='close')
             df['收盘价_EMA_60'] = finta.TA.EMA(df_count, 60, column='close')
+            df['最高价_EMA_5'] = finta.TA.EMA(df_count, 5, column='close')
+            df['最高价_EMA_10'] = finta.TA.EMA(df_count, 10, column='close')
+            df['最高价_EMA_20'] = finta.TA.EMA(df_count, 20, column='close')
+            df['最高价_EMA_30'] = finta.TA.EMA(df_count, 30, column='close')
+            df['最高价_EMA_60'] = finta.TA.EMA(df_count, 60, column='close')
+            df['最低价_EMA_5'] = finta.TA.EMA(df_count, 5, column='close')
+            df['最低价_EMA_10'] = finta.TA.EMA(df_count, 10, column='close')
+            df['最低价_EMA_20'] = finta.TA.EMA(df_count, 20, column='close')
+            df['最低价_EMA_30'] = finta.TA.EMA(df_count, 30, column='close')
+            df['最低价_EMA_60'] = finta.TA.EMA(df_count, 60, column='close')
             df['成交量_EMA_5'] = finta.TA.EMA(df_count, 5, column='volume')
             df['成交量_EMA_10'] = finta.TA.EMA(df_count, 10, column='volume')
             df['成交量_EMA_20'] = finta.TA.EMA(df_count, 20, column='volume')
@@ -101,6 +118,16 @@ def data_deal(args):
             df['收盘价_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='close')
             df['收盘价_DEMA_30'] = finta.TA.DEMA(df_count, 30, column='close')
             df['收盘价_DEMA_60'] = finta.TA.DEMA(df_count, 60, column='close')
+            df['最高价_DEMA_5'] = finta.TA.DEMA(df_count, 5, column='close')
+            df['最高价_DEMA_10'] = finta.TA.DEMA(df_count, 10, column='close')
+            df['最高价_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='close')
+            df['最高价_DEMA_30'] = finta.TA.DEMA(df_count, 30, column='close')
+            df['最高价_DEMA_60'] = finta.TA.DEMA(df_count, 60, column='close')
+            df['最低价_DEMA_5'] = finta.TA.DEMA(df_count, 5, column='close')
+            df['最低价_DEMA_10'] = finta.TA.DEMA(df_count, 10, column='close')
+            df['最低价_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='close')
+            df['最低价_DEMA_30'] = finta.TA.DEMA(df_count, 30, column='close')
+            df['最低价_DEMA_60'] = finta.TA.DEMA(df_count, 60, column='close')
             df['成交量_DEMA_5'] = finta.TA.DEMA(df_count, 5, column='volume')
             df['成交量_DEMA_10'] = finta.TA.DEMA(df_count, 10, column='volume')
             df['成交量_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='volume')

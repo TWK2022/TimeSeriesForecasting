@@ -8,7 +8,7 @@ import pandas as pd
 parser = argparse.ArgumentParser(description='|筛选有上升潜力的股票|')
 parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
-parser.add_argument('--close', default=1.08, type=float, help='|筛选价格<close*5日均线|')
+parser.add_argument('--close', default=5, type=float, help='|筛选价格>close|')
 parser.add_argument('--change', default=2, type=float, help='|筛选近期换手率>change|')
 parser.add_argument('--volume', default=80000, type=float, help='|筛选近期成交量>volume|')
 parser.add_argument('--fluctuate', default=1.03, type=float, help='|筛选近期最高价/最低价>fluctuate|')
@@ -51,7 +51,7 @@ def data_screen(args):
             # 加权均值
             ratio = np.linspace(0.1, 1.9, 10)
             # 收盘价筛选
-            if close_data[-1] > args.close * close_SMA_5[-1]:
+            if close_data[-1] < args.close:
                 continue
             # 换手率筛选
             change_mean = np.mean(change_data[-10:] * ratio)
@@ -71,18 +71,6 @@ def data_screen(args):
             pb = df['r市净率'].values[-1]
             ps_ttm = df['r市销率ttm'].values[-1]
             if pe_ttm == 0 or pb == 0 or ps_ttm == 0:
-                continue
-            # 5日均线和10日均线筛选
-            close_5 = df['收盘价_SMA_5'].values
-            close_10 = df['收盘价_SMA_10'].values
-            for index in range(len(close_5) - 1, 0, -1):
-                if close_5[index] >= close_10[index] and close_5[index - 1] < close_10[index - 1]:  # 上穿
-                    day = len(close_5) - index
-                    break
-                if close_5[index] <= close_10[index] and close_5[index - 1] > close_10[index - 1]:  # 下穿
-                    day = -(len(close_5) - index)
-                    break
-            if day == -1 or day == -2:  # 刚刚下穿
                 continue
             # 记录
             result_dict[industry][name] = float(round(close_data[-1] / close_SMA_5[-1], 2))

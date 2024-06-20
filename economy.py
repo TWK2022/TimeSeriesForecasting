@@ -14,6 +14,7 @@ from block.util import read_column
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|集成|')
 parser.add_argument('--input_column', default='input_column.txt', type=str)
+parser.add_argument('--output_column', default='最高价', type=str)
 parser.add_argument('--input_size', default=96, type=int)
 parser.add_argument('--output_size', default=12, type=int)
 parser.add_argument('--model', default='itransformer', type=str)
@@ -41,7 +42,7 @@ parser.add_argument('--run_again', default=True, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
 parser.add_argument('--next_open', default=1.00, type=float)
-parser.add_argument('--draw_threshold', default=1.05, type=float)
+parser.add_argument('--draw_threshold', default=1.1, type=float)
 args = parser.parse_args()
 
 
@@ -123,7 +124,7 @@ class economy_class:
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column 收盘价 --input_size {self.args.input_size}'
+                          f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
                           f' --output_size {self.args.output_size} --divide 19,1 --z_score 1 --weight {weight}'
                           f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
                           f' --epoch {epoch} --lr_end_epoch {epoch}')
@@ -187,12 +188,12 @@ class economy_class:
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column 收盘价 --input_size {self.args.input_size}'
+                          f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
                           f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 1'
                           f' --weight {weight} --weight_again True --model {self.args.model}'
                           f' --model_type {self.args.model_type} --epoch 30 --lr_end_epoch 30')  # 末尾数据加强训练
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column 收盘价 --input_size {self.args.input_size}'
+                          f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
                           f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
                           f' --weight best.pt --weight_again True --model {self.args.model}'
                           f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {epoch}')  # 所有数据训练
@@ -226,6 +227,7 @@ class economy_class:
                 input_data = np.array(df[input_column]).astype(np.float32).T
                 input_data = input_data[:, -self.args.input_size:]
                 close_data = np.array(df['收盘价']).astype(np.float32)[-100:]
+                high_data = np.array(df['收盘价']).astype(np.float32)[-100:]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
                 special = torch.tensor(self.args.next_open * close_data[-2:-1])  # 设置第2天开盘价
                 # 推理
@@ -235,13 +237,11 @@ class economy_class:
                     else:
                         pred = model(tensor)[0][0].cpu().numpy()
                 # 画图
-                ratio = np.max(pred[0:5]) / close_data[-1]
+                ratio = np.max(pred[0:5]) / high_data[-1]
                 if ratio > self.args.draw_threshold or industry == '自选':  # 有上涨空间或自选股票
                     last_day = str(df.index[-1])
-                    mean_judge = self._count(df['收盘价_SMA_5'].values, df['收盘价_SMA_10'].values)
-                    save_path = f'save_image/{last_day}__{industry}__{name}__{mean_judge}__{ratio:.2f}' \
-                                f'__{model_dict[name][2]}.jpg'
-                    self._draw(pred, close_data, f'{last_day}_{name}', save_path)
+                    save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{model_dict[name][2]}.jpg'
+                    self._draw(pred, high_data, f'{last_day}_{name}', save_path)
 
     def _count(self, close_5, close_10):  # 判断金叉+和死叉-，+1表示今天金叉，-2表示昨天死叉
         for index in range(len(close_5) - 1, 0, -1):
@@ -251,14 +251,14 @@ class economy_class:
                 return f'-{len(close_5) - index}'
         return 'None'
 
-    def _draw(self, pred, close_data, name, save_path):
-        zero = torch.zeros(len(close_data))
+    def _draw(self, pred, high_data, name, save_path):
+        zero = torch.zeros(len(high_data))
         pred = np.concatenate([zero, pred], axis=0)
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
         plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
         plt.title(name)
         plt.grid()
-        plt.plot(close_data, color='green', label='true')
+        plt.plot(high_data, color='green', label='true')
         plt.plot(pred, color='cyan', label='pred')
         plt.savefig(save_path)
         plt.close()

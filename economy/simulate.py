@@ -116,7 +116,7 @@ class project_class:
         # b模型策略
         if buy_value * self.args.rise > np.max(pred[0:3]):  # 预测上涨幅度不大，先不买入
             return
-        if buy_value > np.min(pred[0:3]):  # 预测还有下降空间，先不买入
+        if buy_value > np.mean(pred[0:3]):  # 预测还有下降空间，先不买入
             return
         # 买入
         self.state = 1
@@ -127,7 +127,7 @@ class project_class:
         next_low = self.low_data[index]
         sell_value = next_high - self.args.sell_scale * (next_high - next_low)  # 估计卖出价格
         # b模型策略
-        if sell_value < np.max(pred[0:3]):  # 预测还有上升空间，先不卖出
+        if sell_value < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0
