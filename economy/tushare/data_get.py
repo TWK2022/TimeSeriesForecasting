@@ -9,7 +9,7 @@ import pandas as pd
 # 获取数据的时间格式为20240101，不能为2024-01-01
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|通过tushare获取最新股票数据以补全数据库|')
-parser.add_argument('--token', default='', type=str, help='|密钥|')
+parser.add_argument('--token', default='80d83d7d966f3c4461771a4d56c55948c0752aac3606540d3f35dbcf', type=str, help='|密钥|')
 parser.add_argument('--save_path', default='../dataset', type=str, help='|数据保存的目录|')
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
 parser.add_argument('--start_time', default='20170101', type=str, help='|开始时间|')
@@ -72,6 +72,7 @@ class data_get_class:
                     time_end = time.time()
                     if time_end - time_start < 60:
                         time.sleep(60 + time_start - time_end)
+                        time_start = time.time()
 
     def _tushare_to_df(self, pro, industry_dict, key, start_time):
         start_time = start_time.replace('-', '')
