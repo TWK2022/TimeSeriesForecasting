@@ -14,7 +14,7 @@ from block.util import read_column
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|集成|')
 parser.add_argument('--input_column', default='input_column.txt', type=str)
-parser.add_argument('--output_column', default='最高价', type=str)
+parser.add_argument('--output_column', default='最高价,最低价', type=str)
 parser.add_argument('--input_size', default=96, type=int)
 parser.add_argument('--output_size', default=12, type=int)
 parser.add_argument('--model', default='itransformer', type=str)
@@ -132,7 +132,7 @@ class economy_class:
                 shutil.move('last.pt', model_path)
                 # 记录模型信息
                 dict_ = torch.load(model_path, map_location='cpu')
-                mae_true = round(float(dict_['val_mae'] * dict_['std_output']), 4)
+                mae_true = round(float(dict_['val_mae'] * dict_['std_output'][0]), 4)
                 df = pd.read_csv(data_path, index_col=0)
                 time = str(df.index[-1])
                 if model_dict.get(name):
@@ -227,21 +227,24 @@ class economy_class:
                 input_data = np.array(df[input_column]).astype(np.float32).T
                 input_data = input_data[:, -self.args.input_size:]
                 close_data = np.array(df['收盘价']).astype(np.float32)[-100:]
-                high_data = np.array(df['收盘价']).astype(np.float32)[-100:]
+                high_data = np.array(df['最高价']).astype(np.float32)[-100:]
+                low_data = np.array(df['最低价']).astype(np.float32)[-100:]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
                 special = torch.tensor(self.args.next_open * close_data[-2:-1])  # 设置第2天开盘价
                 # 推理
                 with torch.no_grad():
                     if 'special' in self.args.model:
-                        pred = model(tensor, special)[0][0].cpu().numpy()
+                        pred = model(tensor, special)[0].cpu().numpy()
                     else:
-                        pred = model(tensor)[0][0].cpu().numpy()
+                        pred = model(tensor)[0].cpu().numpy()
+                pred_high = pred[0]
+                pred_low = pred[1]
                 # 画图
-                ratio = np.max(pred[0:5]) / high_data[-1]
+                ratio = np.max(pred_high[0:3]) / high_data[-1]
                 if ratio > self.args.draw_threshold or industry == '自选':  # 有上涨空间或自选股票
                     last_day = str(df.index[-1])
                     save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{model_dict[name][2]}.jpg'
-                    self._draw(pred, high_data, f'{last_day}_{name}', save_path)
+                    self._draw(pred_high, pred_low, high_data, low_data, f'{last_day}_{name}', save_path)
 
     def _count(self, close_5, close_10):  # 判断金叉+和死叉-，+1表示今天金叉，-2表示昨天死叉
         for index in range(len(close_5) - 1, 0, -1):
@@ -251,15 +254,18 @@ class economy_class:
                 return f'-{len(close_5) - index}'
         return 'None'
 
-    def _draw(self, pred, high_data, name, save_path):
+    def _draw(self, pred_high, pred_low, high_data, low_data, name, save_path):
         zero = torch.zeros(len(high_data))
-        pred = np.concatenate([zero, pred], axis=0)
+        pred_high = np.concatenate([zero, pred_high], axis=0)
+        pred_low = np.concatenate([zero, pred_low], axis=0)
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
         plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
         plt.title(name)
         plt.grid()
-        plt.plot(high_data, color='green', label='true')
-        plt.plot(pred, color='cyan', label='pred')
+        plt.plot(high_data, color='red', label='true_high')
+        plt.plot(low_data, color='green', label='true_low')
+        plt.plot(pred_high, color='cyan', label='pred_high')
+        plt.plot(pred_low, color='cyan', label='pred_low')
         plt.savefig(save_path)
         plt.close()
         print(f'| 画图保存位置:{save_path} |')
