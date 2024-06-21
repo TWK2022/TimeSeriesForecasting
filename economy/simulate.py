@@ -81,14 +81,16 @@ class project_class:
                                       ).unsqueeze(0).to(self.args.device)
                 special = torch.tensor(self.open_data[index:index + 1]).to(self.args.device)
                 if self.args.special:
-                    pred = self.model(tensor, special)[0][0].cpu().numpy()
+                    pred = self.model(tensor, special)[0].cpu().numpy()
                 else:
-                    pred = self.model(tensor)[0][0].cpu().numpy()
-                close = self.close_data[index - 1]
+                    pred = self.model(tensor)[0].cpu().numpy()
+                pred_high = pred[0]
+                pred_low = pred[1]
                 if self.state == 0:  # 准备买入
-                    self._buy(index, pred)
+                    self._buy(index, pred_high, pred_low)
                 elif self.state == 1:  # 准备卖出
-                    self._sell(index, pred)
+                    self._sell(index, pred_high, pred_low)
+            close = self.close_data[-1]
             self._metric('模型', close, True)
 
     def predict_true(self):  # 在预知未来情况下的理想收益
@@ -96,38 +98,41 @@ class project_class:
         self.buy_list = []
         self.sell_list = []
         for index in range(self.args.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
-            pred = self.close_data[index:min(index + self.args.output_size, self.input_data.shape[1])]
-            close = self.close_data[index - 1]
+            pred_high = self.high_data[index:min(index + self.args.output_size, self.input_data.shape[1])]
+            pred_low = self.low_data[index:min(index + self.args.output_size, self.input_data.shape[1])]
             if self.state == 0:  # 准备买入
-                self._buy(index, pred)
+                self._buy(index, pred_high, pred_low)
             elif self.state == 1:  # 准备卖出
-                self._sell(index, pred)
+                self._sell(index, pred_high, pred_low)
+        close = self.close_data[-1]
         self._metric('理想', close, False)
 
-    def _buy(self, index, pred):
+    def _buy(self, index, pred_high, pred_low):
         close_SMA_5 = self.close_SMA_5[index - 1]
         next_high = self.high_data[index]
         next_low = self.low_data[index]
-        buy_value = next_low + self.args.buy_scale * (next_high - next_low)  # 估计买入价格
+        buy_value = next_low + self.args.buy_scale * (next_high - next_low)  # 实际买入价格
+        pred_sell = pred_low + self.args.buy_scale * (pred_high - pred_low)  # 预测卖出价格
         # a人为策略
         if self.args.a:
             if buy_value > 1.05 * close_SMA_5:  # 股价处于历史高位，先不买入
                 return
         # b模型策略
-        if buy_value * self.args.rise > np.max(pred[0:3]):  # 预测上涨幅度不大，先不买入
+        if buy_value * self.args.rise > np.max(pred_sell[0:3]):  # 预测上涨幅度不大，先不买入
             return
-        if buy_value > np.mean(pred[0:3]):  # 预测还有下降空间，先不买入
+        if buy_value > np.mean(pred_sell[0:3]):  # 预测还有下降空间，先不买入
             return
         # 买入
         self.state = 1
         self.buy_list.append(buy_value)
 
-    def _sell(self, index, pred):
+    def _sell(self, index, pred_high, pred_low):
         next_high = self.high_data[index]
         next_low = self.low_data[index]
-        sell_value = next_high - self.args.sell_scale * (next_high - next_low)  # 估计卖出价格
+        sell_value = next_high - self.args.sell_scale * (next_high - next_low)  # 实际卖出价格
+        pred_sell = pred_low + self.args.buy_scale * (pred_high - pred_low)  # 预测卖出价格
         # b模型策略
-        if sell_value < np.mean(pred[0:3]):  # 预测还有上升空间，先不卖出
+        if sell_value < np.mean(pred_sell[0:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0
