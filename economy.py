@@ -21,7 +21,7 @@ parser.add_argument('--input_size', default=96, type=int)
 parser.add_argument('--output_size', default=12, type=int)
 parser.add_argument('--model', default='itransformer', type=str)
 parser.add_argument('--model_type', default='l', type=str)
-parser.add_argument('--device', default='cpu', type=str)
+parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
 parser.add_argument('--industry', default='电气设备,通信设备,元器件,小金属,黄金,铝,铜,铅锌', type=str)
@@ -187,7 +187,7 @@ class economy_class:
                 if os.path.exists(model_path):
                     if self.args.run_again:
                         weight = model_path
-                        epoch = 10
+                        epoch = 20
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
