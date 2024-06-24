@@ -123,7 +123,7 @@ class economy_class:
                 if os.path.exists(model_path):
                     if self.args.run_test_again or not model_dict.get(name):
                         weight = model_path
-                        epoch = 10
+                        epoch = 30
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
@@ -187,7 +187,7 @@ class economy_class:
                 if os.path.exists(model_path):
                     if self.args.run_again:
                         weight = model_path
-                        epoch = 20
+                        epoch = 30
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
