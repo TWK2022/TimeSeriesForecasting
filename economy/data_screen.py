@@ -81,9 +81,9 @@ def data_screen(args):
             record_screen += 1
     # 保存
     with open(args.save_path, 'w', encoding='utf-8') as f:
-        yaml.dump(result_dict, f, allow_unicode=True, sort_keys=True)
+        yaml.dump(result_dict, f, allow_unicode=True, sort_keys=False)
     with open(args.save_remove, 'w', encoding='utf-8') as f:
-        yaml.dump(remove_dict, f, allow_unicode=True, sort_keys=True)
+        yaml.dump(remove_dict, f, allow_unicode=True, sort_keys=False)
     # 显示
     print(f'| 总数:{record_all} | 筛选数:{record_screen} |')
     print(f'| 结果保存至:{args.save_path} |')
