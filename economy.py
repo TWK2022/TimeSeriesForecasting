@@ -1,7 +1,9 @@
 import os
+import PIL
 import yaml
 import torch
 import shutil
+import prophet
 import argparse
 import numpy as np
 import pandas as pd
@@ -19,10 +21,10 @@ parser.add_argument('--input_size', default=96, type=int)
 parser.add_argument('--output_size', default=12, type=int)
 parser.add_argument('--model', default='itransformer', type=str)
 parser.add_argument('--model_type', default='l', type=str)
-parser.add_argument('--device', default='cude', type=str)
+parser.add_argument('--device', default='cpu', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='电气设备,运输设备,通信设备,元器件,小金属,黄金,铝,铜,铅锌', type=str)
+parser.add_argument('--industry', default='电气设备,通信设备,元器件,小金属,黄金,铝,铜,铅锌', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -41,7 +43,7 @@ parser.add_argument('--rise', default=1.1, type=float)
 parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=True, type=bool)
 # def feature
-parser.add_argument('--feature', default=False, type=bool)
+parser.add_argument('--feature', default=True, type=bool)
 parser.add_argument('--next_open', default=1.00, type=float)
 parser.add_argument('--draw_threshold', default=1.1, type=float)
 args = parser.parse_args()
@@ -248,14 +250,8 @@ class economy_class:
                     last_day = str(df.index[-1])
                     save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{model_dict[name][2]}.jpg'
                     self._draw(pred_high, pred_low, high_data, low_data, f'{last_day}_{name}', save_path)
-
-    def _count(self, close_5, close_10):  # 判断金叉+和死叉-，+1表示今天金叉，-2表示昨天死叉
-        for index in range(len(close_5) - 1, 0, -1):
-            if close_5[index] >= close_10[index] and close_5[index - 1] < close_10[index - 1]:
-                return f'+{len(close_5) - index}'
-            if close_5[index] <= close_10[index] and close_5[index - 1] > close_10[index - 1]:
-                return f'-{len(close_5) - index}'
-        return 'None'
+                    self._draw_prophet(df)
+                    self._image_merge(save_path, 'save_image/_.jpg')
 
     def _draw(self, pred_high, pred_low, high_data, low_data, name, save_path):
         zero = torch.zeros(len(high_data))
@@ -267,11 +263,32 @@ class economy_class:
         plt.grid()
         plt.plot(high_data, color='red', label='true_high')
         plt.plot(low_data, color='green', label='true_low')
-        plt.plot(pred_high, color='cyan', label='pred_high')
-        plt.plot(pred_low, color='cyan', label='pred_low')
+        plt.plot(pred_high, color='red', label='pred_high')
+        plt.plot(pred_low, color='green', label='pred_low')
         plt.savefig(save_path)
         plt.close()
         print(f'| 画图保存位置:{save_path} |')
+
+    def _draw_prophet(self, df):
+        ds = df.index.values
+        df = pd.DataFrame(df['收盘价'].values, columns=['y'])
+        df['ds'] = ds
+        model = prophet.Prophet()
+        model.changepoint_prior_scale = 0.5
+        model.fit(df)
+        future = model.make_future_dataframe(periods=100)
+        df_pred = model.predict(future)
+        figure = model.plot_components(df_pred)
+        figure.savefig('save_image/_.jpg')
+        plt.close()
+
+    def _image_merge(self, path1, path2):
+        image1 = PIL.Image.open(path1).resize((800, 400))
+        image2 = PIL.Image.open(path2).resize((800, 400))
+        image = PIL.Image.new('RGB', (800, 800), (0, 0, 0))
+        image.paste(image1, (0, 0))
+        image.paste(image2, (0, 400))
+        image.save(path1)
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
