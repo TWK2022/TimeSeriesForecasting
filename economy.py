@@ -43,7 +43,7 @@ parser.add_argument('--rise', default=1.1, type=float)
 parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=True, type=bool)
 # def feature
-parser.add_argument('--feature', default=True, type=bool)
+parser.add_argument('--feature', default=False, type=bool)
 parser.add_argument('--next_open', default=1.00, type=float)
 parser.add_argument('--draw_threshold', default=1.1, type=float)
 args = parser.parse_args()
@@ -202,8 +202,8 @@ class economy_class:
                           f' --weight best.pt --weight_again True --model {self.args.model}'
                           f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {epoch}'
                           f' --device {self.args.device}')  # 所有数据训练
-                shutil.move('last.pt', f'{model_dir}/base.pt')
-                shutil.move('best.pt', model_path)
+                shutil.copyfile('last.pt', f'{model_dir}/base.pt')
+                shutil.move('last.pt', model_path)
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
                 time = str(df.index[-1])
