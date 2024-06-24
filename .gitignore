@@ -22,7 +22,7 @@ __pycache__
 *.onnx
 # -------------------------------------------------------------------------------------------------------------------- #
 economy/model.yaml
-economy/remove.yaml
+economy/tushare/remove.yaml
 economy/data_screen.yaml
 economy/tushare/number.yaml
 economy/tushare/remove.yaml
