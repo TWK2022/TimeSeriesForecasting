@@ -31,6 +31,10 @@ class data_get_class:
         self.daily_name = ['日期', '开盘价', '最高价', '最低价', '收盘价', '昨收价(前复权)', '涨跌幅', '成交量']
         self.daily_basic_column = ['trade_date', 'turnover_rate', 'volume_ratio', 'pe_ttm', 'pb', 'ps_ttm']
         self.daily_basic_name = ['日期', '换手率', '量比', '市盈率ttm', '市净率', '市销率ttm']
+        self.moneyflow_column = ['trade_date', 'buy_sm_vol', 'sell_sm_vol', 'buy_md_vol', 'sell_md_vol', 'buy_lg_vol',
+                                 'sell_lg_vol', 'buy_elg_vol', 'sell_elg_vol', 'net_mf_vol', 'trade_count']
+        self.moneyflow_name = ['日期', '小单买入量', '小单卖出量', '中单买入量', '中单卖出量', '大单买入量',
+                               '大单卖出量', '特大单买入量', '特大单卖出量', '净流入量', '交易笔数']
 
     def data_get(self):
         tushare.set_token(self.args.token)  # 设置密钥
@@ -90,8 +94,15 @@ class data_get_class:
         df_.index = pd.DatetimeIndex(df_['日期'].values)
         df_ = df_.drop(columns='日期')
         df_ = df_.sort_index()
+        # 资金流向
+        df__ = pro.moneyflow(industry_dict[key], start_date=start_time, end_date=self.args.end_time,
+                             fields=self.daily_basic_column)
+        df__.columns = self.moneyflow_name
+        df__.index = pd.DatetimeIndex(df__['日期'].values)
+        df__ = df__.drop(columns='日期')
+        df__ = df__.sort_index()
         # 合并
-        df = pd.concat([df, df_], axis=1)
+        df = pd.concat([df, df_, df__], axis=1)
         return df
 
 
