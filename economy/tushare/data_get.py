@@ -95,8 +95,8 @@ class data_get_class:
         df_ = df_.drop(columns='日期')
         df_ = df_.sort_index()
         # 资金流向
-        df__ = pro.moneyflow(industry_dict[key], start_date=start_time, end_date=self.args.end_time,
-                             fields=self.daily_basic_column)
+        df__ = pro.moneyflow(ts_code=industry_dict[key], start_date=start_time, end_date=self.args.end_time,
+                             fields=self.moneyflow_column)
         df__.columns = self.moneyflow_name
         df__.index = pd.DatetimeIndex(df__['日期'].values)
         df__ = df__.drop(columns='日期')
