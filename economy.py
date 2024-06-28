@@ -119,11 +119,11 @@ class economy_class:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
                 weight = f'{model_dir}/base_test.pt'
-                epoch = 50
+                epoch = 80
                 if os.path.exists(model_path):
                     if self.args.run_test_again or not model_dict.get(name):
                         weight = model_path
-                        epoch = 30
+                        epoch = 50
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
@@ -184,17 +184,17 @@ class economy_class:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
                 weight = f'{model_dir}/base.pt'
-                epoch = 50
+                epoch = 80
                 if os.path.exists(model_path):
                     if self.args.run_again:
                         weight = model_path
-                        epoch = 30
+                        epoch = 50
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
                           f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 2'
-                          f' --weight {weight} --weight_again True --model {self.args.model} --lr_start 0.0008'
+                          f' --weight {weight} --weight_again True --model {self.args.model} --lr_start 0.0001'
                           f' --lr_end_epoch 30 --device {self.args.device}')  # 末尾数据加强训练
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
