@@ -120,17 +120,19 @@ class economy_class:
                 model_path = f'{model_dir}/{name}.pt'
                 weight = f'{model_dir}/base_test.pt'
                 epoch = 80
+                lr_start = 0.0008
                 if os.path.exists(model_path):
                     if self.args.run_test_again or not model_dict.get(name):
                         weight = model_path
                         epoch = 50
+                        lr_start = 0.0001
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
                           f' --output_size {self.args.output_size} --divide 19,1 --z_score 2 --weight {weight}'
                           f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --batch 64 --epoch {epoch} --lr_start 0.0008 --lr_end_epoch {epoch}'
+                          f' --batch 64 --epoch {epoch} --lr_start {lr_start} --lr_end_epoch {epoch}'
                           f' --device {self.args.device}')
                 shutil.copyfile('last.pt', f'{model_dir}/base_test.pt')
                 shutil.move('last.pt', model_path)
@@ -185,22 +187,24 @@ class economy_class:
                 model_path = f'{model_dir}/{name}.pt'
                 weight = f'{model_dir}/base.pt'
                 epoch = 80
+                lr_start = 0.0008
                 if os.path.exists(model_path):
                     if self.args.run_again:
                         weight = model_path
                         epoch = 50
+                        lr_start = 0.0001
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
                           f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 2'
-                          f' --weight {weight} --weight_again True --model {self.args.model} --lr_start 0.0001'
+                          f' --weight {weight} --weight_again True --model {self.args.model} --lr_start {lr_start}'
                           f' --lr_end_epoch 30 --device {self.args.device}')  # 末尾数据加强训练
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
                           f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 2'
                           f' --weight last.pt --weight_again True --model {self.args.model}'
-                          f' --model_type {self.args.model_type} --batch 64 --epoch {epoch} --lr_start 0.0008'
+                          f' --model_type {self.args.model_type} --batch 64 --epoch {epoch} --lr_start {lr_start}'
                           f' --lr_end_epoch {epoch} --device {self.args.device}')  # 所有数据训练
                 shutil.copyfile('last.pt', f'{model_dir}/base.pt')
                 shutil.move('last.pt', model_path)
