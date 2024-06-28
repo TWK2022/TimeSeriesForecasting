@@ -46,16 +46,17 @@ class clg(torch.nn.Module):
 
 
 class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
-    def __init__(self, head, feature, dropout=0.2):
+    def __init__(self, head, feature, bias=False, dropout=0):
         super().__init__()
+        assert feature % head == 0
         self.head = head
-        self.divisor = math.sqrt(feature // self.head)
-        self.query = torch.nn.Linear(feature, feature)
-        self.key = torch.nn.Linear(feature, feature)
-        self.value = torch.nn.Linear(feature, feature)
+        self.divisor = math.sqrt(feature // head)
+        self.query = torch.nn.Linear(feature, feature, bias=bias)
+        self.key = torch.nn.Linear(feature, feature, bias=bias)
+        self.value = torch.nn.Linear(feature, feature, bias=bias)
         self.softmax = torch.nn.Softmax(dim=-1)
         self.dropout = torch.nn.Dropout(dropout)
-        self.linear = torch.nn.Linear(feature, feature)
+        self.linear = torch.nn.Linear(feature, feature, bias=True)
 
     def forward(self, query, key, value):  # 3*(batch,dim,feature) -> (batch,dim,feature)。key和value的dim可以与query不同
         batch, dim, feature = query.shape
@@ -63,6 +64,40 @@ class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
         query = self.query(query).reshape(batch, dim, self.head, -1).permute(0, 2, 1, 3)  # (batch,head,dim,-1)
         key = self.key(key).reshape(batch, dim2, self.head, -1).permute(0, 2, 3, 1)  # (batch,head,-1,dim2)
         value = self.value(value).reshape(batch, dim2, self.head, -1).permute(0, 2, 1, 3)  # (batch,head,dim2,-1)
+        x = torch.matmul(query, key)  # (batch,head,dim,dim2)
+        x = x / self.divisor
+        x = self.softmax(x)
+        x = self.dropout(x)
+        x = torch.matmul(x, value)  # (batch,head,dim,-1)
+        x = x.permute(0, 2, 1, 3).reshape(batch, dim, feature)  # (batch,dim,feature)
+        x = self.linear(x)  # (batch,dim,feature)
+        return x
+
+
+class group_query_attention(torch.nn.Module):
+    def __init__(self, head, feature, group, bias=False, dropout=0):
+        super().__init__()
+        assert feature % head == 0
+        assert head % group == 0
+        self.head = head
+        self.group = group
+        self.divisor = math.sqrt(feature // head)
+        self.query = torch.nn.Linear(feature, feature, bias=bias)
+        self.key = torch.nn.Linear(feature, feature // group, bias=bias)
+        self.value = torch.nn.Linear(feature, feature // group, bias=bias)
+        self.softmax = torch.nn.Softmax(dim=-1)
+        self.dropout = torch.nn.Dropout(dropout)
+        self.linear = torch.nn.Linear(feature, feature, bias=True)
+
+    def forward(self, query, key, value):  # 3*(batch,dim,feature) -> (batch,dim,feature)。key和value的dim可以与query不同
+        batch, dim, feature = query.shape
+        _, dim2, _ = key.shape
+        query = self.query(query).reshape(batch, dim, self.head, -1).permute(0, 2, 1, 3)  # (batch,head,dim,-1)
+        head_group = self.head // self.group
+        key = self.key(key).reshape(batch, dim2, head_group, -1).permute(0, 2, 3, 1)  # (batch,head_group,-1,dim2)
+        value = self.value(value).reshape(batch, dim2, head_group, -1).permute(0, 2, 1, 3)  # (batch,head_group,dim2,-1)
+        key = key.repeat(1, self.group, 1, 1)  # (batch,head,-1,dim2)
+        value = value.repeat(1, self.group, 1, 1)  # (batch,head,-1,dim2)
         x = torch.matmul(query, key)  # (batch,head,dim,dim2)
         x = x / self.divisor
         x = self.softmax(x)
