@@ -128,9 +128,10 @@ class economy_class:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --z_score 1 --weight {weight}'
+                          f' --output_size {self.args.output_size} --divide 19,1 --z_score 2 --weight {weight}'
                           f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --epoch {epoch} --lr_end_epoch {epoch} --device {self.args.device}')
+                          f' --batch 64 --epoch {epoch} --lr_start 0.0008 --lr_end_epoch {epoch}'
+                          f' --device {self.args.device}')
                 shutil.copyfile('last.pt', f'{model_dir}/base_test.pt')
                 shutil.move('last.pt', model_path)
                 # 记录模型信息
@@ -159,7 +160,7 @@ class economy_class:
                 data_path = f'dataset/{name}_add.csv'
                 os.system(f'python simulate.py --model_path {model_path} --data_path {data_path}'
                           f' --input_size {self.args.input_size} --output_size {self.args.output_size}'
-                          f' --rise {self.args.rise}')
+                          f' --rise {self.args.rise} --device {self.args.device}')
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
                     log = f.readlines()
@@ -192,16 +193,15 @@ class economy_class:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 1'
-                          f' --weight {weight} --weight_again True --model {self.args.model}'
-                          f' --model_type {self.args.model_type} --epoch 30 --lr_end_epoch 30'
-                          f' --device {self.args.device}')  # 末尾数据加强训练
+                          f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 2'
+                          f' --weight {weight} --weight_again True --model {self.args.model} --lr_start 0.0008'
+                          f' --lr_end_epoch 30 --device {self.args.device}')  # 末尾数据加强训练
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
-                          f' --weight best.pt --weight_again True --model {self.args.model}'
-                          f' --model_type {self.args.model_type} --epoch {epoch} --lr_end_epoch {epoch}'
-                          f' --device {self.args.device}')  # 所有数据训练
+                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 2'
+                          f' --weight last.pt --weight_again True --model {self.args.model}'
+                          f' --model_type {self.args.model_type} --batch 64 --epoch {epoch} --lr_start 0.0008'
+                          f' --lr_end_epoch {epoch} --device {self.args.device}')  # 所有数据训练
                 shutil.copyfile('last.pt', f'{model_dir}/base.pt')
                 shutil.move('last.pt', model_path)
                 # 记录模型信息
