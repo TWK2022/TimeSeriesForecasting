@@ -20,7 +20,7 @@ parser.add_argument('--input_column', default='../input_column.txt', type=str, h
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--output_size', default=12, type=int, help='|输出长度|')
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
-parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
+parser.add_argument('--device', default='cuda', type=str, help='|推理设备|')
 parser.add_argument('--rise', default=1.1, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.1|')
 parser.add_argument('--buy_scale', default=0.3, type=float, help='|买入价格估算=最低价+buy_scale*波动|')
 parser.add_argument('--sell_scale', default=0.3, type=float, help='|卖出价格估算=最高价-sell_scale*波动|')
@@ -44,10 +44,9 @@ class project_class:
         # 模型
         model_dict = torch.load(model_path, map_location='cpu')
         model = model_dict['model']
-        model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
-                       model_dict['std_output'], model_dict['mean_special'],
-                       model_dict['std_special']).eval().to(self.args.device)
-        self.model = model.half() if self.args.device == 'cuda' else model.float()
+        self.model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
+                            model_dict['std_output'], model_dict['mean_special'],
+                            model_dict['std_special']).eval().to(self.args.device)
         print(f'| 模型:{model_path} | train_loss:{model_dict["train_loss"]:.4f} |'
               f'val_loss:{model_dict["val_loss"]:.4f} |')
         # 数据
