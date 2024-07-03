@@ -62,7 +62,6 @@ class project_class:
         self.open_data = df['开盘价'].values.astype(np.float32).T[boundary:len(df)]  # 开盘价
         self.high_data = df['最高价'].values.astype(np.float32).T[boundary:len(df)]  # 最高价
         self.low_data = df['最低价'].values.astype(np.float32).T[boundary:len(df)]  # 最低价
-        self.close_SMA_5 = df['收盘价_SMA_5'].values.astype(np.float32).T[boundary:len(df)]  # 5日均线
         self.shangzheng = df['上证指数'].values.astype(np.float32).T[boundary:len(df)]  # 上证指数
         self.shangzheng_SMA_5 = df['上证指数_SMA_5'].values.astype(np.float32).T[boundary:len(df)]  # 上证指数5日均线
         # 记录
@@ -107,15 +106,10 @@ class project_class:
         self._metric('理想', close, False)
 
     def _buy(self, index, pred_high, pred_low):
-        close_SMA_5 = self.close_SMA_5[index - 1]
         next_high = self.high_data[index]
         next_low = self.low_data[index]
         buy_value = next_low + self.args.buy_scale * (next_high - next_low)  # 实际买入价格
         pred_sell = pred_low + self.args.buy_scale * (pred_high - pred_low)  # 预测卖出价格
-        # a人为策略
-        if self.args.a:
-            if buy_value > 1.05 * close_SMA_5:  # 股价处于历史高位，先不买入
-                return
         # b模型策略
         if buy_value * self.args.rise > np.max(pred_sell[0:3]):  # 预测上涨幅度不大，先不买入
             return
