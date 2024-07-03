@@ -199,8 +199,9 @@ class economy_class:
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
                           f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 1'
-                          f' --weight {weight} --weight_again True --model {self.args.model} --lr_start {lr_start}'
-                          f' --lr_end_epoch 30 --device {self.args.device}')  # 末尾数据加强训练
+                          f' --weight {weight} --weight_again True --model {self.args.model}'
+                          f' --model_type {self.args.model_type} --batch 64 --epoch 30 --lr_start {lr_start}'
+                          f' --lr_end_epoch 30 --lr_end_epoch {epoch} --device {self.args.device}')  # 末尾数据加强训练
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
                           f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
