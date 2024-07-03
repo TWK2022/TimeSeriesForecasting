@@ -12,7 +12,7 @@ parser.add_argument('--save_remove', default='remove.yaml', type=str, help='|记
 parser.add_argument('--close', default=5, type=float, help='|筛选价格>close|')
 parser.add_argument('--change', default=1, type=float, help='|筛选近期换手率>change|')
 parser.add_argument('--volume', default=50000, type=float, help='|筛选近期成交量>volume|')
-parser.add_argument('--fluctuate', default=1.04, type=float, help='|筛选近期最高价/最低价>fluctuate|')
+parser.add_argument('--fluctuate', default=1.03, type=float, help='|筛选近期最高价/最低价>fluctuate|')
 parser.add_argument('--reserve', default=False, type=bool, help='|自选股票是否需要筛选|')
 args = parser.parse_args()
 
