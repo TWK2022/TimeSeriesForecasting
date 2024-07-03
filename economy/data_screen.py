@@ -9,10 +9,10 @@ parser = argparse.ArgumentParser(description='|筛选有上升潜力的股票|')
 parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
 parser.add_argument('--save_remove', default='remove.yaml', type=str, help='|记录收盘价、换手率、成交量不满足要求的股票|')
-parser.add_argument('--close', default=4, type=float, help='|筛选价格>close|')
-parser.add_argument('--change', default=2, type=float, help='|筛选近期换手率>change|')
-parser.add_argument('--volume', default=80000, type=float, help='|筛选近期成交量>volume|')
-parser.add_argument('--fluctuate', default=1.04, type=float, help='|筛选近期最高价/最低价>fluctuate|')
+parser.add_argument('--close', default=3, type=float, help='|筛选价格>close|')
+parser.add_argument('--change', default=1, type=float, help='|筛选近期换手率>change|')
+parser.add_argument('--volume', default=50000, type=float, help='|筛选近期成交量>volume|')
+parser.add_argument('--fluctuate', default=1.02, type=float, help='|筛选近期最高价/最低价>fluctuate|')
 parser.add_argument('--reserve', default=False, type=bool, help='|自选股票是否需要筛选|')
 args = parser.parse_args()
 
@@ -22,13 +22,14 @@ def data_screen(args):
     with open(args.yaml_path, 'r', encoding='utf-8') as f:
         yaml_dict = yaml.load(f, Loader=yaml.SafeLoader)
     result_dict = {}
-    remove_dict = {'去除': {}}
+    remove_dict = {}
     record_all = 0
     record_screen = 0
     for industry in yaml_dict:
         industry_dict = yaml_dict[industry]
         record_all += len(industry_dict)
         result_dict[industry] = {}
+        remove_dict[industry] = {}
         for name in industry_dict:
             if not os.path.exists(f'dataset/{name}_add.csv'):
                 print(f'| 文件不存在:dataset/{name}_add.csv |')
@@ -53,17 +54,17 @@ def data_screen(args):
             ratio = np.linspace(0.1, 1.9, 10)
             # 收盘价筛选
             if close_data[-1] < args.close:
-                remove_dict['去除'][name] = industry_dict[name]
+                remove_dict[industry][name] = industry_dict[name]
                 continue
             # 换手率筛选
             change_mean = np.mean(change_data[-10:] * ratio)
             if change_mean < args.change:
-                remove_dict['去除'][name] = industry_dict[name]
+                remove_dict[industry][name] = industry_dict[name]
                 continue
             # 成交量筛选
             volume_mean = np.mean(volume_data[-10:] * ratio)
             if volume_mean < args.volume:
-                remove_dict['去除'][name] = industry_dict[name]
+                remove_dict[industry][name] = industry_dict[name]
                 continue
             # 波动量筛选
             high = df['最高价'].values[-10:]

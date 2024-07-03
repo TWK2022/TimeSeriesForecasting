@@ -24,8 +24,8 @@ __pycache__
 economy/model.yaml
 economy/remove.yaml
 economy/data_screen.yaml
+economy/input_column.txt
 economy/tushare/number.yaml
-economy/tushare/remove.yaml
 economy/tushare/reserve.yaml
 # -------------------------------------------------------------------------------------------------------------------- #
 !dataset/ETTh1.csv

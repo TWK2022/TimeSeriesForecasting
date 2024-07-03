@@ -24,7 +24,7 @@ parser.add_argument('--model_type', default='l', type=str)
 parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='互联网,电气设备,通信设备,半导体', type=str)
+parser.add_argument('--industry', default='互联网,电气设备,通信设备,半导体,小金属,铜,铅锌,黄金,百货', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -38,7 +38,7 @@ parser.add_argument('--run_test', default=False, type=bool)
 parser.add_argument('--run_test_again', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
-parser.add_argument('--rise', default=1.05, type=float)
+parser.add_argument('--rise', default=1.08, type=float)
 # run.py | 训练正式模型
 parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=True, type=bool)
@@ -131,7 +131,7 @@ class economy_class:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --z_score 2 --weight {weight}'
+                          f' --output_size {self.args.output_size} --divide 19,1 --z_score 1 --weight {weight}'
                           f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
                           f' --batch 64 --epoch {epoch} --lr_start {lr_start} --lr_end_ratio {lr_end_ratio}'
                           f' --lr_end_epoch {epoch} --device {self.args.device}')
@@ -198,12 +198,12 @@ class economy_class:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 2'
+                          f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 1'
                           f' --weight {weight} --weight_again True --model {self.args.model} --lr_start {lr_start}'
                           f' --lr_end_epoch 30 --device {self.args.device}')  # 末尾数据加强训练
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 2'
+                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
                           f' --weight last.pt --weight_again True --model {self.args.model}'
                           f' --model_type {self.args.model_type} --batch 64 --epoch {epoch} --lr_start {lr_start}'
                           f' --lr_end_ratio {lr_end_ratio} --lr_end_epoch {epoch}'

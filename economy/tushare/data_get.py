@@ -27,8 +27,8 @@ class data_get_class:
         self.args = args
         with open(args.number, 'r', encoding='utf-8') as f:
             self.number_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        self.daily_column = ['trade_date', 'open', 'high', 'low', 'close', 'pre_close', 'pct_chg', 'vol']
-        self.daily_name = ['日期', '开盘价', '最高价', '最低价', '收盘价', '昨收价(前复权)', '涨跌幅', '成交量']
+        self.daily_column = ['trade_date', 'open', 'high', 'low', 'close', 'pct_chg', 'vol']
+        self.daily_name = ['日期', '开盘价', '最高价', '最低价', '收盘价', '涨跌幅', '成交量']
         self.daily_basic_column = ['trade_date', 'turnover_rate', 'volume_ratio', 'pe_ttm', 'pb', 'ps_ttm']
         self.daily_basic_name = ['日期', '换手率', '量比', '市盈率ttm', '市净率', '市销率ttm']
         self.moneyflow_column = ['trade_date', 'buy_sm_vol', 'sell_sm_vol', 'buy_md_vol', 'sell_md_vol', 'buy_lg_vol',
