@@ -58,89 +58,73 @@ def data_deal(args):
             df['上证指数'] = shangzheng[-len(df):]
             df['上证成交量'] = shangzheng_vol[-len(df):]
             # 计算指标
-            df_count = pd.DataFrame(df[['开盘价', '最高价', '最低价', '收盘价', '成交量', '上证指数']].values,
-                                    columns=['open', 'high', 'low', 'close', 'volume', '上证指数'], index=df.index)
+            df_count = pd.DataFrame(
+                df[['开盘价', '最高价', '最低价', '收盘价', '成交量', '上证指数', '上证成交量']].values,
+                columns=['open', 'high', 'low', 'close', 'volume', '上证指数', '上证成交量'], index=df.index)
             # 均线
             df['收盘价_SMA_5'] = finta.TA.SMA(df_count, 5, column='close')
             df['收盘价_SMA_10'] = finta.TA.SMA(df_count, 10, column='close')
             df['收盘价_SMA_20'] = finta.TA.SMA(df_count, 20, column='close')
-            df['收盘价_SMA_30'] = finta.TA.SMA(df_count, 30, column='close')
-            df['收盘价_SMA_60'] = finta.TA.SMA(df_count, 60, column='close')
             df['最高价_SMA_5'] = finta.TA.SMA(df_count, 5, column='close')
             df['最高价_SMA_10'] = finta.TA.SMA(df_count, 10, column='close')
             df['最高价_SMA_20'] = finta.TA.SMA(df_count, 20, column='close')
-            df['最高价_SMA_30'] = finta.TA.SMA(df_count, 30, column='close')
-            df['最高价_SMA_60'] = finta.TA.SMA(df_count, 60, column='close')
             df['最低价_SMA_5'] = finta.TA.SMA(df_count, 5, column='close')
             df['最低价_SMA_10'] = finta.TA.SMA(df_count, 10, column='close')
             df['最低价_SMA_20'] = finta.TA.SMA(df_count, 20, column='close')
-            df['最低价_SMA_30'] = finta.TA.SMA(df_count, 30, column='close')
-            df['最低价_SMA_60'] = finta.TA.SMA(df_count, 60, column='close')
             df['成交量_SMA_5'] = finta.TA.SMA(df_count, 5, column='volume')
             df['成交量_SMA_10'] = finta.TA.SMA(df_count, 10, column='volume')
             df['成交量_SMA_20'] = finta.TA.SMA(df_count, 20, column='volume')
-            df['成交量_SMA_30'] = finta.TA.SMA(df_count, 30, column='volume')
-            df['成交量_SMA_60'] = finta.TA.SMA(df_count, 60, column='volume')
             df['上证指数_SMA_5'] = finta.TA.SMA(df_count, 5, column='上证指数')
             df['上证指数_SMA_10'] = finta.TA.SMA(df_count, 10, column='上证指数')
             df['上证指数_SMA_20'] = finta.TA.SMA(df_count, 20, column='上证指数')
-            df['上证指数_SMA_30'] = finta.TA.SMA(df_count, 30, column='上证指数')
-            df['上证指数_SMA_60'] = finta.TA.SMA(df_count, 60, column='上证指数')
+            df['上证成交量_SMA_5'] = finta.TA.SMA(df_count, 5, column='上证成交量')
+            df['上证成交量_SMA_10'] = finta.TA.SMA(df_count, 10, column='上证成交量')
+            df['上证成交量_SMA_20'] = finta.TA.SMA(df_count, 20, column='上证成交量')
             # 指数均线
             df['收盘价_EMA_5'] = finta.TA.EMA(df_count, 5, column='close')
             df['收盘价_EMA_10'] = finta.TA.EMA(df_count, 10, column='close')
             df['收盘价_EMA_20'] = finta.TA.EMA(df_count, 20, column='close')
-            df['收盘价_EMA_30'] = finta.TA.EMA(df_count, 30, column='close')
-            df['收盘价_EMA_60'] = finta.TA.EMA(df_count, 60, column='close')
             df['最高价_EMA_5'] = finta.TA.EMA(df_count, 5, column='close')
             df['最高价_EMA_10'] = finta.TA.EMA(df_count, 10, column='close')
             df['最高价_EMA_20'] = finta.TA.EMA(df_count, 20, column='close')
-            df['最高价_EMA_30'] = finta.TA.EMA(df_count, 30, column='close')
-            df['最高价_EMA_60'] = finta.TA.EMA(df_count, 60, column='close')
             df['最低价_EMA_5'] = finta.TA.EMA(df_count, 5, column='close')
             df['最低价_EMA_10'] = finta.TA.EMA(df_count, 10, column='close')
             df['最低价_EMA_20'] = finta.TA.EMA(df_count, 20, column='close')
-            df['最低价_EMA_30'] = finta.TA.EMA(df_count, 30, column='close')
-            df['最低价_EMA_60'] = finta.TA.EMA(df_count, 60, column='close')
             df['成交量_EMA_5'] = finta.TA.EMA(df_count, 5, column='volume')
             df['成交量_EMA_10'] = finta.TA.EMA(df_count, 10, column='volume')
             df['成交量_EMA_20'] = finta.TA.EMA(df_count, 20, column='volume')
-            df['成交量_EMA_30'] = finta.TA.EMA(df_count, 30, column='volume')
-            df['成交量_EMA_60'] = finta.TA.EMA(df_count, 60, column='volume')
             df['上证指数_EMA_5'] = finta.TA.EMA(df_count, 5, column='上证指数')
             df['上证指数_EMA_10'] = finta.TA.EMA(df_count, 10, column='上证指数')
             df['上证指数_EMA_20'] = finta.TA.EMA(df_count, 20, column='上证指数')
-            df['上证指数_EMA_30'] = finta.TA.EMA(df_count, 30, column='上证指数')
-            df['上证指数_EMA_60'] = finta.TA.EMA(df_count, 60, column='上证指数')
+            df['上证成交量_EMA_5'] = finta.TA.EMA(df_count, 5, column='上证成交量')
+            df['上证成交量_EMA_10'] = finta.TA.EMA(df_count, 10, column='上证成交量')
+            df['上证成交量_EMA_20'] = finta.TA.EMA(df_count, 20, column='上证成交量')
             # 双指数均线
             df['收盘价_DEMA_5'] = finta.TA.DEMA(df_count, 5, column='close')
             df['收盘价_DEMA_10'] = finta.TA.DEMA(df_count, 10, column='close')
             df['收盘价_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='close')
-            df['收盘价_DEMA_30'] = finta.TA.DEMA(df_count, 30, column='close')
-            df['收盘价_DEMA_60'] = finta.TA.DEMA(df_count, 60, column='close')
             df['最高价_DEMA_5'] = finta.TA.DEMA(df_count, 5, column='close')
             df['最高价_DEMA_10'] = finta.TA.DEMA(df_count, 10, column='close')
             df['最高价_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='close')
-            df['最高价_DEMA_30'] = finta.TA.DEMA(df_count, 30, column='close')
-            df['最高价_DEMA_60'] = finta.TA.DEMA(df_count, 60, column='close')
             df['最低价_DEMA_5'] = finta.TA.DEMA(df_count, 5, column='close')
             df['最低价_DEMA_10'] = finta.TA.DEMA(df_count, 10, column='close')
             df['最低价_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='close')
-            df['最低价_DEMA_30'] = finta.TA.DEMA(df_count, 30, column='close')
-            df['最低价_DEMA_60'] = finta.TA.DEMA(df_count, 60, column='close')
             df['成交量_DEMA_5'] = finta.TA.DEMA(df_count, 5, column='volume')
             df['成交量_DEMA_10'] = finta.TA.DEMA(df_count, 10, column='volume')
             df['成交量_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='volume')
-            df['成交量_DEMA_30'] = finta.TA.DEMA(df_count, 30, column='volume')
-            df['成交量_DEMA_60'] = finta.TA.DEMA(df_count, 60, column='volume')
             df['上证指数_DEMA_5'] = finta.TA.DEMA(df_count, 5, column='上证指数')
             df['上证指数_DEMA_10'] = finta.TA.DEMA(df_count, 10, column='上证指数')
             df['上证指数_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='上证指数')
-            df['上证指数_DEMA_30'] = finta.TA.DEMA(df_count, 30, column='上证指数')
-            df['上证指数_DEMA_60'] = finta.TA.DEMA(df_count, 60, column='上证指数')
+            df['上证成交量_DEMA_5'] = finta.TA.DEMA(df_count, 5, column='上证成交量')
+            df['上证成交量_DEMA_10'] = finta.TA.DEMA(df_count, 10, column='上证成交量')
+            df['上证成交量_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='上证成交量')
             # 其他指标
-            df['开盘涨幅'] = df['开盘价'] / df['昨收价(前复权)']
             df['震荡幅度'] = (df_count['high'] - df_count['low']) / df_count['open']
+            # 买单情况
+            df['小单'] = df['小单买入量'] - df['小单卖出量']
+            df['中单'] = df['中单买入量'] - df['中单卖出量']
+            df['大单'] = df['大单买入量'] - df['大单卖出量']
+            df['特大单'] = df['特大单买入量'] - df['特大单卖出量']
             # 补充数据
             df['量比'] = fix(df['量比'].values)
             df['市盈率ttm'] = add_zero(df['市盈率ttm'].values)
@@ -154,7 +138,7 @@ def data_deal(args):
             df.rename(columns={'市净率': 'r市净率'}, inplace=True)
             df.rename(columns={'市销率ttm': 'r市销率ttm'}, inplace=True)
             # 去除不需要的部分
-            df = df[60:]
+            df = df[20:]
             # 保存
             df.to_csv(f'{args.data_dir}/{name}_add.csv', header=True, index=True)
             print(f'| 结果保存至:{args.data_dir}/{name}_add.csv |')
