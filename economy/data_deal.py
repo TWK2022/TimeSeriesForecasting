@@ -13,12 +13,19 @@ args = parser.parse_args()
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
-def fix(data):  # 修复数据中间的单个nan值
+def fix(data, decimal=2):  # 修复数据中的nan值
     judge_list = np.isnan(data)
     if judge_list.any():  # 存在nan值
-        index_list = np.arange(1, len(data) - 1)[judge_list[1:-1]]
+        index_list = np.arange(1, len(data))[judge_list[1:]]
+        index_max = len(judge_list) - 1
         for index in index_list:
-            data[index] = (data[index - 1] + data[index + 1]) / 2
+            index_next = index + 1
+            record = 2
+            while index_next <= index_max and np.isnan(data[index_next]):  # 下一个值也为空
+                index_next += 1
+                record += 1
+            data[index] = data[index - 1] + (data[index_next] - data[index - 1]) / record
+            data[index] = round(data[index], decimal)
     return data
 
 
@@ -62,9 +69,6 @@ def data_deal(args):
                 df[['开盘价', '最高价', '最低价', '收盘价', '成交量', '上证指数', '上证成交量']].values,
                 columns=['open', 'high', 'low', 'close', 'volume', '上证指数', '上证成交量'], index=df.index)
             # 均线
-            df['收盘价_SMA_5'] = finta.TA.SMA(df_count, 5, column='close')
-            df['收盘价_SMA_10'] = finta.TA.SMA(df_count, 10, column='close')
-            df['收盘价_SMA_20'] = finta.TA.SMA(df_count, 20, column='close')
             df['最高价_SMA_5'] = finta.TA.SMA(df_count, 5, column='close')
             df['最高价_SMA_10'] = finta.TA.SMA(df_count, 10, column='close')
             df['最高价_SMA_20'] = finta.TA.SMA(df_count, 20, column='close')
@@ -81,9 +85,6 @@ def data_deal(args):
             df['上证成交量_SMA_10'] = finta.TA.SMA(df_count, 10, column='上证成交量')
             df['上证成交量_SMA_20'] = finta.TA.SMA(df_count, 20, column='上证成交量')
             # 指数均线
-            df['收盘价_EMA_5'] = finta.TA.EMA(df_count, 5, column='close')
-            df['收盘价_EMA_10'] = finta.TA.EMA(df_count, 10, column='close')
-            df['收盘价_EMA_20'] = finta.TA.EMA(df_count, 20, column='close')
             df['最高价_EMA_5'] = finta.TA.EMA(df_count, 5, column='close')
             df['最高价_EMA_10'] = finta.TA.EMA(df_count, 10, column='close')
             df['最高价_EMA_20'] = finta.TA.EMA(df_count, 20, column='close')
@@ -100,9 +101,6 @@ def data_deal(args):
             df['上证成交量_EMA_10'] = finta.TA.EMA(df_count, 10, column='上证成交量')
             df['上证成交量_EMA_20'] = finta.TA.EMA(df_count, 20, column='上证成交量')
             # 双指数均线
-            df['收盘价_DEMA_5'] = finta.TA.DEMA(df_count, 5, column='close')
-            df['收盘价_DEMA_10'] = finta.TA.DEMA(df_count, 10, column='close')
-            df['收盘价_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='close')
             df['最高价_DEMA_5'] = finta.TA.DEMA(df_count, 5, column='close')
             df['最高价_DEMA_10'] = finta.TA.DEMA(df_count, 10, column='close')
             df['最高价_DEMA_20'] = finta.TA.DEMA(df_count, 20, column='close')
@@ -125,8 +123,16 @@ def data_deal(args):
             df['中单'] = df['中单买入量'] - df['中单卖出量']
             df['大单'] = df['大单买入量'] - df['大单卖出量']
             df['特大单'] = df['特大单买入量'] - df['特大单卖出量']
+            # 修复数据
+            df['量比'] = fix(df['量比'].values, 2)
+            df['5分位成本'] = fix(df['5分位成本'].values, 1)
+            df['15分位成本'] = fix(df['15分位成本'].values, 1)
+            df['50分位成本'] = fix(df['50分位成本'].values, 1)
+            df['85分位成本'] = fix(df['85分位成本'].values, 1)
+            df['95分位成本'] = fix(df['95分位成本'].values, 1)
+            df['加权平均成本'] = fix(df['加权平均成本'].values, 2)
+            df['胜率'] = fix(df['胜率'].values, 2)
             # 补充数据
-            df['量比'] = fix(df['量比'].values)
             df['市盈率ttm'] = add_zero(df['市盈率ttm'].values)
             df['市净率'] = add_zero(df['市净率'].values)
             df['市销率ttm'] = add_zero(df['市销率ttm'].values)
