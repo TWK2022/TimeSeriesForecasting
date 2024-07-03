@@ -12,7 +12,7 @@ parser = argparse.ArgumentParser(description='|通过tushare获取最新股票�
 parser.add_argument('--token', default='', type=str, help='|密钥|')
 parser.add_argument('--save_path', default='../dataset', type=str, help='|数据保存的目录|')
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
-parser.add_argument('--start_time', default='20170101', type=str, help='|开始时间|')
+parser.add_argument('--start_time', default='20180101', type=str, help='|开始时间|')
 parser.add_argument('--end_time', default='20240701', type=str, help='|结束时间|')
 parser.add_argument('--frequency', default=200, type=int, help='|API每分钟可以调取的频率|')
 args = parser.parse_args()
@@ -35,6 +35,10 @@ class data_get_class:
                                  'sell_lg_vol', 'buy_elg_vol', 'sell_elg_vol', 'net_mf_vol', 'trade_count']
         self.moneyflow_name = ['日期', '小单买入量', '小单卖出量', '中单买入量', '中单卖出量', '大单买入量',
                                '大单卖出量', '特大单买入量', '特大单卖出量', '净流入量', '交易笔数']
+        self.distribution_column = ['trade_date', 'cost_5pct', 'cost_15pct', 'cost_50pct', 'cost_85pct', 'cost_95pct',
+                                    'weight_avg', 'winner_rate']
+        self.distribution_name = ['日期', '5分位成本', '15分位成本', '50分位成本', '85分位成本', '95分位成本',
+                                  '加权平均成本', '胜率']
 
     def data_get(self):
         tushare.set_token(self.args.token)  # 设置密钥
@@ -80,29 +84,37 @@ class data_get_class:
 
     def _tushare_to_df(self, pro, industry_dict, key, start_time):
         start_time = start_time.replace('-', '')
+        ts_code = industry_dict[key]
         # 基础信息
-        df = pro.daily(ts_code=industry_dict[key], start_date=start_time,
+        df = pro.daily(ts_code=ts_code, start_date=start_time,
                        end_date=self.args.end_time, fields=self.daily_column)
         df.columns = self.daily_name
         df.index = pd.DatetimeIndex(df['日期'].values)
         df = df.drop(columns='日期')
         df = df.sort_index()
         # 指标
-        df_ = pro.daily_basic(ts_code=industry_dict[key], start_date=start_time, end_date=self.args.end_time,
+        df_ = pro.daily_basic(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
                               fields=self.daily_basic_column)
         df_.columns = self.daily_basic_name
         df_.index = pd.DatetimeIndex(df_['日期'].values)
         df_ = df_.drop(columns='日期')
         df_ = df_.sort_index()
         # 资金流向
-        df__ = pro.moneyflow(ts_code=industry_dict[key], start_date=start_time, end_date=self.args.end_time,
+        df__ = pro.moneyflow(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
                              fields=self.moneyflow_column)
         df__.columns = self.moneyflow_name
         df__.index = pd.DatetimeIndex(df__['日期'].values)
         df__ = df__.drop(columns='日期')
         df__ = df__.sort_index()
+        # 筹码分布
+        df___ = pro.cyq_perf(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
+                             fields=self.distribution_column)
+        df___.columns = self.distribution_name
+        df___.index = pd.DatetimeIndex(df___['日期'].values)
+        df___ = df___.drop(columns='日期')
+        df___ = df___.sort_index()
         # 合并
-        df = pd.concat([df, df_, df__], axis=1)
+        df = pd.concat([df, df_, df__, df___], axis=1)
         return df
 
 

@@ -10,7 +10,7 @@ parser.add_argument('--yaml_path', default='number_all.yaml', type=str, help='|�
 parser.add_argument('--reserve_path', default='reserve.yaml', type=str, help='|自选股票信息(可选)|')
 parser.add_argument('--remove_path', default='remove.yaml', type=str, help='|要去除的股票信息(可选)|')
 parser.add_argument('--save_path', default='number.yaml', type=str, help='|保存位置|')
-parser.add_argument('--industry', default='互联网,电气设备,通信设备,半导体,汽车整车', type=str, help='|行业，必选，如"A,B,C"|')
+parser.add_argument('--industry', default='互联网,电气设备,通信设备,半导体,小金属,铜,铅锌,黄金', type=str, help='|行业，必选，如"A,B,C"|')
 parser.add_argument('--area', default='', type=str, help='|地区，空则不筛选，如"A、B、C"|')
 parser.add_argument('--time', default='20240101', type=str, help='|上市时间，筛选time之前的，空则不筛选|')
 parser.add_argument('--type', default='', type=str, help='|企业类型，有其他、中央国企、地方国企，空则不筛选|')
