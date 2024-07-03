@@ -119,12 +119,12 @@ class economy_class:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
                 weight = model_path
-                epoch = 80
+                epoch = 50
                 lr_start = 0.001
                 lr_end_ratio = 0.001
                 if os.path.exists(model_path):
                     if self.args.run_test_again or not model_dict.get(name):
-                        epoch = 50
+                        epoch = 30
                         lr_start = 0.0001
                         lr_end_ratio = 0.01
                     else:
