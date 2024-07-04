@@ -19,7 +19,7 @@ parser.add_argument('--input_column', default='input_column.txt', type=str)
 parser.add_argument('--output_column', default='最高价,最低价', type=str)
 parser.add_argument('--input_size', default=96, type=int)
 parser.add_argument('--output_size', default=12, type=int)
-parser.add_argument('--model', default='itransformer', type=str)
+parser.add_argument('--model', default='special_add', type=str)
 parser.add_argument('--model_type', default='l', type=str)
 parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
@@ -44,7 +44,6 @@ parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=True, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
-parser.add_argument('--next_open', default=1.00, type=float)
 parser.add_argument('--draw_threshold', default=1.08, type=float)
 args = parser.parse_args()
 
@@ -189,29 +188,29 @@ class economy_class:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
                 weight = model_path
-                epoch = 80
+                epoch = 50
                 lr_start = 0.001
                 lr_end_ratio = 0.001
                 if os.path.exists(model_path):
                     if self.args.run_again:
-                        epoch = 50
+                        epoch = 30
                         lr_start = 0.0001
                         lr_end_ratio = 0.01
                     else:
                         continue
                 os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
                           f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 1'
-                          f' --weight {weight} --weight_again True --model {self.args.model}'
-                          f' --model_type {self.args.model_type} --batch 64 --epoch 30 --lr_start {lr_start}'
-                          f' --lr_end_epoch 30 --lr_end_epoch {epoch} --device {self.args.device}')  # 末尾数据加强训练
-                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
                           f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
-                          f' --weight last.pt --weight_again True --model {self.args.model}'
+                          f' --weight {weight} --weight_again True --model {self.args.model}'
                           f' --model_type {self.args.model_type} --batch 64 --epoch {epoch} --lr_start {lr_start}'
                           f' --lr_end_ratio {lr_end_ratio} --lr_end_epoch {epoch}'
                           f' --device {self.args.device}')  # 所有数据训练
+                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
+                          f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
+                          f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 1'
+                          f' --weight last.pt --weight_again True --model {self.args.model}'
+                          f' --model_type {self.args.model_type} --batch 64 --epoch 30 --lr_start 0.0001'
+                          f' --lr_end_epoch 30 --lr_end_ratio 0.01 --device {self.args.device}')  # 末尾数据加强训练
                 shutil.move('last.pt', model_path)
                 # 记录模型信息
                 df = pd.read_csv(data_path, index_col=0)
@@ -236,21 +235,16 @@ class economy_class:
                 dict_ = torch.load(model_path, map_location='cpu')
                 model = dict_['model']
                 model = deploy(model, dict_['mean_input'], dict_['mean_output'], dict_['std_input'],
-                               dict_['std_output'], dict_['mean_special'], dict_['std_special']).eval()
+                               dict_['std_output']).eval()
                 df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
                 input_data = np.array(df[input_column]).astype(np.float32).T
                 input_data = input_data[:, -self.args.input_size:]
-                close_data = np.array(df['收盘价']).astype(np.float32)[-100:]
                 high_data = np.array(df['最高价']).astype(np.float32)[-100:]
                 low_data = np.array(df['最低价']).astype(np.float32)[-100:]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
-                special = torch.tensor(self.args.next_open * close_data[-2:-1])  # 设置第2天开盘价
                 # 推理
                 with torch.no_grad():
-                    if 'special' in self.args.model:
-                        pred = model(tensor, special)[0].cpu().numpy()
-                    else:
-                        pred = model(tensor)[0].cpu().numpy()
+                    pred = model(tensor)[0].cpu().numpy()
                 pred_high = pred[0]
                 pred_low = pred[1]
                 # 画图
@@ -270,10 +264,10 @@ class economy_class:
         plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
         plt.title(name)
         plt.grid()
-        plt.plot(high_data, color='red', label='true_high')
         plt.plot(low_data, color='green', label='true_low')
-        plt.plot(pred_high, color='red', label='pred_high')
+        plt.plot(high_data, color='red', label='true_high')
         plt.plot(pred_low, color='green', label='pred_low')
+        plt.plot(pred_high, color='red', label='pred_high')
         plt.savefig(save_path)
         plt.close()
         print(f'| 画图保存位置:{save_path} |')
