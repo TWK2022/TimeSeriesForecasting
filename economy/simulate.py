@@ -13,7 +13,6 @@ from block.util import read_column
 # 实际买入和卖出时的股价存在误差
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|测试|')
-parser.add_argument('--special', default=False, type=bool, help='|特殊模型|')
 parser.add_argument('--model_path', default='../last.pt', type=str, help='|pt模型位置|')
 parser.add_argument('--data_path', default=r'dataset/XX_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
@@ -45,8 +44,7 @@ class project_class:
         model_dict = torch.load(model_path, map_location='cpu')
         model = model_dict['model']
         self.model = deploy(model, model_dict['mean_input'], model_dict['mean_output'], model_dict['std_input'],
-                            model_dict['std_output'], model_dict['mean_special'],
-                            model_dict['std_special']).eval().to(self.args.device)
+                            model_dict['std_output']).eval().to(self.args.device)
         print(f'| 模型:{model_path} | train_loss:{model_dict["train_loss"]:.4f} |'
               f'val_loss:{model_dict["val_loss"]:.4f} |')
         # 数据
@@ -77,11 +75,7 @@ class project_class:
             for index in range(self.args.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
                 tensor = torch.tensor(self.input_data[:, index - self.args.input_size:index]
                                       ).unsqueeze(0).to(self.args.device)
-                special = torch.tensor(self.open_data[index:index + 1]).to(self.args.device)
-                if self.args.special:
-                    pred = self.model(tensor, special)[0].cpu().numpy()
-                else:
-                    pred = self.model(tensor)[0].cpu().numpy()
+                pred = self.model(tensor)[0].cpu().numpy()
                 pred_high = pred[0]
                 pred_low = pred[1]
                 if self.state == 0:  # 准备买入
