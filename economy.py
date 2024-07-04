@@ -288,11 +288,11 @@ class economy_class:
         plt.close()
 
     def _image_merge(self, path1, path2):
-        image1 = PIL.Image.open(path1).resize((800, 400))
-        image2 = PIL.Image.open(path2).resize((800, 400))
-        image = PIL.Image.new('RGB', (800, 800), (0, 0, 0))
+        image1 = PIL.Image.open(path1).resize((1000, 500))
+        image2 = PIL.Image.open(path2).resize((1000, 500))
+        image = PIL.Image.new('RGB', (1000, 1000), (0, 0, 0))
         image.paste(image1, (0, 0))
-        image.paste(image2, (0, 400))
+        image.paste(image2, (0, 500))
         image.save(path1)
 
 
