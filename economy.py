@@ -145,9 +145,11 @@ class economy_class:
                     model_dict[name][0], model_dict[name][1] = time, mae_true
                 else:
                     model_dict[name] = [time, mae_true, None, None]
-                with open('economy/model.yaml', 'w', encoding='utf-8') as f:
+                with open('economy/_.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True)
                 del dict_, df
+        # 最后再复制，防止linux中断开导致model.yaml损坏
+        shutil.move('_.yaml', 'model.yaml')
 
     def _simulate(self):
         print('simulate.py')
@@ -169,8 +171,10 @@ class economy_class:
                 income_mean = round(float(log[1].strip()[8:]), 2)
                 # 记录模型信息
                 model_dict[name][2] = income_mean
-                with open('model.yaml', 'w', encoding='utf-8') as f:
+                with open('_.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True)
+        # 最后再复制，防止linux中断开导致model.yaml损坏
+        shutil.move('_.yaml', 'model.yaml')
 
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
         print('run.py | 训练正式模型')
@@ -214,8 +218,10 @@ class economy_class:
                 df = pd.read_csv(data_path, index_col=0)
                 time = str(df.index[-1])
                 model_dict[name][3] = time
-                with open('economy/model.yaml', 'w', encoding='utf-8') as f:
+                with open('economy/_.yaml', 'w', encoding='utf-8') as f:
                     yaml.dump(model_dict, f, allow_unicode=True)
+        # 最后再复制，防止linux中断开导致model.yaml损坏
+        shutil.move('_.yaml', 'model.yaml')
 
     def _feature(self, data_dir='economy/dataset', model_dir='economy/model'):
         if not os.path.exists('save_image'):
