@@ -105,9 +105,9 @@ class project_class:
         buy_value = next_low + self.args.buy_scale * (next_high - next_low)  # 实际买入价格
         pred_sell = pred_low + self.args.buy_scale * (pred_high - pred_low)  # 预测卖出价格
         # b模型策略
-        if buy_value * self.args.rise > np.max(pred_sell[0:3]):  # 预测上涨幅度不大，先不买入
+        if buy_value * self.args.rise > np.mean(pred_sell[0:3]):  # 预测上涨幅度不大，先不买入
             return
-        if buy_value > np.mean(pred_sell[0:3]):  # 预测还有下降空间，先不买入
+        if pred_sell[0] > np.max(pred_sell[1:3]):  # 预测上涨概率不大，先不买入
             return
         # 买入
         self.state = 1
@@ -119,7 +119,7 @@ class project_class:
         sell_value = next_high - self.args.sell_scale * (next_high - next_low)  # 实际卖出价格
         pred_sell = pred_low + self.args.buy_scale * (pred_high - pred_low)  # 预测卖出价格
         # b模型策略
-        if sell_value < np.mean(pred_sell[0:3]):  # 预测还有上升空间，先不卖出
+        if sell_value < np.mean(pred_sell[0:3]) and pred_sell[0] < np.max(pred_sell[1:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0
