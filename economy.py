@@ -248,10 +248,12 @@ class economy_class:
                 pred_high = pred[0]
                 pred_low = pred[1]
                 # 画图
-                ratio = np.max(pred_high[0:3]) / high_data[-1]
-                if ratio > self.args.draw_threshold or industry == '自选':  # 有上涨空间或自选股票
+                ratio = np.mean(pred_high[0:3]) / high_data[-1]  # 上涨幅度
+                probability = np.max(pred_high[1:3]) / pred_high[0]  # 上涨概率
+                if industry == '自选' or (ratio > self.args.draw_threshold and probability > 1):  # 有上涨空间或自选股票
                     last_day = str(df.index[-1])
-                    save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{model_dict[name][2]}.jpg'
+                    save_path = (f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{probability:.2f}__'
+                                 f'{model_dict[name][2]}.jpg')
                     self._draw(pred_high, pred_low, high_data, low_data, f'{last_day}_{name}', save_path)
                     self._draw_prophet(df)
                     self._image_merge(save_path, 'save_image/_.jpg')
