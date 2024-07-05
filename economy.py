@@ -24,7 +24,7 @@ parser.add_argument('--model_type', default='l', type=str)
 parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='互联网,电气设备,通信设备,半导体,小金属,铜,铅锌,黄金,百货', type=str)
+parser.add_argument('--industry', default='互联网,电气设备,通信设备,半导体,小金属,铜,铅锌,黄金', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -38,13 +38,15 @@ parser.add_argument('--run_test', default=False, type=bool)
 parser.add_argument('--run_test_again', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
-parser.add_argument('--rise', default=1.08, type=float)
+parser.add_argument('--rise', default=1.02, type=float)
+parser.add_argument('--rise_max', default=1.07, type=float)
 # run.py | 训练正式模型
 parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=True, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
-parser.add_argument('--draw_threshold', default=1.08, type=float)
+parser.add_argument('--threshold', default=1.02, type=float)
+parser.add_argument('--threshold_max', default=1.07, type=float)
 args = parser.parse_args()
 
 
@@ -161,7 +163,7 @@ class economy_class:
                 data_path = f'dataset/{name}_add.csv'
                 os.system(f'python simulate.py --model_path {model_path} --data_path {data_path}'
                           f' --input_size {self.args.input_size} --output_size {self.args.output_size}'
-                          f' --rise {self.args.rise} --device {self.args.device}')
+                          f' --rise {self.args.rise} --rise_max {self.args.rise_max} --device {self.args.device}')
                 # 打开日志
                 with open('log.txt', 'r', encoding='utf-8') as f:
                     log = f.readlines()
@@ -249,11 +251,9 @@ class economy_class:
                 pred_low = pred[1]
                 # 画图
                 ratio = np.mean(pred_high[0:3]) / high_data[-1]  # 上涨幅度
-                probability = np.max(pred_high[1:3]) / pred_high[0]  # 上涨概率
-                if industry == '自选' or (ratio > self.args.draw_threshold and probability > 1):  # 有上涨空间或自选股票
+                if industry == '自选' or self.args.threshold < ratio < self.args.threshold_max:  # 自选股票或有上涨空间
                     last_day = str(df.index[-1])
-                    save_path = (f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{probability:.2f}__'
-                                 f'{model_dict[name][2]}.jpg')
+                    save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{model_dict[name][2]}.jpg'
                     self._draw(pred_high, pred_low, high_data, low_data, f'{last_day}_{name}', save_path)
                     self._draw_prophet(df)
                     self._image_merge(save_path, 'save_image/_.jpg')
