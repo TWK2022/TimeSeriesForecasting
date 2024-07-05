@@ -20,9 +20,10 @@ parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--output_size', default=12, type=int, help='|输出长度|')
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
 parser.add_argument('--device', default='cuda', type=str, help='|推理设备|')
-parser.add_argument('--rise', default=1.1, type=float, help='|上涨预期，大于预期才会买入，数值越大越保险，基准为1.1|')
-parser.add_argument('--buy_scale', default=0.3, type=float, help='|买入价格估算=最低价+buy_scale*波动|')
-parser.add_argument('--sell_scale', default=0.3, type=float, help='|卖出价格估算=最高价-sell_scale*波动|')
+parser.add_argument('--rise', default=1.02, type=float, help='|上涨预期，大于预期才会买入|')
+parser.add_argument('--rise_max', default=1.07, type=float, help='|上涨异常值，小于异常值才会买入，通常是一直大跌的股|')
+parser.add_argument('--buy_scale', default=0.4, type=float, help='|买入价格估算=最低价+buy_scale*波动|')
+parser.add_argument('--sell_scale', default=0.6, type=float, help='|卖出价格估算=最低价+sell_scale*波动|')
 parser.add_argument('--a', default=True, type=bool, help='|使用人为策略|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
@@ -103,11 +104,11 @@ class project_class:
         next_high = self.high_data[index]
         next_low = self.low_data[index]
         buy_value = next_low + self.args.buy_scale * (next_high - next_low)  # 实际买入价格
-        pred_sell = pred_low + self.args.buy_scale * (pred_high - pred_low)  # 预测卖出价格
+        pred_sell = pred_low + self.args.sell_scale * (pred_high - pred_low)  # 预测卖出价格
         # b模型策略
         if buy_value * self.args.rise > np.mean(pred_sell[0:3]):  # 预测上涨幅度不大，先不买入
             return
-        if pred_sell[0] > np.max(pred_sell[1:3]):  # 预测上涨概率不大，先不买入
+        if buy_value * self.args.rise_max < np.mean(pred_sell[0:3]):  # 预测上涨异常，可能股票因某种原因大跌，先不买入
             return
         # 买入
         self.state = 1
@@ -116,10 +117,10 @@ class project_class:
     def _sell(self, index, pred_high, pred_low):
         next_high = self.high_data[index]
         next_low = self.low_data[index]
-        sell_value = next_high - self.args.sell_scale * (next_high - next_low)  # 实际卖出价格
-        pred_sell = pred_low + self.args.buy_scale * (pred_high - pred_low)  # 预测卖出价格
+        sell_value = next_low + self.args.sell_scale * (next_high - next_low)  # 实际卖出价格
+        pred_sell = pred_low + self.args.sell_scale * (pred_high - pred_low)  # 预测卖出价格
         # b模型策略
-        if sell_value < np.mean(pred_sell[0:3]) and pred_sell[0] < np.max(pred_sell[1:3]):  # 预测还有上升空间，先不卖出
+        if sell_value < 1.01 * np.mean(pred_sell[0:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0
@@ -136,8 +137,8 @@ class project_class:
         income_sum = np.sum(value / buy) if len(buy) else 0
         income_mean = np.mean(value / buy) if len(buy) else 0
         fault = value[np.where(value < 0, True, False)]
-        print(f'| {name} | rise:{self.args.rise} | 总收益率:{income_sum:.2f} | 单次操作收益率:{income_mean:.2f} |'
-              f' 操作次数:{len(value)} | 亏损次数:{len(fault)} | 最后是否持有:{sell_last} |')
+        print(f'| {name} | rise:{self.args.rise} | rise_max:{self.args.rise_max} | 总收益率:{income_sum:.2f} |'
+              f' 单次操作收益率:{income_mean:.2f} | 操作次数:{len(value)} | 亏损次数:{len(fault)} | 最后是否持有:{sell_last} |')
         # 记录日志
         if record:
             with open('log.txt', 'w', encoding='utf-8') as f:
