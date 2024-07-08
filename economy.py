@@ -39,14 +39,14 @@ parser.add_argument('--run_test_again', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
 parser.add_argument('--rise', default=1.02, type=float)
-parser.add_argument('--rise_max', default=1.07, type=float)
+parser.add_argument('--rise_max', default=1.05, type=float)
 # run.py | 训练正式模型
 parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=True, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
 parser.add_argument('--threshold', default=1.02, type=float)
-parser.add_argument('--threshold_max', default=1.07, type=float)
+parser.add_argument('--threshold_max', default=1.05, type=float)
 args = parser.parse_args()
 
 

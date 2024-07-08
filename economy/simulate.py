@@ -21,7 +21,7 @@ parser.add_argument('--output_size', default=12, type=int, help='|输出长度|'
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
 parser.add_argument('--device', default='cuda', type=str, help='|推理设备|')
 parser.add_argument('--rise', default=1.02, type=float, help='|上涨预期，大于预期才会买入|')
-parser.add_argument('--rise_max', default=1.07, type=float, help='|上涨异常值，小于异常值才会买入，通常是一直大跌的股|')
+parser.add_argument('--rise_max', default=1.05, type=float, help='|上涨异常值，小于异常值才会买入，通常是一直大跌的股|')
 parser.add_argument('--buy_scale', default=0.4, type=float, help='|买入价格估算=最低价+buy_scale*波动|')
 parser.add_argument('--sell_scale', default=0.6, type=float, help='|卖出价格估算=最低价+sell_scale*波动|')
 parser.add_argument('--a', default=True, type=bool, help='|使用人为策略|')
