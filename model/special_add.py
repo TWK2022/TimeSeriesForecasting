@@ -1,13 +1,13 @@
 # 特殊模型
 import torch
-from model.itransformer import itransformer
+from model.tsf import tsf
 
 
 class special_add(torch.nn.Module):
     def __init__(self, args, model=None):
         super().__init__()
         # 网络结构
-        self.model = model(args) if model else itransformer(args)
+        self.model = model(args) if model else tsf(args)
 
     def forward(self, x, special=None):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         series_last = torch.mean(x[:, [0, 1], -3:], dim=2, keepdim=True)
