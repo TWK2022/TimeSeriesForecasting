@@ -24,10 +24,11 @@
 >学习笔记：https://github.com/TWK2022/notebook
 ***
 ### ETTh1.csv
-|    模型(m)     | input_column | output_column | input_size | output_size | train_mse_decay | val_mse |
-|:------------:|:------------:|:-------------:|:----------:|:-----------:|:---------------:|:-------:|
-| crossformer  |     all      |      all      |     96     |     24      |      0.264      |  0.282  |
-| itransformer |     all      |      all      |     96     |     24      |      0.224      |  0.265  |
-|     lstm     |     all      |      all      |     96     |     24      |      0.307      |  0.304  |
-|   nlinear    |     all      |      all      |     96     |     24      |      0.249      |  0.266  |
-|  pathformer  |     all      |      all      |     96     |     24      |      0.254      |  0.297  |
+|    模型(m)     | input_column | output_column | input_size | output_size | divide | train_mse_decay | val_mse |
+|:------------:|:------------:|:-------------:|:----------:|:-----------:|:------:|:---------------:|:-------:|
+|     tsf      |     all      |      all      |     96     |     24      |  19:1  |      0.222      |  0.260  |
+| crossformer  |     all      |      all      |     96     |     24      |  19:1  |      0.264      |  0.282  |
+| itransformer |     all      |      all      |     96     |     24      |  19:1  |      0.224      |  0.265  |
+|     lstm     |     all      |      all      |     96     |     24      |  19:1  |      0.307      |  0.304  |
+|   nlinear    |     all      |      all      |     96     |     24      |  19:1  |      0.249      |  0.266  |
+|  pathformer  |     all      |      all      |     96     |     24      |  19:1  |      0.254      |  0.297  |
