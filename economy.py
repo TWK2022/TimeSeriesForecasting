@@ -47,6 +47,7 @@ parser.add_argument('--run_again', default=True, type=bool)
 parser.add_argument('--feature', default=False, type=bool)
 parser.add_argument('--threshold', default=1.02, type=float)
 parser.add_argument('--threshold_max', default=1.05, type=float)
+parser.add_argument('--simulate_score', default=0, type=float)
 args = parser.parse_args()
 
 
@@ -251,9 +252,11 @@ class economy_class:
                 pred_low = pred[1]
                 # 画图
                 ratio = np.mean(pred_high[0:3]) / high_data[-1]  # 上涨幅度
-                if industry == '自选' or self.args.threshold < ratio < self.args.threshold_max:  # 自选股票或有上涨空间
+                simulate_score = model_dict[name][2]
+                if industry == '自选' or (self.args.threshold < ratio < self.args.threshold_max
+                                          and simulate_score > self.args.simulate_score):  # 自选股票或有上涨空间
                     last_day = str(df.index[-1])
-                    save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{model_dict[name][2]}.jpg'
+                    save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{simulate_score}.jpg'
                     self._draw(pred_high, pred_low, high_data, low_data, f'{last_day}_{name}', save_path)
                     self._draw_prophet(df)
                     self._image_merge(save_path, 'save_image/_.jpg')
