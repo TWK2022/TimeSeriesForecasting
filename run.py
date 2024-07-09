@@ -29,7 +29,7 @@ parser.add_argument('--z_score', default=0, type=int, help='|计算mean和std的
 parser.add_argument('--weight', default='last.pt', type=str, help='|已有模型的位置，如果没找到模型则会创建新模型|')
 parser.add_argument('--weight_again', default=False, type=bool, help='|True时会重置学习率等状态，在weight上重新训练|')
 parser.add_argument('--save_path', default='best.pt', type=str, help='|保存最佳模型，除此之外每轮还会保存last.pt|')
-parser.add_argument('--model', default='itransformer', type=str, help='|自定义模型选择|')
+parser.add_argument('--model', default='tsf', type=str, help='|自定义模型选择|')
 parser.add_argument('--model_type', default='m', type=str, help='|自定义模型型号|')
 parser.add_argument('--epoch', default=100, type=int, help='|训练总轮数(包含之前已训练轮数)|')
 parser.add_argument('--batch', default=64, type=int, help='|训练批量大小，分布式时为总批量|')
