@@ -2,17 +2,14 @@ import math
 import torch
 
 
-class llg(torch.nn.Module):
-    def __init__(self, feature_in, feature_out):
+class rms_normalization(torch.nn.Module):
+    def __init__(self, feature):
         super().__init__()
-        self.linear = torch.nn.Linear(feature_in, feature_out, bias=False)
-        self.ln = torch.nn.LayerNorm(feature_out)
-        self.gelu = torch.nn.GELU()
+        self.weight = torch.nn.Parameter(torch.ones(feature))
 
-    def forward(self, x):  # (batch,dim,feature_in) -> (batch,dim,feature_out)
-        x = self.linear(x)
-        x = self.ln(x)
-        x = self.gelu(x)
+    def forward(self, x):
+        x = x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + 1e-6).type_as(x)
+        x = x * self.weight
         return x
 
 
@@ -30,12 +27,26 @@ class lgl(torch.nn.Module):
         return x
 
 
+class llg(torch.nn.Module):
+    def __init__(self, feature_in, feature_out):
+        super().__init__()
+        self.linear = torch.nn.Linear(feature_in, feature_out, bias=False)
+        self.ln = rms_normalization(feature_out)
+        self.gelu = torch.nn.GELU()
+
+    def forward(self, x):  # (batch,dim,feature_in) -> (batch,dim,feature_out)
+        x = self.linear(x)
+        x = self.ln(x)
+        x = self.gelu(x)
+        return x
+
+
 class clg(torch.nn.Module):
     def __init__(self, dim_in, dim_out, feature, kernel_size, stride):
         super().__init__()
         self.conv1d = torch.nn.Conv1d(dim_in, dim_out, kernel_size=kernel_size, stride=stride,
                                       padding=(kernel_size - 1) // 2, bias=False)
-        self.ln = torch.nn.LayerNorm(feature)
+        self.ln = rms_normalization(feature)
         self.gelu = torch.nn.GELU()
 
     def forward(self, x):  # (batch,dim_in,feature) -> (batch,dim_out,feature)
@@ -46,7 +57,7 @@ class clg(torch.nn.Module):
 
 
 class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
-    def __init__(self, head, feature, bias=False, dropout=0):
+    def __init__(self, head, feature, bias=False, dropout=0.2):
         super().__init__()
         assert feature % head == 0
         self.head = head
@@ -75,7 +86,7 @@ class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
 
 
 class group_query_attention(torch.nn.Module):
-    def __init__(self, head, feature, group, bias=False, dropout=0):
+    def __init__(self, head, feature, group=4, bias=False, dropout=0.2):
         super().__init__()
         assert feature % head == 0
         assert head % group == 0
