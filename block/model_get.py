@@ -11,7 +11,8 @@ def model_get(args):
             model_dict['ema_updates'] = 0  # ema参数
             model_dict['standard'] = 999  # 评价指标
     else:
-        choice_dict = {'crossformer': 'model_prepare(args).crossformer()',
+        choice_dict = {'tsf': 'model_prepare(args).tsf()',
+                       'crossformer': 'model_prepare(args).crossformer()',
                        'diffusion_ts': 'model_prepare(args).diffusion_ts()',
                        'itransformer': 'model_prepare(args).itransformer()',
                        'linear': 'model_prepare(args).linear()',
@@ -33,6 +34,11 @@ def model_get(args):
 class model_prepare:
     def __init__(self, args):
         self.args = args
+
+    def tsf(self):
+        from model.tsf import tsf
+        model = tsf(self.args)
+        return model
 
     def crossformer(self):
         from model.crossformer import crossformer
