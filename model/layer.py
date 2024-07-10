@@ -62,12 +62,12 @@ class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
         assert feature % head == 0
         self.head = head
         self.divisor = math.sqrt(feature // head)
-        self.query = torch.nn.Linear(feature, feature, bias=bias)
-        self.key = torch.nn.Linear(feature, feature, bias=bias)
-        self.value = torch.nn.Linear(feature, feature, bias=bias)
+        self.query = torch.nn.Linear(feature, feature, bias=False)
+        self.key = torch.nn.Linear(feature, feature, bias=False)
+        self.value = torch.nn.Linear(feature, feature, bias=False)
         self.softmax = torch.nn.Softmax(dim=-1)
         self.dropout = torch.nn.Dropout(dropout)
-        self.linear = torch.nn.Linear(feature, feature, bias=True)
+        self.linear = torch.nn.Linear(feature, feature, bias=bias)
 
     def forward(self, query, key, value):  # 3*(batch,dim,feature) -> (batch,dim,feature)。key和value的dim可以与query不同
         batch, dim, feature = query.shape
@@ -93,12 +93,12 @@ class group_query_attention(torch.nn.Module):
         self.head = head
         self.group = group
         self.divisor = math.sqrt(feature // head)
-        self.query = torch.nn.Linear(feature, feature, bias=bias)
-        self.key = torch.nn.Linear(feature, feature // group, bias=bias)
-        self.value = torch.nn.Linear(feature, feature // group, bias=bias)
+        self.query = torch.nn.Linear(feature, feature, bias=False)
+        self.key = torch.nn.Linear(feature, feature // group, bias=False)
+        self.value = torch.nn.Linear(feature, feature // group, bias=False)
         self.softmax = torch.nn.Softmax(dim=-1)
         self.dropout = torch.nn.Dropout(dropout)
-        self.linear = torch.nn.Linear(feature, feature, bias=True)
+        self.linear = torch.nn.Linear(feature, feature, bias=bias)
 
     def forward(self, query, key, value):  # 3*(batch,dim,feature) -> (batch,dim,feature)。key和value的dim可以与query不同
         batch, dim, feature = query.shape
