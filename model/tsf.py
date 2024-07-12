@@ -1,12 +1,13 @@
 # 多变量异标签
 import torch
-from model.layer import rms_normalization, group_query_attention, split_linear
+from model.layer import rms_normalization, rotary_position, group_query_attention, split_linear
 
 
 class encode_block(torch.nn.Module):
-    def __init__(self, head, feature):
+    def __init__(self, dim, feature, head):
         super().__init__()
-        self.attention = group_query_attention(head, feature, dropout=0.2)
+        position = rotary_position(dim, feature // head)
+        self.attention = group_query_attention(feature, head, dropout=0.2, position=position)
         self.conv1d1 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.conv1d2 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.activation = torch.nn.GELU()
@@ -38,8 +39,8 @@ class tsf(torch.nn.Module):
         head = 8
         # 网络结构
         self.l0 = torch.nn.Linear(input_size, feature)
-        self.l1 = encode_block(head, feature)
-        self.l2 = encode_block(head, feature)
+        self.l1 = encode_block(input_dim, feature, head)
+        self.l2 = encode_block(input_dim, feature, head)
         self.l3 = torch.nn.Linear(feature, output_size)
         self.l4 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
         self.l5 = split_linear(output_dim, output_size)
@@ -48,9 +49,9 @@ class tsf(torch.nn.Module):
         x = self.l0(x)  # (batch,input_dim,feature)
         x = self.l1(x)
         x = self.l2(x)
-        x = self.l3(x)  # (batch,input_dim,output_size)
-        x = self.l4(x)  # (batch,output_dim,output_size)
-        x = self.l5(x)
+        x = self.l3(x)
+        x = self.l4(x)  # (batch,input_dim,output_size)
+        x = self.l5(x)  # (batch,output_dim,output_size)
         return x
 
 
