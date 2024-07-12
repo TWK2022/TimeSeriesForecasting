@@ -56,8 +56,41 @@ class clg(torch.nn.Module):
         return x
 
 
+class position(torch.nn.Module):
+    def __init__(self, dim, feature):
+        super().__init__()
+        assert feature % 2 == 0
+        dim_index = torch.arange(0, dim).unsqueeze(1).repeat(1, feature // 2)
+        feature_index = torch.arange(0, feature, 2)
+        half = dim_index / torch.pow(10000, (feature_index / feature))
+        self.position = torch.zeros(dim, feature, dtype=torch.float32)
+        self.position[:, 0::2] = torch.sin(half)
+        self.position[:, 1::2] = torch.cos(half)
+
+    def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
+        x = x + self.position.type(x.dtype).to(x.device)
+        return x
+
+
+class rotary_position(torch.nn.Module):
+    def __init__(self, dim, feature):
+        super().__init__()
+        assert feature % 2 == 0
+        dim_index = torch.arange(0, dim).unsqueeze(1).repeat(1, feature // 2)
+        feature_index = torch.arange(0, feature, 2)
+        half = dim_index / torch.pow(10000, (feature_index / feature))
+        merge = torch.concat([half, half], dim=1)
+        self.position_sin = torch.sin(merge)
+        self.position_cos = torch.cos(merge)
+
+    def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
+        x_sin = torch.concat([-x[:, :, x.shape[2] // 2:], x[:, :, :x.shape[2] // 2]], dim=2)
+        x = x_sin * self.position_sin.type(x.dtype).to(x.device) + x * self.position_cos.type(x.dtype).to(x.device)
+        return x
+
+
 class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
-    def __init__(self, head, feature, bias=False, dropout=0.2):
+    def __init__(self, feature, head=8, bias=False, dropout=0.2, position=None):
         super().__init__()
         assert feature % head == 0
         self.head = head
@@ -65,6 +98,7 @@ class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
         self.query = torch.nn.Linear(feature, feature, bias=False)
         self.key = torch.nn.Linear(feature, feature, bias=False)
         self.value = torch.nn.Linear(feature, feature, bias=False)
+        self.position = position
         self.softmax = torch.nn.Softmax(dim=-1)
         self.dropout = torch.nn.Dropout(dropout)
         self.linear = torch.nn.Linear(feature, feature, bias=bias)
@@ -73,9 +107,12 @@ class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
         batch, dim, feature = query.shape
         _, dim2, _ = key.shape
         query = self.query(query).reshape(batch, dim, self.head, -1).permute(0, 2, 1, 3)  # (batch,head,dim,-1)
-        key = self.key(key).reshape(batch, dim2, self.head, -1).permute(0, 2, 3, 1)  # (batch,head,-1,dim2)
+        key = self.key(key).reshape(batch, dim2, self.head, -1).permute(0, 2, 1, 3)  # (batch,head,dim2,-1)
         value = self.value(value).reshape(batch, dim2, self.head, -1).permute(0, 2, 1, 3)  # (batch,head,dim2,-1)
-        x = torch.matmul(query, key)  # (batch,head,dim,dim2)
+        if self.position is not None:
+            query = self.position(query)
+            key = self.position(key)
+        x = torch.matmul(query, key.permute(0, 1, 3, 2))  # (batch,head,dim,dim2)
         x = x / self.divisor
         x = self.softmax(x)
         x = self.dropout(x)
@@ -86,7 +123,7 @@ class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
 
 
 class group_query_attention(torch.nn.Module):
-    def __init__(self, head, feature, group=4, bias=False, dropout=0.2):
+    def __init__(self, feature, head=8, group=4, bias=False, dropout=0.2, position=None):
         super().__init__()
         assert feature % head == 0
         assert head % group == 0
@@ -96,6 +133,7 @@ class group_query_attention(torch.nn.Module):
         self.query = torch.nn.Linear(feature, feature, bias=False)
         self.key = torch.nn.Linear(feature, feature // group, bias=False)
         self.value = torch.nn.Linear(feature, feature // group, bias=False)
+        self.position = position
         self.softmax = torch.nn.Softmax(dim=-1)
         self.dropout = torch.nn.Dropout(dropout)
         self.linear = torch.nn.Linear(feature, feature, bias=bias)
@@ -105,28 +143,20 @@ class group_query_attention(torch.nn.Module):
         _, dim2, _ = key.shape
         query = self.query(query).reshape(batch, dim, self.head, -1).permute(0, 2, 1, 3)  # (batch,head,dim,-1)
         head_group = self.head // self.group
-        key = self.key(key).reshape(batch, dim2, head_group, -1).permute(0, 2, 3, 1)  # (batch,head_group,-1,dim2)
+        key = self.key(key).reshape(batch, dim2, head_group, -1).permute(0, 2, 1, 3)  # (batch,head_group,dim2,-1)
         value = self.value(value).reshape(batch, dim2, head_group, -1).permute(0, 2, 1, 3)  # (batch,head_group,dim2,-1)
-        key = key.repeat(1, self.group, 1, 1)  # (batch,head,-1,dim2)
-        value = value.repeat(1, self.group, 1, 1)  # (batch,head,-1,dim2)
-        x = torch.matmul(query, key)  # (batch,head,dim,dim2)
+        key = key.repeat(1, self.group, 1, 1)  # (batch,head,dim2,-1)
+        value = value.repeat(1, self.group, 1, 1)  # (batch,head,dim2,-1)
+        if self.position is not None:
+            query = self.position(query)
+            key = self.position(key)
+        x = torch.matmul(query, key.permute(0, 1, 3, 2))  # (batch,head,dim,dim2)
         x = x / self.divisor
         x = self.softmax(x)
         x = self.dropout(x)
         x = torch.matmul(x, value)  # (batch,head,dim,-1)
         x = x.permute(0, 2, 1, 3).reshape(batch, dim, feature)  # (batch,dim,feature)
         x = self.linear(x)  # (batch,dim,feature)
-        return x
-
-
-class concat(torch.nn.Module):
-    def __init__(self, dim=1):
-        super().__init__()
-        self.concat = torch.concat
-        self.dim = dim
-
-    def forward(self, x):
-        x = self.concat(x, dim=self.dim)
         return x
 
 
