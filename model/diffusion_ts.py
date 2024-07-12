@@ -2,7 +2,7 @@
 # 多变量异标签
 import math
 import torch
-from model.layer import attention, lgl, split_linear
+from model.layer import lgl, attention, split_linear
 
 
 class ada_norm(torch.nn.Module):
