@@ -189,7 +189,7 @@ class Transformer_Layer(torch.nn.Module):
         W_pos = torch.empty(self.patch_nums, 1)
         torch.nn.init.uniform_(W_pos, -0.02, 0.02)
         self.W_pos = torch.nn.Parameter(W_pos)
-        self.attention = attention(self.feature, self.inter_feature, dropout=0.2)
+        self.attention = attention(self.inter_feature, self.feature, dropout=0.2)
         self.norm_attn = torch.nn.Sequential(Transpose(1, 2), torch.nn.BatchNorm1d(self.feature), Transpose(1, 2))
         self.norm_ffn = torch.nn.Sequential(Transpose(1, 2), torch.nn.BatchNorm1d(self.feature), Transpose(1, 2))
         self.dropout = torch.nn.Dropout(0.1)
