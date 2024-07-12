@@ -5,9 +5,9 @@ from model.layer import attention, split_linear
 
 
 class encode_block(torch.nn.Module):
-    def __init__(self, head, feature):
+    def __init__(self, feature, head):
         super().__init__()
-        self.attention = attention(head, feature, dropout=0.2)
+        self.attention = attention(feature, head, dropout=0.2)
         self.conv1d1 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.conv1d2 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.activation = torch.nn.GELU()
@@ -39,8 +39,8 @@ class itransformer(torch.nn.Module):
         head = 8
         # 网络结构
         self.l0 = torch.nn.Linear(input_size, feature)
-        self.l1 = encode_block(head, feature)
-        self.l2 = encode_block(head, feature)
+        self.l1 = encode_block(feature, head)
+        self.l2 = encode_block(feature, head)
         self.l3 = torch.nn.Linear(feature, output_size)
         self.l4 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
         self.l5 = split_linear(output_dim, output_size)
