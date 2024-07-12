@@ -23,10 +23,10 @@ class ada_norm(torch.nn.Module):
 
 
 class encode_block(torch.nn.Module):
-    def __init__(self, head, feature):
+    def __init__(self, feature, head):
         super().__init__()
         self.ada_norm = ada_norm(feature)
-        self.attention = attention(head, feature, dropout=0.2)
+        self.attention = attention(feature, head, dropout=0.2)
         self.lgl = lgl(feature, 4)
         self.normalization1 = torch.nn.LayerNorm(feature)
         self.normalization2 = torch.nn.LayerNorm(feature)
@@ -76,13 +76,13 @@ class season_block(torch.nn.Module):
 
 
 class decode_block(torch.nn.Module):
-    def __init__(self, dim, head, feature):
+    def __init__(self, dim, feature, head):
         super().__init__()
         self.ada_norm1 = ada_norm(feature)
-        self.attention1 = attention(head, feature, dropout=0.2)
+        self.attention1 = attention(feature, head, dropout=0.2)
         self.normalization1 = torch.nn.LayerNorm(feature)
         self.ada_norm2 = ada_norm(feature)
-        self.attention2 = attention(head, feature, dropout=0.2)
+        self.attention2 = attention(feature, head, dropout=0.2)
         self.normalization2 = torch.nn.LayerNorm(feature)
         self.conv1d = torch.nn.Conv1d(dim, 2 * dim, kernel_size=1, stride=1)
         self.trend = trend_block(feature)
@@ -118,14 +118,14 @@ class diffusion_ts(torch.nn.Module):
         # 网络结构
         self.embedding = torch.nn.Conv1d(input_dim, dim, kernel_size=3, stride=1, padding=1, bias=False)
         self.encode_position = torch.nn.Parameter(torch.randn(1, dim, input_size))
-        self.encode_block1 = encode_block(head, input_size)
-        self.encode_block2 = encode_block(head, input_size)
-        self.encode_block3 = encode_block(head, input_size)
+        self.encode_block1 = encode_block(input_size, head)
+        self.encode_block2 = encode_block(input_size, head)
+        self.encode_block3 = encode_block(input_size, head)
         self.linear = torch.nn.Linear(input_size, output_size)
         self.decode_position = torch.nn.Parameter(torch.randn(1, output_dim, output_size))
-        self.decode_block1 = decode_block(output_dim, head, output_size)
-        self.decode_block2 = decode_block(output_dim, head, output_size)
-        self.decode_block3 = decode_block(output_dim, head, output_size)
+        self.decode_block1 = decode_block(output_dim, output_size, head)
+        self.decode_block2 = decode_block(output_dim, output_size, head)
+        self.decode_block3 = decode_block(output_dim, output_size, head)
         self.normalization1 = torch.nn.LayerNorm(output_size)
         self.normalization2 = torch.nn.LayerNorm(output_size)
         self.conv1d = torch.nn.Conv1d(3 * output_dim, output_dim, kernel_size=1)
