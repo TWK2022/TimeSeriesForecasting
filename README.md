@@ -26,7 +26,7 @@
 ### ETTh1.csv
 |    模型(m)     | input_column | output_column | input_size | output_size | divide | train_mse_decay | val_mse |
 |:------------:|:------------:|:-------------:|:----------:|:-----------:|:------:|:---------------:|:-------:|
-|     tsf      |     all      |      all      |     96     |     24      |  19:1  |      0.222      |  0.260  |
+|     tsf      |     all      |      all      |     96     |     24      |  19:1  |      0.190      |  0.267  |
 | crossformer  |     all      |      all      |     96     |     24      |  19:1  |      0.264      |  0.282  |
 | itransformer |     all      |      all      |     96     |     24      |  19:1  |      0.224      |  0.265  |
 |     lstm     |     all      |      all      |     96     |     24      |  19:1  |      0.307      |  0.304  |
