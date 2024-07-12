@@ -89,7 +89,7 @@ class rotary_position(torch.nn.Module):
         return x
 
 
-class attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
+class multihead_attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
     def __init__(self, feature, head=8, bias=False, dropout=0.2, position=None):
         super().__init__()
         assert feature % head == 0

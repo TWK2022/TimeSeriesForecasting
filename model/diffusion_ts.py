@@ -2,7 +2,7 @@
 # 多变量异标签
 import math
 import torch
-from model.layer import lgl, attention, split_linear
+from model.layer import lgl, multihead_attention, split_linear
 
 
 class ada_norm(torch.nn.Module):
@@ -26,7 +26,7 @@ class encode_block(torch.nn.Module):
     def __init__(self, feature, head):
         super().__init__()
         self.ada_norm = ada_norm(feature)
-        self.attention = attention(feature, head, dropout=0.2)
+        self.attention = multihead_attention(feature, head, dropout=0.2)
         self.lgl = lgl(feature, 4)
         self.normalization1 = torch.nn.LayerNorm(feature)
         self.normalization2 = torch.nn.LayerNorm(feature)
@@ -79,10 +79,10 @@ class decode_block(torch.nn.Module):
     def __init__(self, dim, feature, head):
         super().__init__()
         self.ada_norm1 = ada_norm(feature)
-        self.attention1 = attention(feature, head, dropout=0.2)
+        self.attention1 = multihead_attention(feature, head, dropout=0.2)
         self.normalization1 = torch.nn.LayerNorm(feature)
         self.ada_norm2 = ada_norm(feature)
-        self.attention2 = attention(feature, head, dropout=0.2)
+        self.attention2 = multihead_attention(feature, head, dropout=0.2)
         self.normalization2 = torch.nn.LayerNorm(feature)
         self.conv1d = torch.nn.Conv1d(dim, 2 * dim, kernel_size=1, stride=1)
         self.trend = trend_block(feature)

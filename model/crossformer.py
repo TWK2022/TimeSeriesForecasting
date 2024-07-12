@@ -1,16 +1,16 @@
 # 根据crossformer改编:https://github.com/Thinklab-SJTU/Crossformer
 # 多变量异标签
 import torch
-from model.layer import lgl, attention, split_linear
+from model.layer import lgl, multihead_attention, split_linear
 
 
 class attention_block(torch.nn.Module):
     def __init__(self, number, middle_dim, feature, head):
         super().__init__()
         self.param = torch.nn.Parameter(torch.randn(number, middle_dim, feature))
-        self.time_attention = attention(feature, head, dropout=0.2)
-        self.param_attention = attention(feature, head, dropout=0.2)
-        self.input_attention = attention(feature, head, dropout=0.2)
+        self.time_attention = multihead_attention(feature, head, dropout=0.2)
+        self.param_attention = multihead_attention(feature, head, dropout=0.2)
+        self.input_attention = multihead_attention(feature, head, dropout=0.2)
         self.lgl1 = lgl(feature, 2)
         self.lgl2 = lgl(feature, 2)
         self.normalization1 = torch.nn.LayerNorm(feature)
@@ -73,7 +73,7 @@ class decode_block(torch.nn.Module):
     def __init__(self, number, head, feature, middle_dim=5):
         super().__init__()
         self.self_attention = attention_block(number, middle_dim, feature, head)
-        self.encode_decode_attention = attention(feature, head, dropout=0.2)
+        self.encode_decode_attention = multihead_attention(feature, head, dropout=0.2)
         self.lgl = lgl(feature, 2)
         self.normalization1 = torch.nn.LayerNorm(feature)
         self.normalization2 = torch.nn.LayerNorm(feature)

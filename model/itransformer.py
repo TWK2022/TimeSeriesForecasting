@@ -1,13 +1,13 @@
 # 根据itransformer改编:https://github.com/thuml/iTransformer
 # 多变量异标签
 import torch
-from model.layer import attention, split_linear
+from model.layer import multihead_attention, split_linear
 
 
 class encode_block(torch.nn.Module):
     def __init__(self, feature, head):
         super().__init__()
-        self.attention = attention(feature, head, dropout=0.2)
+        self.attention = multihead_attention(feature, head, dropout=0.2)
         self.conv1d1 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.conv1d2 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.activation = torch.nn.GELU()
