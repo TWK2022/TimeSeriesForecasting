@@ -4,10 +4,9 @@ from model.layer import rms_normalization, rotary_position, group_query_attentio
 
 
 class encode_block(torch.nn.Module):
-    def __init__(self, dim, feature, head):
+    def __init__(self, feature, head):
         super().__init__()
-        position = rotary_position(dim, feature // head)
-        self.attention = group_query_attention(feature, head, dropout=0.2, position=position)
+        self.attention = group_query_attention(feature, head, dropout=0.2)
         self.conv1d1 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.conv1d2 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.activation = torch.nn.GELU()
@@ -39,19 +38,21 @@ class tsf(torch.nn.Module):
         head = 8
         # 网络结构
         self.l0 = torch.nn.Linear(input_size, feature)
-        self.l1 = encode_block(input_dim, feature, head)
-        self.l2 = encode_block(input_dim, feature, head)
-        self.l3 = torch.nn.Linear(feature, output_size)
-        self.l4 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
-        self.l5 = split_linear(output_dim, output_size)
+        self.l1 = rotary_position(input_dim, feature)
+        self.l2 = encode_block(feature, head)
+        self.l3 = encode_block(feature, head)
+        self.l4 = torch.nn.Linear(feature, output_size)
+        self.l5 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
+        self.l6 = split_linear(output_dim, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         x = self.l0(x)  # (batch,input_dim,feature)
         x = self.l1(x)
         x = self.l2(x)
         x = self.l3(x)
-        x = self.l4(x)  # (batch,input_dim,output_size)
-        x = self.l5(x)  # (batch,output_dim,output_size)
+        x = self.l4(x)
+        x = self.l5(x)  # (batch,input_dim,output_size)
+        x = self.l6(x)  # (batch,output_dim,output_size)
         return x
 
 
