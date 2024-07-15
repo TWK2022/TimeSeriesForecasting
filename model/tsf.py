@@ -41,18 +41,16 @@ class tsf(torch.nn.Module):
         self.l1 = rotary_position(input_dim, feature)
         self.l2 = encode_block(feature, head)
         self.l3 = encode_block(feature, head)
-        self.l4 = torch.nn.Linear(feature, output_size)
-        self.l5 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
-        self.l6 = split_linear(output_dim, output_size)
+        self.l4 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
+        self.l5 = split_linear(output_dim, feature, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         x = self.l0(x)  # (batch,input_dim,feature)
         x = self.l1(x)
         x = self.l2(x)
         x = self.l3(x)
-        x = self.l4(x)
-        x = self.l5(x)  # (batch,input_dim,output_size)
-        x = self.l6(x)  # (batch,output_dim,output_size)
+        x = self.l4(x)  # (batch,output_dim,input_size)
+        x = self.l5(x)  # (batch,output_dim,output_size)
         return x
 
 
