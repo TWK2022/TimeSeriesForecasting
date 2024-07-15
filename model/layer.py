@@ -13,46 +13,33 @@ class rms_normalization(torch.nn.Module):
         return x
 
 
-class lgl(torch.nn.Module):
-    def __init__(self, feature, n=2):
+class lsl(torch.nn.Module):
+    def __init__(self, feature, n=4):
         super().__init__()
         self.linear0 = torch.nn.Linear(feature, n * feature, bias=False)
-        self.gelu1 = torch.nn.GELU()
+        self.silu1 = torch.nn.SiLU()
         self.linear2 = torch.nn.Linear(n * feature, feature, bias=False)
 
     def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
         x = self.linear0(x)
-        x = self.gelu1(x)
+        x = self.silu1(x)
         x = self.linear2(x)
         return x
 
 
-class llg(torch.nn.Module):
-    def __init__(self, feature_in, feature_out):
+class mlp(torch.nn.Module):
+    def __init__(self, feature, n=4):
         super().__init__()
-        self.linear = torch.nn.Linear(feature_in, feature_out, bias=False)
-        self.ln = rms_normalization(feature_out)
-        self.gelu = torch.nn.GELU()
+        self.linear0 = torch.nn.Linear(feature, n * feature, bias=False)
+        self.silu = torch.nn.SiLU()
+        self.linear1 = torch.nn.Linear(feature, n * feature, bias=False)
+        self.linear2 = torch.nn.Linear(n * feature, feature, bias=False)
 
     def forward(self, x):  # (batch,dim,feature_in) -> (batch,dim,feature_out)
-        x = self.linear(x)
-        x = self.ln(x)
-        x = self.gelu(x)
-        return x
-
-
-class clg(torch.nn.Module):
-    def __init__(self, dim_in, dim_out, feature, kernel_size, stride):
-        super().__init__()
-        self.conv1d = torch.nn.Conv1d(dim_in, dim_out, kernel_size=kernel_size, stride=stride,
-                                      padding=(kernel_size - 1) // 2, bias=False)
-        self.ln = rms_normalization(feature)
-        self.gelu = torch.nn.GELU()
-
-    def forward(self, x):  # (batch,dim_in,feature) -> (batch,dim_out,feature)
-        x = self.conv1d(x)
-        x = self.ln(x)
-        x = self.gelu(x)
+        x0 = self.linear0(x)
+        x0 = self.silu(x0)
+        x1 = self.linear1(x)
+        x = self.linear2(x0 * x1)
         return x
 
 
@@ -161,11 +148,11 @@ class group_query_attention(torch.nn.Module):
 
 
 class split_linear(torch.nn.Module):
-    def __init__(self, dim, feature):
+    def __init__(self, dim, feature_in, feature_out):
         super().__init__()
         self.dim = dim
         for i in range(self.dim):
-            exec(f'self.linear{i} = torch.nn.Linear(feature, feature, bias=True)')
+            exec(f'self.linear{i} = torch.nn.Linear(feature_in, feature_out, bias=True)')
 
     def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
         x_list = []
