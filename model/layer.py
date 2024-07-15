@@ -14,7 +14,7 @@ class rms_normalization(torch.nn.Module):
 
 
 class lsl(torch.nn.Module):
-    def __init__(self, feature, n=4):
+    def __init__(self, feature, n=2):
         super().__init__()
         self.linear0 = torch.nn.Linear(feature, n * feature, bias=False)
         self.silu1 = torch.nn.SiLU()
@@ -28,7 +28,7 @@ class lsl(torch.nn.Module):
 
 
 class mlp(torch.nn.Module):
-    def __init__(self, feature, n=4):
+    def __init__(self, feature, n=2):
         super().__init__()
         self.linear0 = torch.nn.Linear(feature, n * feature, bias=False)
         self.silu = torch.nn.SiLU()
