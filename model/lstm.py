@@ -13,14 +13,14 @@ class lstm(torch.nn.Module):
         n_dict = {'s': 1, 'm': 2, 'l': 3}
         n = n_dict[args.model_type]
         # 网络结构
-        self.l0 = torch.nn.LSTM(input_size=input_size, hidden_size=output_size, num_layers=n, dropout=0.2)
+        self.l0 = torch.nn.LSTM(input_size=input_size, hidden_size=input_size, num_layers=n, dropout=0.2)
         self.l1 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
-        self.l2 = split_linear(output_dim, output_size)
+        self.l2 = split_linear(output_dim, input_size, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
-        x, (h_n, c_n) = self.l0(x)
-        x = self.l1(x)  # (batch,output_dim,output_size)
-        x = self.l2(x)
+        x, (h_n, c_n) = self.l0(x)  # (batch,input_dim,input_size)
+        x = self.l1(x)  # (batch,output_dim,input_size)
+        x = self.l2(x)  # (batch,output_dim,output_size)
         return x
 
 
