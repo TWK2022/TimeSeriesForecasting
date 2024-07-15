@@ -3,7 +3,7 @@
 import math
 import torch
 import numpy as np
-from model.layer import attention, split_linear
+from model.layer import multihead_attention, split_linear
 
 
 class AMS(torch.nn.Module):
@@ -189,7 +189,7 @@ class Transformer_Layer(torch.nn.Module):
         W_pos = torch.empty(self.patch_nums, 1)
         torch.nn.init.uniform_(W_pos, -0.02, 0.02)
         self.W_pos = torch.nn.Parameter(W_pos)
-        self.attention = attention(self.inter_feature, self.feature, dropout=0.2)
+        self.attention = multihead_attention(self.inter_feature, self.feature, dropout=0.2)
         self.norm_attn = torch.nn.Sequential(Transpose(1, 2), torch.nn.BatchNorm1d(self.feature), Transpose(1, 2))
         self.norm_ffn = torch.nn.Sequential(Transpose(1, 2), torch.nn.BatchNorm1d(self.feature), Transpose(1, 2))
         self.dropout = torch.nn.Dropout(0.1)
@@ -338,20 +338,20 @@ class pathformer(torch.nn.Module):
         self.AMS0 = AMS(input_size, input_dim=input_dim, feature=feature, layer_number=1)
         self.AMS1 = AMS(input_size, input_dim=input_dim, feature=feature, layer_number=2)
         self.AMS2 = AMS(input_size, input_dim=input_dim, feature=feature, layer_number=3)
-        self.linear_out = torch.nn.Linear(feature * input_size, output_size)
+        self.linear_out = torch.nn.Linear(feature * input_size, input_size)
         self.conv1d = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
-        self.split_linear = split_linear(output_dim, output_size)
+        self.split_linear = split_linear(output_dim, input_size, output_size)
 
-    def forward(self, x):
+    def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         x = x.permute(0, 2, 1)
         x = self.linear(x.unsqueeze(3))
         x = self.AMS0(x)
         x = self.AMS1(x)
         x = self.AMS2(x)
         x = x.permute(0, 2, 1, 3).reshape(x.shape[0], x.shape[2], -1)
-        x = self.linear_out(x)
-        x = self.conv1d(x)  # (batch,output_dim,output_size)
-        x = self.split_linear(x)
+        x = self.linear_out(x)  # (batch,input_dim,input_size)
+        x = self.conv1d(x)  # (batch,output_dim,input_size)
+        x = self.split_linear(x)  # (batch,output_dim,output_size)
         return x
 
 
