@@ -1,7 +1,7 @@
 # 根据crossformer改编:https://github.com/Thinklab-SJTU/Crossformer
 # 多变量异标签
 import torch
-from model.layer import lgl, multihead_attention, split_linear
+from model.layer import lsl, multihead_attention, split_linear
 
 
 class attention_block(torch.nn.Module):
@@ -11,8 +11,8 @@ class attention_block(torch.nn.Module):
         self.time_attention = multihead_attention(feature, head, dropout=0.2)
         self.param_attention = multihead_attention(feature, head, dropout=0.2)
         self.input_attention = multihead_attention(feature, head, dropout=0.2)
-        self.lgl1 = lgl(feature, 2)
-        self.lgl2 = lgl(feature, 2)
+        self.lsl1 = lsl(feature, 2)
+        self.lsl2 = lsl(feature, 2)
         self.normalization1 = torch.nn.LayerNorm(feature)
         self.normalization2 = torch.nn.LayerNorm(feature)
         self.normalization3 = torch.nn.LayerNorm(feature)
@@ -26,13 +26,13 @@ class attention_block(torch.nn.Module):
         batch, dim, number, feature = x.shape
         x = x.reshape(batch * dim, number, feature)  # (batch*dim,number,feature)
         x = self.normalization1(x + self.dropout1(self.time_attention(x, x, x)))
-        x = self.normalization2(x + self.dropout2(self.lgl1(x)))  # (batch*dim,number,feature)
+        x = self.normalization2(x + self.dropout2(self.lsl1(x)))  # (batch*dim,number,feature)
         x = x.reshape(batch * number, dim, feature)  # (batch*n,dim,feature)
         param = self.param.repeat(batch, 1, 1)  # (batch*n,middle_dim,feature)
         param = self.param_attention(param, x, x)  # (batch*n,middle_dim,feature)
         param = self.input_attention(x, param, param)  # (batch*n,dim,feature)
         x = self.normalization3(x + self.dropout3(param))
-        x = self.normalization4(x + self.dropout4(self.lgl2(x)))
+        x = self.normalization4(x + self.dropout4(self.lsl2(x)))
         x = x.reshape(batch, dim, number, feature)
         return x
 
@@ -74,7 +74,7 @@ class decode_block(torch.nn.Module):
         super().__init__()
         self.self_attention = attention_block(number, middle_dim, feature, head)
         self.encode_decode_attention = multihead_attention(feature, head, dropout=0.2)
-        self.lgl = lgl(feature, 2)
+        self.lsl = lsl(feature, 2)
         self.normalization1 = torch.nn.LayerNorm(feature)
         self.normalization2 = torch.nn.LayerNorm(feature)
         self.dropout = torch.nn.Dropout(0.2)
@@ -85,7 +85,7 @@ class decode_block(torch.nn.Module):
         x = x.reshape(batch * dim, number, feature)  # (batch*dim,number,feature)
         cross = cross.reshape(batch * dim, -1, feature)  # (batch*dim,-1,feature)
         x = self.normalization1(x + self.dropout(self.encode_decode_attention(x, cross, cross)))
-        x = self.normalization2(x + self.lgl(x))
+        x = self.normalization2(x + self.lsl(x))
         x = x.reshape(batch, dim, number, feature)  # (batch,dim,number,feature)
         return x
 
@@ -140,7 +140,7 @@ class crossformer(torch.nn.Module):
         self.decode_input = torch.nn.Parameter(torch.randn(1, input_dim, output_number, feature))
         self.decode = decode(output_number, self.segment, head, feature, middle_dim=middle_dim)
         self.conv1d = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
-        self.split_linear = split_linear(output_dim, output_size)
+        self.split_linear = split_linear(output_dim, output_size, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         batch, input_dim, input_size = x.shape
