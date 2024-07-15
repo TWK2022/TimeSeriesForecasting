@@ -41,17 +41,15 @@ class itransformer(torch.nn.Module):
         self.l0 = torch.nn.Linear(input_size, feature)
         self.l1 = encode_block(feature, head)
         self.l2 = encode_block(feature, head)
-        self.l3 = torch.nn.Linear(feature, output_size)
-        self.l4 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
-        self.l5 = split_linear(output_dim, output_size)
+        self.l3 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
+        self.l4 = split_linear(output_dim, feature, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         x = self.l0(x)  # (batch,input_dim,feature)
         x = self.l1(x)
         x = self.l2(x)
-        x = self.l3(x)  # (batch,input_dim,output_size)
+        x = self.l3(x)  # (batch,output_dim,input_size)
         x = self.l4(x)  # (batch,output_dim,output_size)
-        x = self.l5(x)
         return x
 
 
