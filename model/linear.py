@@ -11,14 +11,14 @@ class linear(torch.nn.Module):
         input_size = args.input_size
         output_size = args.output_size
         # 网络结构
-        self.l0 = torch.nn.Linear(input_size, output_size)
+        self.l0 = torch.nn.Linear(input_size, input_size)
         self.l1 = torch.nn.Conv1d(input_dim, output_dim, kernel_size=1)
-        self.l2 = split_linear(output_dim, output_size)
+        self.l2 = split_linear(output_dim, input_size, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
-        x = self.l0(x)  # (batch,input_dim,output_size)
-        x = self.l1(x)  # (batch,output_dim,output_size)
-        x = self.l2(x)
+        x = self.l0(x)  # (batch,input_dim,input_size)
+        x = self.l1(x)  # (batch,output_dim,input_size)
+        x = self.l2(x)  # (batch,output_dim,output_size)
         return x
 
 
