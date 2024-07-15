@@ -7,22 +7,22 @@ class encode_block(torch.nn.Module):
     def __init__(self, feature, head):
         super().__init__()
         self.attention = group_query_attention(feature, head, dropout=0.2)
+        self.conv1d0 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.conv1d1 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
-        self.conv1d2 = torch.nn.Conv1d(in_channels=feature, out_channels=feature, kernel_size=1)
         self.activation = torch.nn.GELU()
+        self.normalization0 = rms_normalization(feature)
         self.normalization1 = rms_normalization(feature)
-        self.normalization2 = rms_normalization(feature)
         self.dropout = torch.nn.Dropout(0.2)
 
     def forward(self, x):  # (batch,dim,feature) -> (batch,dim,feature)
-        x = self.normalization1(x + self.dropout(self.attention(x, x, x)))
+        x = self.normalization0(x + self.dropout(self.attention(x, x, x)))
         x1 = x.permute(0, 2, 1)
-        x1 = self.conv1d1(x1)
+        x1 = self.conv1d0(x1)
         x1 = self.activation(x1)
         x1 = self.dropout(x1)
-        x1 = self.conv1d2(x1)
+        x1 = self.conv1d1(x1)
         x1 = x1.permute(0, 2, 1)
-        x = self.normalization2(x + x1)
+        x = self.normalization1(x + x1)
         return x
 
 
