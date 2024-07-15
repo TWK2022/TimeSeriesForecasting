@@ -2,7 +2,7 @@
 # 多变量异标签
 import math
 import torch
-from model.layer import lgl, multihead_attention, split_linear
+from model.layer import lsl, multihead_attention, split_linear
 
 
 class ada_norm(torch.nn.Module):
@@ -27,7 +27,7 @@ class encode_block(torch.nn.Module):
         super().__init__()
         self.ada_norm = ada_norm(feature)
         self.attention = multihead_attention(feature, head, dropout=0.2)
-        self.lgl = lgl(feature, 4)
+        self.lsl = lsl(feature, 4)
         self.normalization1 = torch.nn.LayerNorm(feature)
         self.normalization2 = torch.nn.LayerNorm(feature)
 
@@ -35,7 +35,7 @@ class encode_block(torch.nn.Module):
         x1 = self.ada_norm(x)
         x1 = self.attention(x1, x1, x1)
         x = self.normalization1(x + x1)
-        x = self.normalization2(x + self.lgl(x))
+        x = self.normalization2(x + self.lsl(x))
         return x
 
 
@@ -87,7 +87,7 @@ class decode_block(torch.nn.Module):
         self.conv1d = torch.nn.Conv1d(dim, 2 * dim, kernel_size=1, stride=1)
         self.trend = trend_block(feature)
         self.season = season_block()
-        self.lgl = lgl(feature, 2)
+        self.lsl = lsl(feature, 2)
         self.normalization3 = torch.nn.LayerNorm(feature)
 
     def forward(self, x, memory):  # x(batch,dim,feature) -> [3*(batch,dim,feature)]
@@ -100,7 +100,7 @@ class decode_block(torch.nn.Module):
         x1, x2 = self.conv1d(x).chunk(2, dim=1)
         trend = self.trend(x1)  # (batch,dim,feature)
         season = self.season(x2)  # (batch,dim,feature)
-        x = self.normalization3(x + self.lgl(x))  # (batch,dim,feature)
+        x = self.normalization3(x + self.lsl(x))  # (batch,dim,feature)
         return x, trend, season
 
 
@@ -129,7 +129,7 @@ class diffusion_ts(torch.nn.Module):
         self.normalization1 = torch.nn.LayerNorm(output_size)
         self.normalization2 = torch.nn.LayerNorm(output_size)
         self.conv1d = torch.nn.Conv1d(3 * output_dim, output_dim, kernel_size=1)
-        self.split_linear = split_linear(output_dim, output_size)
+        self.split_linear = split_linear(output_dim, output_size, output_size)
 
     def forward(self, x):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
         x0 = self.embedding(x)  # (batch,dim,input_size)
