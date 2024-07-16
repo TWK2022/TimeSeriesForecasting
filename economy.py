@@ -24,7 +24,7 @@ parser.add_argument('--model_type', default='l', type=str)
 parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='互联网,电气设备,通信设备,小金属,铜,铅锌,黄金,化学制药,汽车整车', type=str)
+parser.add_argument('--industry', default='互联网,电气设备,通信设备,元器件,化学制药,汽车整车,公共交通,小金属,铜,铅锌,黄金', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
