@@ -67,8 +67,8 @@ class data_prepare:
         data_dict['std_input'] = std_input
         data_dict['std_output'] = std_output
         # 特殊数据(需要根据情况更改)
-        data_dict['train_special'] = train_input[:, [0]] if 'special' in self.args.model else None
-        data_dict['val_special'] = val_input[:, [0]] if 'special' in self.args.model else None
-        data_dict['mean_special'] = mean_input[0] if 'special' in self.args.model else None
-        data_dict['std_special'] = std_input[0] if 'special' in self.args.model else None
+        data_dict['train_special'] = train_input[:, [1, 2]] if 'special' in self.args.model else None
+        data_dict['val_special'] = val_input[:, [1, 2]] if 'special' in self.args.model else None
+        data_dict['mean_special'] = mean_input[[1, 2]] if 'special' in self.args.model else None
+        data_dict['std_special'] = std_input[[1, 2]] if 'special' in self.args.model else None
         return data_dict

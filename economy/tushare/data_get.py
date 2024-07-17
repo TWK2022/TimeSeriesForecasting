@@ -27,18 +27,18 @@ class data_get_class:
         self.args = args
         with open(args.number, 'r', encoding='utf-8') as f:
             self.number_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        self.daily_column = ['trade_date', 'open', 'high', 'low', 'close', 'pct_chg', 'vol']
-        self.daily_name = ['日期', '开盘价', '最高价', '最低价', '收盘价', '涨跌幅', '成交量']
+        self.daily_column = ['trade_date', 'open', 'high', 'low', 'close', 'change', 'pct_chg', 'vol', 'amount']
+        self.daily_name = ['日期', '开盘价', '最高价', '最低价', '收盘价', '涨跌额', '涨跌幅', '成交量', '成交额']
         self.daily_basic_column = ['trade_date', 'turnover_rate', 'volume_ratio', 'pe_ttm', 'pb', 'ps_ttm']
         self.daily_basic_name = ['日期', '换手率', '量比', '市盈率ttm', '市净率', '市销率ttm']
         self.moneyflow_column = ['trade_date', 'buy_sm_vol', 'sell_sm_vol', 'buy_md_vol', 'sell_md_vol', 'buy_lg_vol',
                                  'sell_lg_vol', 'buy_elg_vol', 'sell_elg_vol', 'net_mf_vol', 'trade_count']
-        self.moneyflow_name = ['日期', '小单买入量', '小单卖出量', '中单买入量', '中单卖出量', '大单买入量',
-                               '大单卖出量', '特大单买入量', '特大单卖出量', '净流入量', '交易笔数']
+        self.moneyflow_name = ['日期', '小单买入量', '小单卖出量', '中单买入量', '中单卖出量', '大单买入量', '大单卖出量',
+                               '特大单买入量', '特大单卖出量', '净流入量', '交易笔数']
         self.distribution_column = ['trade_date', 'cost_5pct', 'cost_15pct', 'cost_50pct', 'cost_85pct', 'cost_95pct',
                                     'weight_avg', 'winner_rate']
-        self.distribution_name = ['日期', '5分位成本', '15分位成本', '50分位成本', '85分位成本', '95分位成本',
-                                  '加权平均成本', '胜率']
+        self.distribution_name = ['日期', '5分位成本', '15分位成本', '50分位成本', '85分位成本', '95分位成本', '加权平均成本',
+                                  '胜率']
 
     def data_get(self):
         tushare.set_token(self.args.token)  # 设置密钥
@@ -93,28 +93,28 @@ class data_get_class:
         df = df.drop(columns='日期')
         df = df.sort_index()
         # 指标
-        df_ = pro.daily_basic(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
+        df1 = pro.daily_basic(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
                               fields=self.daily_basic_column)
-        df_.columns = self.daily_basic_name
-        df_.index = pd.DatetimeIndex(df_['日期'].values)
-        df_ = df_.drop(columns='日期')
-        df_ = df_.sort_index()
+        df1.columns = self.daily_basic_name
+        df1.index = pd.DatetimeIndex(df1['日期'].values)
+        df1 = df1.drop(columns='日期')
+        df1 = df1.sort_index()
         # 资金流向
-        df__ = pro.moneyflow(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
-                             fields=self.moneyflow_column)
-        df__.columns = self.moneyflow_name
-        df__.index = pd.DatetimeIndex(df__['日期'].values)
-        df__ = df__.drop(columns='日期')
-        df__ = df__.sort_index()
+        df2 = pro.moneyflow(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
+                            fields=self.moneyflow_column)
+        df2.columns = self.moneyflow_name
+        df2.index = pd.DatetimeIndex(df2['日期'].values)
+        df2 = df2.drop(columns='日期')
+        df2 = df2.sort_index()
         # 筹码分布
-        df___ = pro.cyq_perf(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
-                             fields=self.distribution_column)
-        df___.columns = self.distribution_name
-        df___.index = pd.DatetimeIndex(df___['日期'].values)
-        df___ = df___.drop(columns='日期')
-        df___ = df___.sort_index()
+        df3 = pro.cyq_perf(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
+                           fields=self.distribution_column)
+        df3.columns = self.distribution_name
+        df3.index = pd.DatetimeIndex(df3['日期'].values)
+        df3 = df3.drop(columns='日期')
+        df3 = df3.sort_index()
         # 合并
-        df = pd.concat([df, df_, df__, df___], axis=1)
+        df = pd.concat([df, df1, df2, df3], axis=1)
         return df
 
 
