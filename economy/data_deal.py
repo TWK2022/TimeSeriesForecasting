@@ -144,7 +144,8 @@ def data_deal(args):
             df['中单卖出量'] = fix(df['中单卖出量'].values, 0)
             df['大单买入量'] = fix(df['大单买入量'].values, 0)
             df['大单卖出量'] = fix(df['大单卖出量'].values, 0)
-            df['特大单买入量'] = fix(df['特大单卖出量'].values, 0)
+            df['特大单买入量'] = fix(df['特大单买入量'].values, 0)
+            df['特大单卖出量'] = fix(df['特大单卖出量'].values, 0)
             df['净流入量'] = fix(df['净流入量'].values, 0)
             df['交易笔数'] = fix(df['交易笔数'].values, 0)
             # 买单情况
