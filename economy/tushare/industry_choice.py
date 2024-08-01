@@ -10,13 +10,10 @@ parser.add_argument('--yaml_path', default='number_all.yaml', type=str, help='|�
 parser.add_argument('--reserve_path', default='reserve.yaml', type=str, help='|自选股票信息(可选)|')
 parser.add_argument('--remove_path', default='remove.yaml', type=str, help='|要去除的股票信息(可选)|')
 parser.add_argument('--save_path', default='number.yaml', type=str, help='|保存位置|')
-parser.add_argument('--industry', default='互联网,通信设备,工程机械,元器件,半导体,小金属,铜,铅锌,黄金', type=str, help='|行业，必选，如"A,B,C"|')
-parser.add_argument('--area', default='', type=str, help='|地区，空则不筛选，如"A、B、C"|')
-parser.add_argument('--time', default='20240101', type=str, help='|上市时间，筛选time之前的，空则不筛选|')
-parser.add_argument('--type', default='', type=str, help='|企业类型，有其他、中央国企、地方国企，空则不筛选|')
+parser.add_argument('--industry', default='无人驾驶,汽车整车,军工装备,半导体,网约车,军工信息化,汽车芯片,商业航天,高铁', type=str, help='|行业或概念，如"A,B,C"|')
+parser.add_argument('--drop_st', default=True, type=bool, help='|是否去除ST股票|')
 args = parser.parse_args()
 args.industry = args.industry.split(',')
-args.time = int(args.time) if args.time else 0
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -43,19 +40,13 @@ def industry_choice(args):
         result_dict[industry] = {}
         dict_ = yaml_dict[industry]
         for name in dict_.keys():
-            number = dict_[name][0]
-            type_ = dict_[name][2]
-            time = dict_[name][3]
+            number = dict_[name]
             if name in reserve_list:
                 continue
             if remove_dict is not None and remove_dict.get(industry):
                 if name in remove_dict[industry].keys():
                     continue
-            if 'ST' in name:
-                continue
-            if args.type and type_ != args.type:
-                continue
-            if args.time and time > args.time:
+            if args.drop_st and 'ST' in name:
                 continue
             result_dict[industry][name] = number
             record += 1

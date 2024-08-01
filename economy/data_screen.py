@@ -44,6 +44,7 @@ def data_screen(args):
                 continue
             # 上市日期删选
             if len(df) < 200:
+                print(f'| 文件数据太少:dataset/{name}_add.csv |')
                 continue
             # 自选股票
             if not args.reserve and industry == '自选':

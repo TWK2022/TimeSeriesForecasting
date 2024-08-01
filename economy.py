@@ -24,7 +24,7 @@ parser.add_argument('--model_type', default='l', type=str)
 parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='互联网,通信设备,工程机械,元器件,半导体,小金属,铜,铅锌,黄金', type=str)
+parser.add_argument('--industry', default='无人驾驶,汽车整车,军工装备,半导体,网约车,军工信息化,汽车芯片,商业航天,高铁', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -115,41 +115,43 @@ class economy_class:
             model_dict = model_dict if model_dict else {}  # 初始化
         else:
             model_dict = {}
+        all_dict = {}
         for industry in screen_dict:
-            name_list = screen_dict[industry].keys()
-            for name in name_list:
-                data_path = f'{data_dir}/{name}_add.csv'
-                model_path = f'{model_dir}/{name}.pt'
-                weight = model_path
-                epoch = 50
-                lr_start = 0.001
-                lr_end_ratio = 0.001
-                if os.path.exists(model_path):
-                    if self.args.run_test_again or not model_dict.get(name):
-                        epoch = 30
-                        lr_start = 0.0001
-                        lr_end_ratio = 0.01
-                    else:
-                        continue
-                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --z_score 1 --weight {weight}'
-                          f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
-                          f' --batch 64 --epoch {epoch} --lr_start {lr_start} --lr_end_ratio {lr_end_ratio}'
-                          f' --lr_end_epoch {epoch} --device {self.args.device}')
-                shutil.move('last.pt', model_path)
-                # 记录模型信息
-                dict_ = torch.load(model_path, map_location='cpu')
-                mae_true = round(float(dict_['val_mae'] * dict_['std_output'][0]), 4)
-                df = pd.read_csv(data_path, index_col=0)
-                time = str(df.index[-1])
-                if model_dict.get(name):
-                    model_dict[name][0], model_dict[name][1] = time, mae_true
+            for key in screen_dict[industry].keys():
+                all_dict[key] = screen_dict[industry][key]
+        for name in all_dict.keys():
+            data_path = f'{data_dir}/{name}_add.csv'
+            model_path = f'{model_dir}/{name}.pt'
+            weight = model_path
+            epoch = 50
+            lr_start = 0.001
+            lr_end_ratio = 0.001
+            if os.path.exists(model_path):
+                if self.args.run_test_again or not model_dict.get(name):
+                    epoch = 30
+                    lr_start = 0.0001
+                    lr_end_ratio = 0.01
                 else:
-                    model_dict[name] = [time, mae_true, None, None]
-                with open('economy/model.yaml', 'w', encoding='utf-8') as f:
-                    yaml.dump(model_dict, f, allow_unicode=True)
-                del dict_, df
+                    continue
+            os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
+                      f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
+                      f' --output_size {self.args.output_size} --divide 19,1 --z_score 1 --weight {weight}'
+                      f' --weight_again True --model {self.args.model} --model_type {self.args.model_type}'
+                      f' --batch 64 --epoch {epoch} --lr_start {lr_start} --lr_end_ratio {lr_end_ratio}'
+                      f' --lr_end_epoch {epoch} --device {self.args.device}')
+            shutil.move('last.pt', model_path)
+            # 记录模型信息
+            dict_ = torch.load(model_path, map_location='cpu')
+            mae_true = round(float(dict_['val_mae'] * dict_['std_output'][0]), 4)
+            df = pd.read_csv(data_path, index_col=0)
+            time = str(df.index[-1])
+            if model_dict.get(name):
+                model_dict[name][0], model_dict[name][1] = time, mae_true
+            else:
+                model_dict[name] = [time, mae_true, None, None]
+            with open('economy/model.yaml', 'w', encoding='utf-8') as f:
+                yaml.dump(model_dict, f, allow_unicode=True)
+            del dict_, df
 
     def _simulate(self):
         print('simulate.py')
@@ -157,22 +159,24 @@ class economy_class:
             screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
         with open('model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
             model_dict = yaml.load(f, Loader=yaml.SafeLoader)
+        all_dict = {}
         for industry in screen_dict:
-            name_list = screen_dict[industry].keys()
-            for name in name_list:
-                model_path = f'model_test/{name}.pt'
-                data_path = f'dataset/{name}_add.csv'
-                os.system(f'python simulate.py --model_path {model_path} --data_path {data_path}'
-                          f' --input_size {self.args.input_size} --output_size {self.args.output_size}'
-                          f' --rise {self.args.rise} --rise_max {self.args.rise_max} --device {self.args.device}')
-                # 打开日志
-                with open('log.txt', 'r', encoding='utf-8') as f:
-                    log = f.readlines()
-                income_mean = round(float(log[1].strip()[8:]), 2)
-                # 记录模型信息
-                model_dict[name][2] = income_mean
-                with open('_.yaml', 'w', encoding='utf-8') as f:
-                    yaml.dump(model_dict, f, allow_unicode=True)
+            for key in screen_dict[industry].keys():
+                all_dict[key] = screen_dict[industry][key]
+        for name in all_dict.keys():
+            model_path = f'model_test/{name}.pt'
+            data_path = f'dataset/{name}_add.csv'
+            os.system(f'python simulate.py --model_path {model_path} --data_path {data_path}'
+                      f' --input_size {self.args.input_size} --output_size {self.args.output_size}'
+                      f' --rise {self.args.rise} --rise_max {self.args.rise_max} --device {self.args.device}')
+            # 打开日志
+            with open('log.txt', 'r', encoding='utf-8') as f:
+                log = f.readlines()
+            income_mean = round(float(log[1].strip()[8:]), 2)
+            # 记录模型信息
+            model_dict[name][2] = income_mean
+            with open('_.yaml', 'w', encoding='utf-8') as f:
+                yaml.dump(model_dict, f, allow_unicode=True)
         # 最后再复制，防止linux中间断开时导致model.yaml损坏
         if os.path.exists('_.yaml'):
             shutil.move('_.yaml', 'model.yaml')
@@ -185,42 +189,44 @@ class economy_class:
             screen_dict = yaml.load(f, Loader=yaml.SafeLoader)
         with open('economy/model.yaml', 'r', encoding='utf-8') as f:  # 模型信息
             model_dict = yaml.load(f, Loader=yaml.SafeLoader)
+        all_dict = {}
         for industry in screen_dict:
-            name_list = screen_dict[industry].keys()
-            for name in name_list:
-                data_path = f'{data_dir}/{name}_add.csv'
-                model_path = f'{model_dir}/{name}.pt'
-                weight = model_path
-                epoch = 50
-                lr_start = 0.001
-                lr_end_ratio = 0.001
-                if os.path.exists(model_path):
-                    if self.args.run_again:
-                        epoch = 30
-                        lr_start = 0.0001
-                        lr_end_ratio = 0.01
-                    else:
-                        continue
-                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
-                          f' --weight {weight} --weight_again True --model {self.args.model}'
-                          f' --model_type {self.args.model_type} --batch 64 --epoch {epoch} --lr_start {lr_start}'
-                          f' --lr_end_ratio {lr_end_ratio} --lr_end_epoch {epoch}'
-                          f' --device {self.args.device}')  # 所有数据训练
-                os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
-                          f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
-                          f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 1'
-                          f' --weight last.pt --weight_again True --model {self.args.model}'
-                          f' --model_type {self.args.model_type} --batch 64 --epoch 30 --lr_start 0.0001'
-                          f' --lr_end_epoch 30 --lr_end_ratio 0.01 --device {self.args.device}')  # 末尾数据加强训练
-                shutil.move('last.pt', model_path)
-                # 记录模型信息
-                df = pd.read_csv(data_path, index_col=0)
-                time = str(df.index[-1])
-                model_dict[name][3] = time
-                with open('economy/model.yaml', 'w', encoding='utf-8') as f:
-                    yaml.dump(model_dict, f, allow_unicode=True)
+            for key in screen_dict[industry].keys():
+                all_dict[key] = screen_dict[industry][key]
+        for name in all_dict.keys():
+            data_path = f'{data_dir}/{name}_add.csv'
+            model_path = f'{model_dir}/{name}.pt'
+            weight = model_path
+            epoch = 50
+            lr_start = 0.001
+            lr_end_ratio = 0.001
+            if os.path.exists(model_path):
+                if self.args.run_again:
+                    epoch = 30
+                    lr_start = 0.0001
+                    lr_end_ratio = 0.01
+                else:
+                    continue
+            os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
+                      f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
+                      f' --output_size {self.args.output_size} --divide 19,1 --divide_train 1 --z_score 1'
+                      f' --weight {weight} --weight_again True --model {self.args.model}'
+                      f' --model_type {self.args.model_type} --batch 64 --epoch {epoch} --lr_start {lr_start}'
+                      f' --lr_end_ratio {lr_end_ratio} --lr_end_epoch {epoch}'
+                      f' --device {self.args.device}')  # 所有数据训练
+            os.system(f'python run.py --data_path {data_path} --input_column {self.args.input_column}'
+                      f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
+                      f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 1'
+                      f' --weight last.pt --weight_again True --model {self.args.model}'
+                      f' --model_type {self.args.model_type} --batch 64 --epoch 30 --lr_start 0.0001'
+                      f' --lr_end_epoch 30 --lr_end_ratio 0.01 --device {self.args.device}')  # 末尾数据加强训练
+            shutil.move('last.pt', model_path)
+            # 记录模型信息
+            df = pd.read_csv(data_path, index_col=0)
+            time = str(df.index[-1])
+            model_dict[name][3] = time
+            with open('economy/model.yaml', 'w', encoding='utf-8') as f:
+                yaml.dump(model_dict, f, allow_unicode=True)
 
     def _feature(self, data_dir='economy/dataset', model_dir='economy/model'):
         if not os.path.exists('save_image'):
@@ -254,7 +260,7 @@ class economy_class:
                 ratio = np.mean(pred_high[0:3]) / high_data[-1]  # 上涨幅度
                 simulate_score = model_dict[name][2]
                 if industry == '自选' or (self.args.threshold < ratio < self.args.threshold_max
-                                          and simulate_score > self.args.simulate_score):  # 自选股票或有上涨空间
+                                        and simulate_score > self.args.simulate_score):  # 自选股票或有上涨空间
                     last_day = str(df.index[-1])
                     save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{simulate_score}.jpg'
                     self._draw(pred_high, pred_low, high_data, low_data, f'{last_day}_{name}', save_path)
