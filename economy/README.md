@@ -4,6 +4,8 @@
 >```
 >pip install tqdm wandb pyyaml pandas matplotlib tushare finta prophet -i https://pypi.tuna.tsinghua.edu.cn/simple
 >```
+### *，economy/tushare/industry_get.py
+>获取行业和概念分类信息
 ### 1，economy/tushare/industry_choice.py
 >选择股票
 ### 2，economy/tushare/data_get.py

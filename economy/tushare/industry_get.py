@@ -6,10 +6,10 @@ import tushare
 import argparse
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 获取同花顺的概念和行业分类，得到number_all.yaml
+# 获取同花顺的行业和概念分类，得到number_all.yaml
 # 需要5000积分
 # -------------------------------------------------------------------------------------------------------------------- #
-parser = argparse.ArgumentParser(description='|tushare获取同花顺的概念和行业分类|')
+parser = argparse.ArgumentParser(description='|tushare获取同花顺的行业和概念分类|')
 parser.add_argument('--token', default='', type=str, help='|密钥|')
 parser.add_argument('--save_path', default='number_all.yaml', type=str, help='|保存位置|')
 parser.add_argument('--start_code', default=['00', '60'], type=list, help='|只记录start_code开头的股票|')
