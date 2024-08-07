@@ -166,6 +166,9 @@ class economy_class:
         for name in all_dict.keys():
             model_path = f'model_test/{name}.pt'
             data_path = f'dataset/{name}_add.csv'
+            if not os.path.exists(model_path):
+                print(f'| 模型不存在:{model_path} |')
+                continue
             os.system(f'python simulate.py --model_path {model_path} --data_path {data_path}'
                       f' --input_size {self.args.input_size} --output_size {self.args.output_size}'
                       f' --rise {self.args.rise} --rise_max {self.args.rise_max} --device {self.args.device}')
@@ -238,6 +241,9 @@ class economy_class:
             for name in name_list:
                 data_path = f'{data_dir}/{name}_add.csv'
                 model_path = f'{model_dir}/{name}.pt'
+                if not os.path.exists(model_path):
+                    print(f'| 模型不存在:{model_path} |')
+                    continue
                 dict_ = torch.load(model_path, map_location='cpu')
                 model = dict_['model']
                 model = deploy(model, dict_['mean_input'], dict_['mean_output'], dict_['std_input'],
