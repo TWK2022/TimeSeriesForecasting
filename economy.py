@@ -128,7 +128,7 @@ class economy_class:
             lr_end_ratio = 0.001
             if os.path.exists(model_path):
                 if self.args.run_test_again or not model_dict.get(name):
-                    epoch = 30
+                    epoch = 20
                     lr_start = 0.0001
                     lr_end_ratio = 0.01
                 else:
@@ -149,9 +149,9 @@ class economy_class:
                 model_dict[name][0], model_dict[name][1] = time, mae_true
             else:
                 model_dict[name] = [time, mae_true, None, None]
-            with open('economy/model.yaml', 'w', encoding='utf-8') as f:
-                yaml.dump(model_dict, f, allow_unicode=True)
             del dict_, df
+        with open('economy/model.yaml', 'w', encoding='utf-8') as f:
+            yaml.dump(model_dict, f, allow_unicode=True)
 
     def _simulate(self):
         print('simulate.py')
@@ -175,11 +175,8 @@ class economy_class:
             income_mean = round(float(log[1].strip()[8:]), 2)
             # 记录模型信息
             model_dict[name][2] = income_mean
-            with open('_.yaml', 'w', encoding='utf-8') as f:
-                yaml.dump(model_dict, f, allow_unicode=True)
-        # 最后再复制，防止linux中间断开时导致model.yaml损坏
-        if os.path.exists('_.yaml'):
-            shutil.move('_.yaml', 'model.yaml')
+        with open('model.yaml', 'w', encoding='utf-8') as f:
+            yaml.dump(model_dict, f, allow_unicode=True)
 
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
         print('run.py | 训练正式模型')
@@ -225,8 +222,8 @@ class economy_class:
             df = pd.read_csv(data_path, index_col=0)
             time = str(df.index[-1])
             model_dict[name][3] = time
-            with open('economy/model.yaml', 'w', encoding='utf-8') as f:
-                yaml.dump(model_dict, f, allow_unicode=True)
+        with open('economy/model.yaml', 'w', encoding='utf-8') as f:
+            yaml.dump(model_dict, f, allow_unicode=True)
 
     def _feature(self, data_dir='economy/dataset', model_dir='economy/model'):
         if not os.path.exists('save_image'):
