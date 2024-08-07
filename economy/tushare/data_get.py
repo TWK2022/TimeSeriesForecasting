@@ -83,7 +83,7 @@ class data_get_class:
             if record_time % self.args.frequency == 0:
                 time_end = time.time()
                 if time_end - time_start < 60:
-                    time.sleep(60 + time_start - time_end)
+                    time.sleep(61 + time_start - time_end)
                 time_start = time.time()
 
     def _tushare_to_df(self, pro, ts_code, start_time):

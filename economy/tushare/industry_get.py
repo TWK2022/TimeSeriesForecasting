@@ -33,7 +33,7 @@ def industry_get(args):
         if ts_code[0:3] == '881' or ts_code[0:3] == '885' or ts_code[0:3] == '886':
             result_dict[value[index, 1]] = value[index, 0]
     # 获取行业股票数据
-    record_time = 1
+    record_time = 0
     time_start = time.time()
     for industry, ts_code in tqdm.tqdm(result_dict.items()):
         df = pro.ths_member(ts_code=ts_code, fields='code,name')
@@ -45,10 +45,11 @@ def industry_get(args):
                 continue
             industry_dict[name] = code
         result_dict[industry] = industry_dict
+        record_time += 1
         if record_time % args.frequency == 0:
             time_end = time.time()
             if time_end - time_start < 60:
-                time.sleep(60 + time_start - time_end)
+                time.sleep(61 + time_start - time_end)
             time_start = time.time()
     with open(args.save_path, 'w', encoding='utf-8') as f:
         yaml.dump(result_dict, f, allow_unicode=True, sort_keys=False)
