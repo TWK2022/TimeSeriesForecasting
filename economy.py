@@ -202,7 +202,7 @@ class economy_class:
             lr_end_ratio = 0.001
             if os.path.exists(model_path):
                 if self.args.run_again:
-                    epoch = 30
+                    epoch = 20
                     lr_start = 0.0001
                     lr_end_ratio = 0.01
                 else:
@@ -218,8 +218,8 @@ class economy_class:
                       f' --output_column {self.args.output_column} --input_size {self.args.input_size}'
                       f' --output_size {self.args.output_size} --divide 4,1 --divide_train 2 --z_score 1'
                       f' --weight last.pt --weight_again True --model {self.args.model}'
-                      f' --model_type {self.args.model_type} --batch 64 --epoch 30 --lr_start 0.0001'
-                      f' --lr_end_epoch 30 --lr_end_ratio 0.01 --device {self.args.device}')  # 末尾数据加强训练
+                      f' --model_type {self.args.model_type} --batch 64 --epoch 20 --lr_start 0.0001'
+                      f' --lr_end_epoch 20 --lr_end_ratio 0.01 --device {self.args.device}')  # 末尾数据加强训练
             shutil.move('last.pt', model_path)
             # 记录模型信息
             df = pd.read_csv(data_path, index_col=0)
