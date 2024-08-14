@@ -10,7 +10,7 @@ parser.add_argument('--yaml_path', default='number_all.yaml', type=str, help='|�
 parser.add_argument('--reserve_path', default='reserve.yaml', type=str, help='|自选股票信息(可选)|')
 parser.add_argument('--remove_path', default='remove.yaml', type=str, help='|要去除的股票信息(可选)|')
 parser.add_argument('--save_path', default='number.yaml', type=str, help='|保存位置|')
-parser.add_argument('--industry', default='无人驾驶,流感,新冠特效药,肝炎概念,抗原检测,环保设备,新能源汽车', type=str, help='|行业或概念，如"A,B,C"|')
+parser.add_argument('--industry', default='无人驾驶,流感,新冠特效药,抗原检测,环保设备,新能源汽车,民爆概念,天然气,油气开采及服务,贵金属,游戏', type=str, help='|行业或概念，如"A,B,C"|')
 parser.add_argument('--drop_st', default=True, type=bool, help='|是否去除ST股票|')
 args = parser.parse_args()
 args.industry = args.industry.split(',')
@@ -27,7 +27,7 @@ def industry_choice(args):
     if os.path.exists(args.reserve_path):
         with open(args.reserve_path, 'r', encoding='utf-8') as f:
             reserve_dict = yaml.load(f, Loader=yaml.SafeLoader)
-        if reserve_dict is not None or result_dict['自选'] is not None:
+        if reserve_dict is not None:
             result_dict['自选'] = reserve_dict['自选']
             record += len(reserve_dict['自选'])
     if os.path.exists(args.remove_path):
