@@ -24,7 +24,7 @@ parser.add_argument('--model_type', default='l', type=str)
 parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='无人驾驶,华为海思概念股,天然气,油气开采及服务,贵金属,游戏,云游戏,网络游戏,跨境支付(CIPS),数字货币,猴痘概念', type=str)
+parser.add_argument('--industry', default='无人驾驶,华为海思概念股,天然气,油气开采及服务,贵金属,游戏,云游戏,网络游戏,跨境支付(CIPS),数字货币,猴痘概念,俄乌冲突概念', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
