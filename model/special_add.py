@@ -10,7 +10,7 @@ class special_add(torch.nn.Module):
         self.model = model(args) if model else tsf(args)
 
     def forward(self, x, special=None):  # (batch,input_dim,input_size) -> (batch,output_dim,output_size)
-        series_last = torch.mean(x[:, [1, 2], -5:], dim=2, keepdim=True)
+        series_last = torch.mean(x[:, [1, 2], -4:], dim=2, keepdim=True)
         x = self.model(x)
         x = x + series_last
         return x
