@@ -9,10 +9,10 @@ parser = argparse.ArgumentParser(description='|筛选有上升潜力的股票|')
 parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
 parser.add_argument('--save_remove', default='remove.yaml', type=str, help='|记录收盘价、换手率、成交量不满足要求的股票|')
-parser.add_argument('--close', default=5, type=float, help='|筛选价格>close|')
+parser.add_argument('--close', default=4, type=float, help='|筛选价格>close|')
 parser.add_argument('--change', default=1, type=float, help='|筛选近期换手率>change|')
-parser.add_argument('--volume', default=50000, type=float, help='|筛选近期成交量>volume|')
-parser.add_argument('--fluctuate', default=1.04, type=float, help='|筛选近期最高价/最低价>fluctuate|')
+parser.add_argument('--volume', default=80000, type=float, help='|筛选近期成交量>volume|')
+parser.add_argument('--fluctuate', default=1.05, type=float, help='|筛选近期最高价/最低价>fluctuate|')
 parser.add_argument('--reserve', default=False, type=bool, help='|自选股票是否需要筛选|')
 args = parser.parse_args()
 
@@ -70,7 +70,7 @@ def data_screen(args):
             # 波动量筛选
             high = df['最高价'].values[-10:]
             low = df['最低价'].values[-10:]
-            if np.mean(high / low) < args.fluctuate:
+            if np.mean(high / low * ratio) < args.fluctuate:
                 continue
             # 盈利情况筛选
             pe_ttm = df['r市盈率ttm'].values[-1]

@@ -10,7 +10,7 @@ parser.add_argument('--yaml_path', default='number_all.yaml', type=str, help='|�
 parser.add_argument('--reserve_path', default='reserve.yaml', type=str, help='|自选股票信息(可选)|')
 parser.add_argument('--remove_path', default='remove.yaml', type=str, help='|要去除的股票信息(可选)|')
 parser.add_argument('--save_path', default='number.yaml', type=str, help='|保存位置|')
-parser.add_argument('--industry', default='无人驾驶,网约车,华为海思概念股,苹果概念,英伟达概念,猴痘概念,贵金属,跨境支付(CIPS),数字货币,俄乌冲突概念', type=str, help='|行业或概念，如"A,B,C"|')
+parser.add_argument('--industry', default='消费电子概念,华为海思概念股,英伟达概念,苹果概念,芯片概念,人工智能,机器人概念,一带一路,俄乌冲突概念,跨境支付(CIPS),黄金概念,猴痘概念,无人驾驶', type=str, help='|行业或概念，如"A,B,C"|')
 parser.add_argument('--drop_st', default=True, type=bool, help='|是否去除ST股票|')
 args = parser.parse_args()
 args.industry = args.industry.split(',')
