@@ -123,7 +123,7 @@ class economy_class:
             data_path = f'{data_dir}/{name}_add.csv'
             model_path = f'{model_dir}/{name}.pt'
             weight = model_path
-            epoch = 50
+            epoch = 80
             lr_start = 0.001
             lr_end_ratio = 0.001
             if os.path.exists(model_path):
@@ -197,7 +197,7 @@ class economy_class:
             data_path = f'{data_dir}/{name}_add.csv'
             model_path = f'{model_dir}/{name}.pt'
             weight = model_path
-            epoch = 50
+            epoch = 80
             lr_start = 0.001
             lr_end_ratio = 0.001
             if os.path.exists(model_path):
