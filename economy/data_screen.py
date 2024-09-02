@@ -9,10 +9,11 @@ parser = argparse.ArgumentParser(description='|筛选有上升潜力的股票|')
 parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
 parser.add_argument('--save_remove', default='remove.yaml', type=str, help='|记录收盘价、换手率、成交量不满足要求的股票|')
-parser.add_argument('--close', default=4, type=float, help='|筛选价格>close|')
-parser.add_argument('--change', default=1, type=float, help='|筛选近期换手率>change|')
-parser.add_argument('--volume', default=80000, type=float, help='|筛选近期成交量>volume|')
-parser.add_argument('--fluctuate', default=1.05, type=float, help='|筛选近期最高价/最低价>fluctuate|')
+parser.add_argument('--close_min', default=4, type=float, help='|筛选价格>close_min|')
+parser.add_argument('--close_max', default=40, type=float, help='|筛选价格<close_max|')
+parser.add_argument('--change', default=2, type=float, help='|筛选近期最大换手率>change|')
+parser.add_argument('--volume', default=200000, type=float, help='|筛选近期最大成交量>volume|')
+parser.add_argument('--fluctuate', default=1.04, type=float, help='|筛选近期最高价/最低价>fluctuate|')
 parser.add_argument('--reserve', default=False, type=bool, help='|自选股票是否需要筛选|')
 args = parser.parse_args()
 
@@ -52,25 +53,24 @@ def data_screen(args):
                 record_screen += 1
                 continue
             # 加权均值
-            ratio = np.linspace(0.1, 1.9, 10)
             # 收盘价筛选
-            if close_data[-1] < args.close:
+            if close_data[-1] < args.close_min or close_data[-1] > args.close_max:
                 remove_dict[industry][name] = industry_dict[name]
                 continue
             # 换手率筛选
-            change_mean = np.mean(change_data[-10:] * ratio)
+            change_mean = np.max(change_data[-5:])
             if change_mean < args.change:
                 remove_dict[industry][name] = industry_dict[name]
                 continue
             # 成交量筛选
-            volume_mean = np.mean(volume_data[-10:] * ratio)
+            volume_mean = np.max(volume_data[-5:])
             if volume_mean < args.volume:
                 remove_dict[industry][name] = industry_dict[name]
                 continue
             # 波动量筛选
-            high = df['最高价'].values[-10:]
-            low = df['最低价'].values[-10:]
-            if np.mean(high / low * ratio) < args.fluctuate:
+            high = df['最高价'].values[-5:]
+            low = df['最低价'].values[-5:]
+            if np.mean(high / low) < args.fluctuate:
                 continue
             # 盈利情况筛选
             pe_ttm = df['r市盈率ttm'].values[-1]

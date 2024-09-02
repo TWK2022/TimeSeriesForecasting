@@ -39,14 +39,14 @@ parser.add_argument('--run_test_again', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
 parser.add_argument('--rise', default=1.02, type=float)
-parser.add_argument('--rise_max', default=1.05, type=float)
+parser.add_argument('--rise_max', default=1.06, type=float)
 # run.py | 训练正式模型
 parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=True, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
 parser.add_argument('--threshold', default=1.02, type=float)
-parser.add_argument('--threshold_max', default=1.05, type=float)
+parser.add_argument('--threshold_max', default=1.06, type=float)
 parser.add_argument('--simulate_score', default=0, type=float)
 args = parser.parse_args()
 
@@ -163,6 +163,7 @@ class economy_class:
         for industry in screen_dict:
             for key in screen_dict[industry].keys():
                 all_dict[key] = screen_dict[industry][key]
+        income_all = 0
         for name in all_dict.keys():
             model_path = f'model_test/{name}.pt'
             data_path = f'dataset/{name}_add.csv'
@@ -175,11 +176,17 @@ class economy_class:
             # 打开日志
             with open('log.txt', 'r', encoding='utf-8') as f:
                 log = f.readlines()
-            income_mean = round(float(log[1].strip()[8:]), 2)
+            income_mean = round(float(log[1].strip()[8:]), 3)
             # 记录模型信息
-            model_dict[name][2] = income_mean
+            if model_dict.get(name):
+                model_dict[name][2] = income_mean
+            else:
+                model_dict[name] = [None, None, income_mean, None]
+            # 统计
+            income_all += income_mean
         with open('model.yaml', 'w', encoding='utf-8') as f:
             yaml.dump(model_dict, f, allow_unicode=True)
+        print(f'| 总收益:{income_all:.3f} |')
 
     def _run(self, data_dir='economy/dataset', model_dir='economy/model'):
         print('run.py | 训练正式模型')
@@ -224,7 +231,10 @@ class economy_class:
             # 记录模型信息
             df = pd.read_csv(data_path, index_col=0)
             time = str(df.index[-1])
-            model_dict[name][3] = time
+            if model_dict.get(name):
+                model_dict[name][3] = time
+            else:
+                model_dict[name] = [None, None, 0, time]
         with open('economy/model.yaml', 'w', encoding='utf-8') as f:
             yaml.dump(model_dict, f, allow_unicode=True)
 

@@ -15,7 +15,7 @@ parser.add_argument('--token', default='', type=str, help='|密钥|')
 parser.add_argument('--save_path', default='../dataset', type=str, help='|数据保存的目录|')
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
 parser.add_argument('--start_time', default='20180101', type=str, help='|开始时间|')
-parser.add_argument('--end_time', default='20240901', type=str, help='|结束时间|')
+parser.add_argument('--end_time', default='20241001', type=str, help='|结束时间|')
 parser.add_argument('--frequency', default=200, type=int, help='|API每分钟可以调取的频率|')
 args = parser.parse_args()
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -89,8 +89,7 @@ class data_get_class:
     def _tushare_to_df(self, pro, ts_code, start_time):
         start_time = start_time.replace('-', '')
         # 基础信息
-        df = pro.daily(ts_code=ts_code, start_date=start_time,
-                       end_date=self.args.end_time, fields=self.daily_column)
+        df = pro.daily(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time, fields=self.daily_column)
         df.columns = self.daily_name
         df.index = pd.DatetimeIndex(df['日期'].values)
         df = df.drop(columns='日期')
