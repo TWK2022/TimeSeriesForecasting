@@ -24,7 +24,9 @@ parser.add_argument('--model_type', default='l', type=str)
 parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='消费电子概念,华为概念,英伟达概念,苹果概念,芯片概念,人工智能,机器人概念,无人驾驶,一带一路,新疆振兴,跨境支付(CIPS),中俄贸易概念,俄乌冲突概念,文化传媒概念,旅游概念,网络游戏,猴痘概念,肝炎概念,金属铅,黄金概念', type=str)
+parser.add_argument('--industry',
+                    default='消费电子概念,华为概念,英伟达概念,苹果概念,芯片概念,人工智能,机器人概念,无人驾驶,一带一路,新疆振兴,跨境支付(CIPS),中俄贸易概念,俄乌冲突概念,文化传媒概念,旅游概念,网络游戏,猴痘概念,肝炎概念,金属铅,黄金概念',
+                    type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -263,6 +265,7 @@ class economy_class:
                 input_data = input_data[:, -self.args.input_size:]
                 high_data = np.array(df['最高价']).astype(np.float32)[-100:]
                 low_data = np.array(df['最低价']).astype(np.float32)[-100:]
+                increase = np.array(df['涨跌幅']).astype(np.float32)[-2:]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
                 # 推理
                 with torch.no_grad():
@@ -272,8 +275,9 @@ class economy_class:
                 # 画图
                 ratio = np.mean(pred_high[0:3]) / high_data[-1]  # 上涨幅度
                 simulate_score = model_dict[name][2]
-                if industry == '自选' or (self.args.threshold < ratio < self.args.threshold_max
-                                        and simulate_score > self.args.simulate_score):  # 自选股票或有上涨空间
+                if industry == '自选' or np.mean(increase) > 8 \
+                        or (self.args.threshold < ratio < self.args.threshold_max
+                            and simulate_score > self.args.simulate_score):  # 自选股票或有上涨空间
                     last_day = str(df.index[-1])
                     save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{simulate_score}.jpg'
                     self._draw(pred_high, pred_low, high_data, low_data, f'{last_day}_{name}', save_path)
