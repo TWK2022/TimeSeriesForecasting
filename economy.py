@@ -273,7 +273,7 @@ class economy_class:
                 # 画图
                 ratio = np.mean(pred_high[0:3]) / high_data[-1]  # 上涨幅度
                 simulate_score = model_dict[name][2]
-                if industry == '自选' or np.mean(increase) > 8 \
+                if industry == '自选' or np.max(increase) > 8 \
                         or (self.args.threshold < ratio < self.args.threshold_max
                             and simulate_score > self.args.simulate_score):  # 自选股票或有上涨空间
                     last_day = str(df.index[-1])
