@@ -73,10 +73,11 @@ def data_screen(args):
             if np.mean(high / low) < args.fluctuate:
                 continue
             # 盈利情况筛选
+            increase = np.array(df['涨跌幅']).astype(np.float32)[-2:]
             pe_ttm = df['r市盈率ttm'].values[-1]
             pb = df['r市净率'].values[-1]
             ps_ttm = df['r市销率ttm'].values[-1]
-            if pe_ttm == 0 or pb == 0 or ps_ttm == 0:
+            if np.max(increase) < 8 and (pe_ttm == 0 or pb == 0 or ps_ttm == 0):
                 continue
             # 记录
             result_dict[industry][name] = industry_dict[name]
