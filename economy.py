@@ -48,6 +48,7 @@ parser.add_argument('--feature', default=False, type=bool)
 parser.add_argument('--threshold', default=1.02, type=float)
 parser.add_argument('--threshold_max', default=1.06, type=float)
 parser.add_argument('--simulate_score', default=0, type=float)
+parser.add_argument('--prophet', default=True, type=bool)
 args = parser.parse_args()
 
 
@@ -279,8 +280,9 @@ class economy_class:
                     last_day = str(df.index[-1])
                     save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{simulate_score}.jpg'
                     self._draw(pred_high, pred_low, high_data, low_data, f'{last_day}_{name}', save_path)
-                    self._draw_prophet(df)
-                    self._image_merge(save_path, 'save_image/_.jpg')
+                    if self.args.prophet:
+                        self._draw_prophet(df)
+                        self._image_merge(save_path, 'save_image/_.jpg')
 
     def _draw(self, pred_high, pred_low, high_data, low_data, name, save_path):
         zero = torch.zeros(len(high_data))
