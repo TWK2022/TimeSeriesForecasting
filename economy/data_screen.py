@@ -10,7 +10,7 @@ parser.add_argument('--yaml_path', default='tushare/number.yaml', type=str, help
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
 parser.add_argument('--save_remove', default='remove.yaml', type=str, help='|记录收盘价、换手率、成交量不满足要求的股票|')
 parser.add_argument('--close_min', default=4, type=float, help='|筛选价格>close_min|')
-parser.add_argument('--close_max', default=40, type=float, help='|筛选价格<close_max|')
+parser.add_argument('--close_max', default=30, type=float, help='|筛选价格<close_max|')
 parser.add_argument('--change', default=2, type=float, help='|筛选近期最大换手率>change|')
 parser.add_argument('--volume', default=200000, type=float, help='|筛选近期最大成交量>volume|')
 parser.add_argument('--fluctuate', default=1.04, type=float, help='|筛选近期最高价/最低价>fluctuate|')
@@ -73,11 +73,11 @@ def data_screen(args):
             if np.mean(high / low) < args.fluctuate:
                 continue
             # 盈利情况筛选
-            increase = np.array(df['涨跌幅']).astype(np.float32)[-2:]
+            increase = np.abs(df['涨跌幅'])
             pe_ttm = df['r市盈率ttm'].values[-1]
             pb = df['r市净率'].values[-1]
             ps_ttm = df['r市销率ttm'].values[-1]
-            if np.max(increase) < 8 and (pe_ttm == 0 or pb == 0 or ps_ttm == 0):
+            if increase < 6 and (pe_ttm == 0 or pb == 0 or ps_ttm == 0):
                 continue
             # 记录
             result_dict[industry][name] = industry_dict[name]

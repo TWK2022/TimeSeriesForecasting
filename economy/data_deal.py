@@ -25,6 +25,7 @@ def fix(data, decimal=2):  # 修复数据中的nan值
                 index_next += 1
                 record += 1
             if index == index_max:  # 最后一天空缺
+                data[index] = data[index - 1]
                 continue
             data[index] = data[index - 1] + (data[index_next] - data[index - 1]) / record
             data[index] = round(data[index], decimal)
@@ -133,6 +134,7 @@ def data_deal(args):
         # 其他指标
         df['震荡幅度'] = (df_count['high'] - df_count['low']) / df_count['open']
         # 修复数据
+        df['换手率'] = fix(df['换手率'].values, 4)
         df['量比'] = fix(df['量比'].values, 2)
         df['5分位成本'] = fix(df['5分位成本'].values, 1)
         df['15分位成本'] = fix(df['15分位成本'].values, 1)
