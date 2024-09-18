@@ -33,7 +33,7 @@ def data_screen(args):
         remove_dict[industry] = {}
         for name in industry_dict:
             if not os.path.exists(f'dataset/{name}_add.csv'):
-                print(f'| 文件不存在:dataset/{name}_add.csv |')
+                print(f'! 文件不存在:dataset/{name}_add.csv !')
                 continue
             df = pd.read_csv(f'dataset/{name}_add.csv', index_col=0)
             close_data = df['收盘价'].values
@@ -41,11 +41,11 @@ def data_screen(args):
             volume_data = df['成交量'].values
             # 检查是否存在nan值
             if np.isnan(df.values).any():
-                print(f'| 存在nan值:dataset/{name}_add.csv |')
+                print(f'! 存在nan值:dataset/{name}_add.csv !')
                 continue
             # 上市日期删选
             if len(df) < 200:
-                print(f'| 文件数据太少:dataset/{name}_add.csv |')
+                print(f'! 文件数据太少:dataset/{name}_add.csv !')
                 continue
             # 自选股票
             if not args.reserve and industry == '自选':
