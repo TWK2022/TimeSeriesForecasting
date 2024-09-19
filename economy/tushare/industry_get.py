@@ -28,14 +28,14 @@ def industry_get(args):
     # 获取行业分类数据
     df = pro.ths_index(fields='ts_code,name')
     value = df.values
-    result_dict = {}
+    result_dict = {'同花顺概念': {}}
     for index, ts_code in enumerate(value[:, 0]):
         if ts_code[0:3] == '881' or ts_code[0:3] == '885' or ts_code[0:3] == '886':
-            result_dict[value[index, 1]] = value[index, 0]
+            result_dict['同花顺概念'][value[index, 1]] = ts_code
     # 获取行业股票数据
     record_time = 0
     time_start = time.time()
-    for industry, ts_code in tqdm.tqdm(result_dict.items()):
+    for industry, ts_code in tqdm.tqdm(result_dict['同花顺概念'].items()):
         df = pro.ths_member(ts_code=ts_code, fields='code,name')
         industry_dict = {}
         for code, name in df.values:
