@@ -266,7 +266,7 @@ class economy_class:
                 input_data = input_data[:, -self.args.input_size:]
                 high_data = df['最高价'].values[-100:]
                 low_data = df['最低价'].values[-100:]
-                mean_data = np.mean(high_data + low_data)
+                mean_data = (high_data + low_data) / 2
                 increase = np.abs(df['涨跌幅'].values)[-1]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
                 # 推理
@@ -274,7 +274,7 @@ class economy_class:
                     pred = model(tensor)[0].cpu().numpy()
                 pred_high = pred[0]
                 pred_low = pred[1]
-                pred_mean = np.mean(pred_high + pred_low)
+                pred_mean = (pred_high + pred_low) / 2
                 # 画图
                 ratio = np.mean(pred_mean[0:3]) / mean_data[-1]  # 上涨幅度
                 simulate_score = model_dict[name][2]
