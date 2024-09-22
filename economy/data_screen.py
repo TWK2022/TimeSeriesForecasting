@@ -20,7 +20,7 @@ args = parser.parse_args()
 
 # -------------------------------------------------------------------------------------------------------------------- #
 def data_screen(args):
-    with open(args.yaml_path, 'r', encoding='utf-8') as f:
+    with open(args.number_path, 'r', encoding='utf-8') as f:
         number_dict = yaml.load(f, Loader=yaml.SafeLoader)
     result_dict = {}
     remove_dict = {}
