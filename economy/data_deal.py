@@ -21,10 +21,10 @@ def fix(data, decimal=2):  # 修复数据中的nan值
         for index in index_list:
             index_next = index + 1
             record = 2
-            while index_next <= index_max and np.isnan(data[index_next]):  # 下一个值也为空
+            while index_next < index_max and np.isnan(data[index_next]):  # 下一个值也为空
                 index_next += 1
                 record += 1
-            if index == index_max:  # 最后一天空缺
+            if index == index_max or index_next == index_max:  # 最后一天空缺
                 data[index] = data[index - 1]
                 continue
             data[index] = data[index - 1] + (data[index_next] - data[index - 1]) / record
