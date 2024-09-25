@@ -275,7 +275,10 @@ class economy_class:
                 pred_mean = (pred_high + pred_low) / 2
                 # 画图
                 ratio = np.mean(pred_mean[0:3]) / mean_data[-1]  # 上涨幅度
-                simulate_score = model_dict[name][2]
+                if model_dict.get(name):
+                    simulate_score = model_dict[name][2]
+                else:
+                    simulate_score = 0
                 if industry == '自选' or increase > 6 or (self.args.threshold < ratio < self.args.threshold_max
                                                         and simulate_score > self.args.simulate_score):  # 有上涨空间
                     last_day = str(df.index[-1])
