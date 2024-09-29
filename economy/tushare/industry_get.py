@@ -6,10 +6,10 @@ import tushare
 import argparse
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 获取同花顺的行业和概念分类，得到number_all.yaml
+# 获取同花顺的概念分类，得到number_all.yaml
 # 需要5000积分
 # -------------------------------------------------------------------------------------------------------------------- #
-parser = argparse.ArgumentParser(description='|tushare获取同花顺的行业和概念分类|')
+parser = argparse.ArgumentParser(description='|tushare获取同花顺的概念分类|')
 parser.add_argument('--token', default='', type=str, help='|密钥|')
 parser.add_argument('--save_path', default='number_all.yaml', type=str, help='|保存位置|')
 parser.add_argument('--start_code', default=['00', '60'], type=list, help='|只记录start_code开头的股票|')
@@ -25,14 +25,14 @@ if not os.path.exists(args.save_path):
 def industry_get(args):
     tushare.set_token(args.token)  # 设置密钥
     pro = tushare.pro_api()  # 初始化接口
-    # 获取行业分类数据
+    # 获取概念分类数据
     df = pro.ths_index(fields='ts_code,name')
     value = df.values
     result_dict = {'同花顺概念': {}}
     for index, ts_code in enumerate(value[:, 0]):
-        if ts_code[0:3] == '881' or ts_code[0:3] == '885' or ts_code[0:3] == '886':
+        if ts_code[0:3] == '883' or ts_code[0:3] == '885' or ts_code[0:3] == '886':
             result_dict['同花顺概念'][value[index, 1]] = ts_code
-    # 获取行业股票数据
+    # 获取概念股票数据
     record_time = 0
     time_start = time.time()
     for industry, ts_code in tqdm.tqdm(result_dict['同花顺概念'].items()):
