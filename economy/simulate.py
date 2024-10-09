@@ -21,13 +21,11 @@ parser.add_argument('--model_path', default='../last.pt', type=str, help='|pt模
 parser.add_argument('--data_path', default=r'dataset/XX_add.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='../input_column.txt', type=str, help='|选择输入的变量，可传入.txt|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
-parser.add_argument('--output_size', default=12, type=int, help='|输出长度|')
+parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
 parser.add_argument('--divide', default='19,1', type=str, help='|训练集和验证集划分比例，取验证集测试|')
 parser.add_argument('--device', default='cuda', type=str, help='|推理设备|')
 parser.add_argument('--rise', default=1.02, type=float, help='|上涨预期，大于预期才会买入|')
-parser.add_argument('--rise_max', default=1.06, type=float, help='|上涨异常值，小于异常值才会买入，通常是一直大跌的股|')
-parser.add_argument('--buy_scale', default=0.3, type=float, help='|买入价格估算=最低价+buy_scale*波动|')
-parser.add_argument('--sell_scale', default=0.7, type=float, help='|卖出价格估算=最低价+sell_scale*波动|')
+parser.add_argument('--rise_max', default=1.12, type=float, help='|上涨异常值，小于异常值才会买入，通常是一直大跌的股|')
 parser.add_argument('--a', default=True, type=bool, help='|使用人为策略|')
 args = parser.parse_args()
 args.divide = list(map(int, args.divide.split(',')))
@@ -61,12 +59,8 @@ class simulate_class:
         data_len = len(df) - add  # 输入数据的真实数量
         boundary = int(data_len * divide[0] / (divide[0] + divide[1]))  # 数据划分
         self.input_data = df[input_column].values.astype(np.float32).T[:, boundary:len(df)]  # 模型输入
+        self.mean_data = df['均价'].values.astype(np.float32).T[boundary:len(df)]  # 均价
         self.close_data = df['收盘价'].values.astype(np.float32).T[boundary:len(df)]  # 收盘价
-        self.open_data = df['开盘价'].values.astype(np.float32).T[boundary:len(df)]  # 开盘价
-        self.high_data = df['最高价'].values.astype(np.float32).T[boundary:len(df)]  # 最高价
-        self.low_data = df['最低价'].values.astype(np.float32).T[boundary:len(df)]  # 最低价
-        self.shangzheng = df['上证指数'].values.astype(np.float32).T[boundary:len(df)]  # 上证指数
-        self.shangzheng_SMA_5 = df['上证指数_SMA_5'].values.astype(np.float32).T[boundary:len(df)]  # 上证指数5日均线
         # 记录
         self.state = None  # 买卖状态
         self.buy_list = None  # 买入价格
@@ -81,12 +75,11 @@ class simulate_class:
                 tensor = torch.tensor(self.input_data[:, index - self.args.input_size:index]
                                       ).unsqueeze(0).to(self.args.device)
                 pred = self.model(tensor)[0].cpu().numpy()
-                pred_high = pred[0]
-                pred_low = pred[1]
+                pred_mean = pred[0]
                 if self.state == 0:  # 准备买入
-                    self._buy(index, pred_high, pred_low)
+                    self._buy(index, pred_mean)
                 elif self.state == 1:  # 准备卖出
-                    self._sell(index, pred_high, pred_low)
+                    self._sell(index, pred_mean)
             close = self.close_data[-1]
             self._metric('模型', close, True)
 
@@ -95,20 +88,18 @@ class simulate_class:
         self.buy_list = []
         self.sell_list = []
         for index in range(self.args.input_size, self.input_data.shape[1] - 1):  # index是预测的第1步
-            pred_high = self.high_data[index:min(index + self.args.output_size, self.input_data.shape[1])]
-            pred_low = self.low_data[index:min(index + self.args.output_size, self.input_data.shape[1])]
+            pred_mean = self.mean_data[index:min(index + self.args.output_size, self.input_data.shape[1])]
             if self.state == 0:  # 准备买入
-                self._buy(index, pred_high, pred_low)
+                self._buy(index, pred_mean)
             elif self.state == 1:  # 准备卖出
-                self._sell(index, pred_high, pred_low)
+                self._sell(index, pred_mean)
         close = self.close_data[-1]
         self._metric('理想', close, False)
 
-    def _buy(self, index, pred_high, pred_low):
-        next_high = self.high_data[index]
-        next_low = self.low_data[index]
-        buy_value = next_low + self.args.buy_scale * (next_high - next_low)  # 实际买入价格
-        pred_sell = pred_low + self.args.sell_scale * (pred_high - pred_low)  # 预测卖出价格
+    def _buy(self, index, pred_mean):
+        next_mean = self.mean_data[index]
+        buy_value = next_mean  # 实际买入价格
+        pred_sell = pred_mean  # 预测卖出价格
         # b模型策略
         if buy_value * self.args.rise > np.mean(pred_sell[0:3]):  # 预测上涨幅度不大，先不买入
             return
@@ -118,13 +109,12 @@ class simulate_class:
         self.state = 1
         self.buy_list.append(buy_value)
 
-    def _sell(self, index, pred_high, pred_low):
-        next_high = self.high_data[index]
-        next_low = self.low_data[index]
-        sell_value = next_low + self.args.sell_scale * (next_high - next_low)  # 实际卖出价格
-        pred_sell = pred_low + self.args.sell_scale * (pred_high - pred_low)  # 预测卖出价格
+    def _sell(self, index, pred_mean):
+        next_mean = self.mean_data[index]
+        sell_value = next_mean  # 实际卖出价格
+        pred_sell = pred_mean  # 预测卖出价格
         # b模型策略
-        if sell_value < 1.01 * np.mean(pred_sell[0:3]):  # 预测还有上升空间，先不卖出
+        if sell_value < 1.02 * np.mean(pred_sell[0:3]):  # 预测还有上升空间，先不卖出
             return
         # 卖出
         self.state = 0

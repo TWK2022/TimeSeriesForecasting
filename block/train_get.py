@@ -125,7 +125,8 @@ class torch_dataset(torch.utils.data.Dataset):
         self.special_data = special_data
 
     def __len__(self):
-        return len(self.input_data) - self.input_size - self.output_size + 1
+        reduce = 0 if 'special' not in self.model else 1
+        return len(self.input_data) - self.input_size - self.output_size + 1 - reduce
 
     def __getitem__(self, index):
         boundary = index + self.input_size

@@ -16,10 +16,10 @@ from block.util import read_column
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|集成|')
 parser.add_argument('--input_column', default='input_column.txt', type=str)
-parser.add_argument('--output_column', default='最高价,最低价', type=str)
+parser.add_argument('--output_column', default='均价', type=str)
 parser.add_argument('--input_size', default=96, type=int)
-parser.add_argument('--output_size', default=12, type=int)
-parser.add_argument('--model', default='special_add', type=str)
+parser.add_argument('--output_size', default=24, type=int)
+parser.add_argument('--model', default='tsf', type=str)
 parser.add_argument('--model_type', default='l', type=str)
 parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
@@ -39,14 +39,14 @@ parser.add_argument('--run_test_again', default=False, type=bool)
 # simulate.py
 parser.add_argument('--simulate', default=False, type=bool)
 parser.add_argument('--rise', default=1.02, type=float)
-parser.add_argument('--rise_max', default=1.06, type=float)
+parser.add_argument('--rise_max', default=1.1, type=float)
 # run.py | 训练正式模型
 parser.add_argument('--run', default=False, type=bool)
 parser.add_argument('--run_again', default=True, type=bool)
 # def feature
 parser.add_argument('--feature', default=False, type=bool)
 parser.add_argument('--threshold', default=1.02, type=float)
-parser.add_argument('--threshold_max', default=1.06, type=float)
+parser.add_argument('--threshold_max', default=1.1, type=float)
 parser.add_argument('--simulate_score', default=0, type=float)
 parser.add_argument('--prophet', default=False, type=bool)
 args = parser.parse_args()
@@ -262,17 +262,13 @@ class economy_class:
                 df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
                 input_data = df[input_column].values.astype(np.float32).T
                 input_data = input_data[:, -self.args.input_size:]
-                high_data = df['最高价'].values[-100:]
-                low_data = df['最低价'].values[-100:]
-                mean_data = (high_data + low_data) / 2
+                mean_data = df['均价'].values[-100:]
                 increase = np.abs(df['涨跌幅'].values)[-1]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
                 # 推理
                 with torch.no_grad():
                     pred = model(tensor)[0].cpu().numpy()
-                pred_high = pred[0]
-                pred_low = pred[1]
-                pred_mean = (pred_high + pred_low) / 2
+                pred_mean = pred[0]
                 # 画图
                 ratio = np.mean(pred_mean[0:3]) / mean_data[-1]  # 上涨幅度
                 if model_dict.get(name):
@@ -283,23 +279,20 @@ class economy_class:
                                                         and simulate_score > self.args.simulate_score):  # 有上涨空间
                     last_day = str(df.index[-1])
                     save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{simulate_score}.jpg'
-                    self._draw(pred_high, pred_low, high_data, low_data, f'{last_day}_{name}', save_path)
+                    self._draw(pred_mean, mean_data, f'{last_day}_{name}', save_path)
                     if self.args.prophet:
                         self._draw_prophet(df)
                         self._image_merge(save_path, 'save_image/_.jpg')
 
-    def _draw(self, pred_high, pred_low, high_data, low_data, name, save_path):
-        zero = torch.zeros(len(high_data))
-        pred_high = np.concatenate([zero, pred_high], axis=0)
-        pred_low = np.concatenate([zero, pred_low], axis=0)
+    def _draw(self, pred_mean, mean_data, name, save_path):
+        zero = torch.zeros(len(mean_data))
+        pred_mean = np.concatenate([zero, pred_mean], axis=0)
         plt.rcParams['font.sans-serif'] = ['SimHei']  # 显示中文
         plt.rcParams['axes.unicode_minus'] = False  # 使用字体时让坐标轴正常显示负号
         plt.title(name)
         plt.grid()
-        plt.plot(low_data, color='green', label='true_low')
-        plt.plot(high_data, color='red', label='true_high')
-        plt.plot(pred_low, color='green', label='pred_low')
-        plt.plot(pred_high, color='red', label='pred_high')
+        plt.plot(mean_data, color='red', label='mean_data')
+        plt.plot(pred_mean, color='green', label='pred_mean')
         plt.savefig(save_path)
         plt.close()
         print(f'| 画图保存位置:{save_path} |')

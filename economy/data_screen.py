@@ -70,11 +70,10 @@ def data_screen(args):
             if np.max(high / low) < args.fluctuate:
                 continue
             # 盈利情况筛选
-            increase = df['最高价'].values[-1] / df['最低价'].values[-1]
             pe_ttm = df['r市盈率ttm'].values[-1]
             pb = df['r市净率'].values[-1]
             ps_ttm = df['r市销率ttm'].values[-1]
-            if increase < 6 and (pe_ttm == 0 or pb == 0 or ps_ttm == 0):
+            if pe_ttm < 1 or pb == 0 or ps_ttm == 0:
                 continue
             # 记录
             result_dict[industry][name] = industry_dict[name]
