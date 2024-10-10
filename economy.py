@@ -24,7 +24,7 @@ parser.add_argument('--model_type', default='l', type=str)
 parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='高股息精选,破净股,鸿蒙概念,数字货币,跨境支付(CIPS)', type=str)
+parser.add_argument('--industry', default='中字头股票,高端装备,鸿蒙概念,跨境支付(CIPS)', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
