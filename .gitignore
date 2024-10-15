@@ -21,7 +21,6 @@ __pycache__
 *.trt
 *.onnx
 # -------------------------------------------------------------------------------------------------------------------- #
-economy/_.yaml
 economy/model.yaml
 economy/remove.yaml
 economy/data_screen.yaml
