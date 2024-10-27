@@ -24,7 +24,7 @@ parser.add_argument('--model_type', default='l', type=str)
 parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='数据安全,鸿蒙概念,跨境支付(CIPS)', type=str)
+parser.add_argument('--industry', default='华为概念,芯片概念,股权转让,商业航天,军工,黄金概念', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
@@ -275,7 +275,7 @@ class economy_class:
                     simulate_score = model_dict[name][2]
                 else:
                     simulate_score = 0
-                if industry == '自选' or increase > 6 or (self.args.threshold < ratio < self.args.threshold_max
+                if industry == '自选' or increase > 8 or (self.args.threshold < ratio < self.args.threshold_max
                                                         and simulate_score > self.args.simulate_score):  # 有上涨空间
                     last_day = str(df.index[-1])
                     save_path = f'save_image/{last_day}__{industry}__{name}__{ratio:.2f}__{simulate_score}.jpg'

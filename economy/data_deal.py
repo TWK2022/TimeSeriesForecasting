@@ -138,6 +138,12 @@ def data_deal(args):
         # 修复数据
         df['换手率'] = fix(df['换手率'].values, 4)
         df['量比'] = fix(df['量比'].values, 2)
+        df['KDJ_K'] = fix(df['KDJ_K'].values, 2)
+        df['KDJ_D'] = fix(df['KDJ_D'].values, 2)
+        df['KDJ_J'] = fix(df['KDJ_J'].values, 2)
+        df['RSI_6'] = fix(df['RSI_6'].values, 2)
+        df['RSI_12'] = fix(df['RSI_12'].values, 2)
+        df['RSI_24'] = fix(df['RSI_24'].values, 2)
         df['5分位成本'] = fix(df['5分位成本'].values, 1)
         df['15分位成本'] = fix(df['15分位成本'].values, 1)
         df['50分位成本'] = fix(df['50分位成本'].values, 1)

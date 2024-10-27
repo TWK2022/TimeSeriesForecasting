@@ -8,7 +8,7 @@ import pandas as pd
 # -------------------------------------------------------------------------------------------------------------------- #
 # 获取股票数据以补全数据库
 # 获取数据的时间格式为20240101，不能为2024-01-01
-# 需要2000积分
+# 需要5000积分
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|tushare获取最新股票数据以补全数据库|')
 parser.add_argument('--token', default='', type=str, help='|密钥|')
@@ -16,7 +16,7 @@ parser.add_argument('--save_path', default='../dataset', type=str, help='|数据
 parser.add_argument('--number', default='number.yaml', type=str, help='|选用的股票|')
 parser.add_argument('--start_time', default='20180101', type=str, help='|开始时间|')
 parser.add_argument('--end_time', default='20241101', type=str, help='|结束时间|')
-parser.add_argument('--frequency', default=200, type=int, help='|API每分钟可以调取的频率|')
+parser.add_argument('--frequency', default=100, type=int, help='|API每分钟可以调取的频率|')
 args = parser.parse_args()
 # -------------------------------------------------------------------------------------------------------------------- #
 if not os.path.exists(args.save_path):
@@ -33,6 +33,8 @@ class data_get_class:
         self.daily_name = ['日期', '开盘价', '最高价', '最低价', '收盘价', '涨跌额', '涨跌幅', '成交量', '成交额']
         self.daily_basic_column = ['trade_date', 'turnover_rate', 'volume_ratio', 'pe_ttm', 'pb', 'ps_ttm']
         self.daily_basic_name = ['日期', '换手率', '量比', '市盈率ttm', '市净率', '市销率ttm']
+        self.stk_factor_column = ['trade_date', 'kdj_k', 'kdj_d', 'kdj_j', 'rsi_6', 'rsi_12', 'rsi_24']
+        self.stk_factor_name = ['日期', 'KDJ_K', 'KDJ_D', 'KDJ_J', 'RSI_6', 'RSI_12', 'RSI_24']
         self.moneyflow_column = ['trade_date', 'buy_sm_vol', 'sell_sm_vol', 'buy_md_vol', 'sell_md_vol', 'buy_lg_vol',
                                  'sell_lg_vol', 'buy_elg_vol', 'sell_elg_vol', 'net_mf_vol', 'trade_count']
         self.moneyflow_name = ['日期', '小单买入量', '小单卖出量', '中单买入量', '中单卖出量', '大单买入量', '大单卖出量',
@@ -101,22 +103,29 @@ class data_get_class:
         df1.index = pd.DatetimeIndex(df1['日期'].values)
         df1 = df1.drop(columns='日期')
         df1 = df1.sort_index()
-        # 资金流向
-        df2 = pro.moneyflow(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
-                            fields=self.moneyflow_column)
-        df2.columns = self.moneyflow_name
+        # 技术指标
+        df2 = pro.stk_factor(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
+                             fields=self.stk_factor_column)
+        df2.columns = self.stk_factor_name
         df2.index = pd.DatetimeIndex(df2['日期'].values)
         df2 = df2.drop(columns='日期')
         df2 = df2.sort_index()
-        # 筹码分布
-        df3 = pro.cyq_perf(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
-                           fields=self.distribution_column)
-        df3.columns = self.distribution_name
+        # 资金流向
+        df3 = pro.moneyflow(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
+                            fields=self.moneyflow_column)
+        df3.columns = self.moneyflow_name
         df3.index = pd.DatetimeIndex(df3['日期'].values)
         df3 = df3.drop(columns='日期')
         df3 = df3.sort_index()
+        # 筹码分布
+        df4 = pro.cyq_perf(ts_code=ts_code, start_date=start_time, end_date=self.args.end_time,
+                           fields=self.distribution_column)
+        df4.columns = self.distribution_name
+        df4.index = pd.DatetimeIndex(df4['日期'].values)
+        df4 = df4.drop(columns='日期')
+        df4 = df4.sort_index()
         # 合并
-        df = pd.concat([df, df1, df2, df3], axis=1)
+        df = pd.concat([df, df1, df2, df3, df4], axis=1)
         return df
 
 
