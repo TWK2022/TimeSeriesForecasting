@@ -24,7 +24,7 @@ parser.add_argument('--model_type', default='l', type=str)
 parser.add_argument('--device', default='cuda', type=str)
 # economy/tushare/industry_choice.py
 parser.add_argument('--industry_choice', default=False, type=bool)
-parser.add_argument('--industry', default='华为概念,芯片概念,股权转让(并购重组),商业航天,化债概念(AMC概念),低空经济', type=str)
+parser.add_argument('--industry', default='互联网金融,华为概念,芯片概念,锂电池概念,消费电子概念,低空经济', type=str)
 # economy/tushare/data_get.py
 parser.add_argument('--data_get', default=False, type=bool)
 parser.add_argument('--token', default='', type=str)
