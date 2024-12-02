@@ -128,7 +128,7 @@ class economy_class:
             lr_start = 0.001
             lr_end_ratio = 0.001
             if os.path.exists(model_path):
-                if self.args.run_test_again or not model_dict.get(name):
+                if self.args.run_test_again or model_dict.get(name) is None:
                     epoch = 20
                     lr_start = 0.0001
                     lr_end_ratio = 0.01
@@ -146,7 +146,7 @@ class economy_class:
             mae_true = round(float(dict_['val_mae'] * dict_['std_output'][0]), 4)
             df = pd.read_csv(data_path, index_col=0)
             time = str(df.index[-1])
-            if model_dict.get(name):
+            if model_dict.get(name) is not None:
                 model_dict[name][0], model_dict[name][1] = time, mae_true
             else:
                 model_dict[name] = [time, mae_true, None, None]
@@ -179,7 +179,7 @@ class economy_class:
                 log = f.readlines()
             income_mean = round(float(log[1].strip()[8:]), 3)
             # 记录模型信息
-            if model_dict.get(name):
+            if model_dict.get(name) is not None:
                 model_dict[name][2] = income_mean
             else:
                 model_dict[name] = [None, None, income_mean, None]
@@ -232,7 +232,7 @@ class economy_class:
             # 记录模型信息
             df = pd.read_csv(data_path, index_col=0)
             time = str(df.index[-1])
-            if model_dict.get(name):
+            if model_dict.get(name) is not None:
                 model_dict[name][3] = time
             else:
                 model_dict[name] = [None, None, 0, time]
@@ -271,7 +271,7 @@ class economy_class:
                 pred_mean = pred[0]
                 # 画图
                 ratio = np.mean(pred_mean[0:3]) / mean_data[-1]  # 上涨幅度
-                if model_dict.get(name):
+                if model_dict.get(name) is not None:
                     simulate_score = model_dict[name][2]
                 else:
                     simulate_score = 0
