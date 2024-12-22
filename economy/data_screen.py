@@ -75,6 +75,13 @@ def data_screen(args):
             ps_ttm = df['r市销率ttm'].values[-1]
             if pe_ttm < 1 or pb == 0 or ps_ttm == 0:
                 continue
+            # KDJ指标筛选
+            kdj_k = df['KDJ_K'].values[-2:]
+            kdj_j = df['KDJ_J'].values[-2:]
+            if kdj_k[-1] < kdj_j[-1] < kdj_j[-2]:
+                continue
+            if kdj_j[-1] < kdj_k[-1] and kdj_j[-2] > kdj_k[-2]:
+                continue
             # 记录
             result_dict[industry][name] = industry_dict[name]
             record_screen += 1
