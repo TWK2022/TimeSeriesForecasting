@@ -8,12 +8,14 @@ import pandas as pd
 parser = argparse.ArgumentParser(description='|筛选有上升潜力的股票|')
 parser.add_argument('--number_path', default='tushare/number.yaml', type=str, help='|选择的股票|')
 parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|筛选结果保存位置|')
-parser.add_argument('--save_remove', default='remove.yaml', type=str, help='|记录收盘价、换手率、成交量不满足要求的股票|')
+parser.add_argument('--save_remove', default='remove.yaml', type=str, help='|记录收盘价、市值、换手率、成交量筛选|')
 parser.add_argument('--close_min', default=3, type=float, help='|筛选价格>close_min|')
 parser.add_argument('--close_max', default=30, type=float, help='|筛选价格<close_max|')
+parser.add_argument('--value_min', default=50, type=float, help='|筛选总市值<value_min|')
+parser.add_argument('--value_max', default=10000, type=float, help='|筛选总市值<value_max|')
 parser.add_argument('--change', default=3, type=float, help='|筛选近期最大换手率>change|')
-parser.add_argument('--volume', default=200000, type=float, help='|筛选近期最大成交量>volume|')
-parser.add_argument('--fluctuate', default=1.05, type=float, help='|筛选近期最高价/最低价>fluctuate|')
+parser.add_argument('--volume', default=100000, type=float, help='|筛选近期最大成交量>volume|')
+parser.add_argument('--fluctuate', default=1.04, type=float, help='|筛选近期最高价/最低价>fluctuate|')
 parser.add_argument('--reserve', default=False, type=bool, help='|自选股票是否需要筛选|')
 args = parser.parse_args()
 
@@ -37,6 +39,7 @@ def data_screen(args):
                 continue
             df = pd.read_csv(f'dataset/{name}_add.csv', index_col=0)
             close_data = df['收盘价'].values
+            value_data = df['总市值'].values
             change_data = df['换手率'].values
             volume_data = df['成交量'].values
             # 检查是否存在nan值
@@ -54,6 +57,10 @@ def data_screen(args):
                 continue
             # 收盘价筛选
             if close_data[-1] < args.close_min or close_data[-1] > args.close_max:
+                remove_dict[industry][name] = industry_dict[name]
+                continue
+            # 市值筛选
+            if value_data[-1] < args.value_min or value_data[-1] > args.value_max:
                 remove_dict[industry][name] = industry_dict[name]
                 continue
             # 换手率筛选

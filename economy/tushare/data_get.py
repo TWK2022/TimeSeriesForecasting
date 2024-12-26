@@ -31,8 +31,8 @@ class data_get_class:
             self.number_dict = yaml.load(f, Loader=yaml.SafeLoader)
         self.daily_column = ['trade_date', 'open', 'high', 'low', 'close', 'change', 'pct_chg', 'vol', 'amount']
         self.daily_name = ['日期', '开盘价', '最高价', '最低价', '收盘价', '涨跌额', '涨跌幅', '成交量', '成交额']
-        self.daily_basic_column = ['trade_date', 'turnover_rate', 'volume_ratio', 'pe_ttm', 'pb', 'ps_ttm']
-        self.daily_basic_name = ['日期', '换手率', '量比', '市盈率ttm', '市净率', '市销率ttm']
+        self.daily_basic_column = ['trade_date', 'turnover_rate', 'volume_ratio', 'pe_ttm', 'pb', 'ps_ttm', 'total_mv']
+        self.daily_basic_name = ['日期', '换手率', '量比', '市盈率ttm', '市净率', '市销率ttm', '总市值']
         self.stk_factor_column = ['trade_date', 'kdj_k', 'kdj_d', 'kdj_j', 'rsi_6', 'rsi_12', 'rsi_24']
         self.stk_factor_name = ['日期', 'KDJ_K', 'KDJ_D', 'KDJ_J', 'RSI_6', 'RSI_12', 'RSI_24']
         self.moneyflow_column = ['trade_date', 'buy_sm_vol', 'sell_sm_vol', 'buy_md_vol', 'sell_md_vol', 'buy_lg_vol',
@@ -54,6 +54,7 @@ class data_get_class:
                           index=df['trade_date'].values).sort_index()
         df.to_csv(f'{self.args.save_path}/上证指数.csv', index=True, header=True)
         print(f'| 补充数据: {self.args.save_path}/上证指数.csv |')
+        self.args.end_time = df.index[-1]
         # 股票数据
         all_dict = {}
         for industry in self.number_dict:
