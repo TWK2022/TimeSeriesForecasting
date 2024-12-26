@@ -11,8 +11,8 @@ parser.add_argument('--save_path', default='data_screen.yaml', type=str, help='|
 parser.add_argument('--save_remove', default='remove.yaml', type=str, help='|记录收盘价、市值、换手率、成交量筛选|')
 parser.add_argument('--close_min', default=3, type=float, help='|筛选价格>close_min|')
 parser.add_argument('--close_max', default=30, type=float, help='|筛选价格<close_max|')
-parser.add_argument('--value_min', default=50, type=float, help='|筛选总市值<value_min|')
-parser.add_argument('--value_max', default=10000, type=float, help='|筛选总市值<value_max|')
+parser.add_argument('--value_min', default=50, type=float, help='|筛选总市值(亿)<value_min|')
+parser.add_argument('--value_max', default=10000, type=float, help='|筛选总市值(亿)<value_max|')
 parser.add_argument('--change', default=3, type=float, help='|筛选近期最大换手率>change|')
 parser.add_argument('--volume', default=100000, type=float, help='|筛选近期最大成交量>volume|')
 parser.add_argument('--fluctuate', default=1.04, type=float, help='|筛选近期最高价/最低价>fluctuate|')
@@ -60,7 +60,7 @@ def data_screen(args):
                 remove_dict[industry][name] = industry_dict[name]
                 continue
             # 市值筛选
-            if value_data[-1] < args.value_min or value_data[-1] > args.value_max:
+            if value_data[-1] / 10000 < args.value_min or value_data[-1] / 10000 > args.value_max:
                 remove_dict[industry][name] = industry_dict[name]
                 continue
             # 换手率筛选
