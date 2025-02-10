@@ -155,7 +155,7 @@ class multihead_latent_attention(torch.nn.Module):  # 多头潜在注意力层(2
         self.multihead_attention1 = multihead_attention(latent, head, bias, dropout, position)
         self.linear2 = torch.nn.Linear(latent, feature, bias=False)
 
-    def forward(self, x):  # 3*(batch,dim,feature) -> (batch,dim,feature)。key和value的dim可以与query不同
+    def forward(self, x):  # 3*(batch,dim,feature) -> (batch,dim,feature)
         x = self.linear0(x)
         x = self.multihead_attention1(x, x, x)
         x = self.linear2(x)
