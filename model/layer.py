@@ -76,7 +76,7 @@ class rotary_position(torch.nn.Module):
         return x
 
 
-class multihead_attention(torch.nn.Module):  # 基本等同于torch.nn.MultiheadAttention
+class multihead_attention(torch.nn.Module):  # 多头注意力层。基本等同于torch.nn.MultiheadAttention
     def __init__(self, feature, head=8, bias=False, dropout=0.2, position=None):
         super().__init__()
         assert feature % head == 0
@@ -109,7 +109,7 @@ class multihead_attention(torch.nn.Module):  # 基本等同于torch.nn.Multihead
         return x
 
 
-class group_query_attention(torch.nn.Module):
+class group_query_attention(torch.nn.Module):  # 多头查询注意力层(2019)
     def __init__(self, feature, head=8, group=4, bias=False, dropout=0.2, position=None):
         super().__init__()
         assert feature % head == 0
@@ -144,6 +144,21 @@ class group_query_attention(torch.nn.Module):
         x = torch.matmul(x, value)  # (batch,head,dim,-1)
         x = x.permute(0, 2, 1, 3).reshape(batch, dim, feature)  # (batch,dim,feature)
         x = self.linear(x)  # (batch,dim,feature)
+        return x
+
+
+class multihead_latent_attention(torch.nn.Module):  # 多头潜在注意力层(2025)
+    def __init__(self, feature, latent, head=8, bias=False, dropout=0.2, position=None):
+        super().__init__()
+        assert latent % head == 0
+        self.linear0 = torch.nn.Linear(feature, latent, bias=False)
+        self.multihead_attention1 = multihead_attention(latent, head, bias, dropout, position)
+        self.linear2 = torch.nn.Linear(latent, feature, bias=False)
+
+    def forward(self, x):  # 3*(batch,dim,feature) -> (batch,dim,feature)。key和value的dim可以与query不同
+        x = self.linear0(x)
+        x = self.multihead_attention1(x, x, x)
+        x = self.linear2(x)
         return x
 
 
