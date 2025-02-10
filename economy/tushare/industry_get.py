@@ -36,7 +36,7 @@ def industry_get(args):
     record_time = 0
     time_start = time.time()
     for industry, ts_code in tqdm.tqdm(result_dict['同花顺概念'].items()):
-        df = pro.ths_member(ts_code=ts_code, fields='code,name')
+        df = pro.ths_member(ts_code=ts_code, fields='con_code,con_name')
         industry_dict = {}
         for code, name in df.values:
             if args.drop_st and 'ST' in name:
