@@ -56,7 +56,7 @@ class train_class:
                 'epoch_finished': 0,  # 已训练的轮数
                 'optimizer_state_dict': None,  # 学习率参数
                 'ema_update': 0,  # ema参数
-                'standard': 0,  # 评价指标
+                'standard': 100,  # 评价指标
             }
         return model_dict
 
