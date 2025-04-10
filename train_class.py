@@ -181,7 +181,7 @@ class train_class:
                       // args.batch // args.device_number * args.device_number)  # 每轮的步数
         for epoch in range(epoch_base, args.epoch + 1):
             if args.local_rank == 0:
-                info = f'-----------------------第{epoch}轮-----------------------'
+                info = f'-----------------------epoch:{epoch}-----------------------'
                 if args.print_info:
                     print('\n' + info)
                 if args.log:
@@ -218,7 +218,7 @@ class train_class:
             # 日志
             if args.local_rank == 0:
                 train_loss /= index + 1  # 计算平均损失
-                info = f'| 训练 | train_loss:{train_loss:.4f} | lr:{self.optimizer.param_groups[0]["lr"]:.6f} |'
+                info = f'| train | train_loss:{train_loss:.4f} | lr:{self.optimizer.param_groups[0]["lr"]:.6f} |'
                 if args.print_info:
                     print(info)
                 if args.log:
@@ -253,7 +253,7 @@ class train_class:
                     self.model_dict['standard'] = val_loss
                     torch.save(self.model_dict, args.save_path)  # 保存最佳模型
                     if args.local_rank == 0:  # 日志
-                        info = (f'| 保存最佳模型:{args.save_path} | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} |'
+                        info = (f'| best_model:{args.save_path} | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} |'
                                 f' val_rmse:{rmse:.4f} |')
                         if args.print_info:
                             print(info)
@@ -297,7 +297,7 @@ class train_class:
             # 计算总相对指标
             mae, rmse = self.metric(pred, true)
             # 日志
-            info = f'| 验证 | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_rmse:{rmse:.4f} |'
+            info = f'| val | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_rmse:{rmse:.4f} |'
             if args.print_info:
                 print(info)
             if args.log:
@@ -309,7 +309,7 @@ class train_class:
                 pred[:, i] = pred[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
                 true[:, i] = true[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
                 _mae_true, _rmse_true = self.metric(pred[:, i], true[:, i])
-                info = (f'| 验证 | {column} | mae:{_mae:.4f} | rmse:{_rmse:.4f} | mae_true:{_mae_true:.4f} |'
+                info = (f'| val | {column} | mae:{_mae:.4f} | rmse:{_rmse:.4f} | mae_true:{_mae_true:.4f} |'
                         f' rmse_true:{_rmse_true:.4f} |')
                 if args.print_info:
                     print(info)

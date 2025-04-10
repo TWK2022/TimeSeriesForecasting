@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from model.layer import deploy
-from block.util import read_column
+from train_class import train_class
 
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|pt模型推理|')
@@ -21,8 +21,8 @@ parser.add_argument('--device', default='cuda', type=str, help='|推理设备|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU处理数据的进程数，0只有一个主进程，一般为0、2、4、8|')
 parser.add_argument('--plot_len', default=1000, type=int, help='|画图长度，取数据的倒数plot_len个|')
 args = parser.parse_args()
-args.input_column = read_column(args.input_column)  # column处理
-args.output_column = read_column(args.output_column)  # column处理
+args.input_column = train_class.read_column(args.input_column)  # column处理
+args.output_column = train_class.read_column(args.output_column)  # column处理
 args.save_path = 'save_image'
 # -------------------------------------------------------------------------------------------------------------------- #
 assert os.path.exists(args.model_path), f'! model_path不存在:{args.model_path} !'

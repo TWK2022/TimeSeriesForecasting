@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from model.layer import deploy
-from block.util import read_column
+from train_class import train_class
 
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|预测未来|')
@@ -17,8 +17,8 @@ parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
 parser.add_argument('--device', default='cpu', type=str, help='|推理设备|')
 args = parser.parse_args()
-args.input_column = read_column(args.input_column)  # column处理
-args.output_column = read_column(args.output_column)  # column处理
+args.input_column = train_class.read_column(args.input_column)  # column处理
+args.output_column = train_class.read_column(args.output_column)  # column处理
 args.save_path = 'save_image'
 # -------------------------------------------------------------------------------------------------------------------- #
 assert os.path.exists(args.model_path), f'! model_path不存在:{args.model_path} !'
