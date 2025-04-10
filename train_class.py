@@ -1,0 +1,432 @@
+import os
+import math
+import copy
+import tqdm
+import torch
+import logging
+import numpy as np
+import pandas as pd
+
+
+class train_class:
+    '''
+        model_load: 加载模型
+        data_load: 加载数据
+        dataloader_load: 加载数据处理器
+        optimizer_load: 加载学习率
+        loss_load: 训练损失
+        train: 训练模型
+        validation: 训练时的模型验证
+    '''
+
+    def __init__(self, args):
+        self.args = args
+        self.model_dict = self.model_load()  # 模型
+        self.model_dict['model'] = self.model_dict['model'].to(args.device, non_blocking=args.latch)  # 设备
+        self.data_dict = self.data_load()  # 数据
+        self.train_dataloader, self.val_dataloader = self.dataloader_load()  # 数据处理器
+        self.optimizer, self.optimizer_adjust = self.optimizer_load()  # 学习率、学习率调整
+        self.loss = self.loss_load()  # 损失函数
+        if args.ema:  # 使用平均指数移动(EMA)调整参数
+            self.ema = model_ema(self.model_dict['model'])
+            self.ema.update_all = self.model_dict['ema_update']
+        if args.distributed:  # 分布式初始化
+            self.model_dict['model'] = torch.nn.parallel.DistributedDataParallel(self.model_dict['model'],
+                                                                                 device_ids=[args.local_rank],
+                                                                                 output_device=args.local_rank)
+        if args.log:  # 日志
+            log_path = os.path.dirname(__file__) + '/log.log'
+            logging.basicConfig(filename=log_path, level=logging.INFO,
+                                format='%(asctime)s | %(levelname)s | %(message)s')
+
+    def model_load(self):
+        args = self.args
+        if os.path.exists(args.weight):
+            model_dict = torch.load(args.weight, map_location='cpu')
+            if args.weight_again:
+                model_dict['epoch_finished'] = 0  # 已训练的轮数
+                model_dict['optimizer_state_dict'] = None  # 学习率参数
+                model_dict['ema_update'] = 0  # ema参数
+                model_dict['standard'] = 100  # 评价指标
+        else:
+            exec(f'from model.{args.model} import {args.model}')
+            model = eval(f'{args.model}(self.args)')
+            model_dict = {
+                'model': model,
+                'epoch_finished': 0,  # 已训练的轮数
+                'optimizer_state_dict': None,  # 学习率参数
+                'ema_update': 0,  # ema参数
+                'standard': 0,  # 评价指标
+            }
+        return model_dict
+
+    def data_load(self):
+        args = self.args
+        # 读取数据
+        try:
+            df = pd.read_csv(args.data_path, encoding='utf-8', index_col=0)
+        except:
+            df = pd.read_csv(args.data_path, encoding='gbk', index_col=0)
+        input_data = np.array(df[args.input_column]).astype(np.float32)
+        output_data = np.array(df[args.output_column]).astype(np.float32)
+        # 划分数据
+        add = args.input_size + args.output_size - 1  # 输入数据后面的补足
+        data_len = len(df) - add  # 输入数据的真实数量
+        boundary = int(data_len * args.divide[0] / (args.divide[0] + args.divide[1]))  # 数据划分
+        if args.divide_train == 1:  # 使用所有数据训练
+            train_input = input_data  # 训练数据
+            train_output = output_data  # 训练标签
+        elif args.divide_train == 2:  # 使用验证集训练
+            train_input = input_data[boundary:len(df)]  # 训练数据
+            train_output = output_data[boundary:len(df)]  # 训练标签
+        else:  # 使用训练集训练
+            train_input = input_data[0:boundary + add]  # 训练数据
+            train_output = output_data[0:boundary + add]  # 训练标签
+        assert len(train_input) >= args.input_size + args.output_size  # 训练集不满足一个batch
+        val_input = input_data[boundary:len(df)].copy()  # 验证数据
+        val_output = output_data[boundary:len(df)].copy()  # 验证标签
+        # 周期
+        if args.z_score == 1:
+            mean_input = np.mean(input_data, axis=0)
+            mean_output = np.mean(output_data, axis=0)
+            std_input = np.std(input_data, axis=0)
+            std_output = np.std(output_data, axis=0)
+        elif args.z_score == 2:
+            mean_input = np.mean(val_input, axis=0)
+            mean_output = np.mean(val_output, axis=0)
+            std_input = np.std(val_input, axis=0)
+            std_output = np.std(val_output, axis=0)
+        else:
+            mean_input = np.mean(train_input, axis=0)
+            mean_output = np.mean(train_output, axis=0)
+            std_input = np.std(train_input, axis=0)
+            std_output = np.std(train_output, axis=0)
+        # 归一化
+        train_input = (train_input - mean_input) / std_input
+        val_input = (val_input - mean_input) / std_input
+        train_output = (train_output - mean_output) / std_output
+        val_output = (val_output - mean_output) / std_output
+        # 记录数据
+        data_dict = {
+            'train_input': train_input,
+            'train_output': train_output,
+            'val_input': val_input,
+            'val_output': val_output,
+            'mean_input': mean_input,
+            'mean_output': mean_output,
+            'std_input': std_input,
+            'std_output': std_output,
+        }
+        # 特殊数据(需要根据情况更改)
+        if 'special' in args.model:
+            data_dict['train_special'] = train_input[:, [1, 2]]
+            data_dict['val_special'] = val_input[:, [1, 2]]
+            data_dict['mean_special'] = mean_input[[1, 2]]
+            data_dict['std_special'] = std_input[[1, 2]]
+        else:
+            data_dict['train_special'] = None
+            data_dict['val_special'] = None
+            data_dict['mean_special'] = None
+            data_dict['std_special'] = None
+        return data_dict
+
+    def dataloader_load(self):
+        args = self.args
+        train_dataset = torch_dataset(args, self.data_dict['train_input'], self.data_dict['train_output'],
+                                      self.data_dict['train_special'])
+        train_shuffle = False if args.distributed else True  # 分布式设置sampler后shuffle要为False
+        train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset) if args.distributed else None
+        train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch, shuffle=train_shuffle,
+                                                       drop_last=True, pin_memory=args.latch,
+                                                       num_workers=args.num_worker,
+                                                       sampler=train_sampler, collate_fn=train_dataset.collate_fn)
+        val_dataset = torch_dataset(args, self.data_dict['val_input'], self.data_dict['val_output'],
+                                    self.data_dict['val_special'])
+        val_sampler = None  # 分布式时数据合在主GPU上进行验证
+        val_batch = args.batch // args.device_number  # 分布式验证时batch要减少为一个GPU的量
+        val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=val_batch, shuffle=False,
+                                                     drop_last=False, pin_memory=args.latch,
+                                                     num_workers=args.num_worker,
+                                                     sampler=val_sampler, collate_fn=val_dataset.collate_fn)
+        return train_dataloader, val_dataloader
+
+    def optimizer_load(self):
+        args = self.args
+        if args.regularization == 'L2':
+            optimizer = torch.optim.Adam(self.model_dict['model'].parameters(),
+                                         lr=args.lr_start, betas=(0.937, 0.999), weight_decay=args.r_value)
+        else:
+            optimizer = torch.optim.Adam(self.model_dict['model'].parameters(),
+                                         lr=args.lr_start, betas=(0.937, 0.999))
+        optimizer.load_state_dict(self.model_dict['optimizer_state_dict']) if self.model_dict[
+            'optimizer_state_dict'] else None
+        step_epoch = ((len(self.data_dict['train_input']) - args.input_size - args.output_size + 1)
+                      // args.batch // args.device_number * args.device_number)  # 每轮的步数
+        optimizer_adjust = lr_adjust(args, step_epoch, self.model_dict['epoch_finished'])  # 学习率调整函数
+        optimizer = optimizer_adjust(optimizer)  # 学习率初始化
+        return optimizer, optimizer_adjust
+
+    def loss_load(self):
+        choice_dict = {'mae': 'torch.nn.L1Loss()',
+                       'mse': 'torch.nn.MSELoss()',
+                       'mse_decay': 'mse_decay(self.args)'}
+        loss = eval(choice_dict[self.args.loss])
+        return loss
+
+    def train(self):
+        args = self.args
+        model = self.model_dict['model']
+        epoch_base = self.model_dict['epoch_finished'] + 1  # 新的一轮要+1
+        step_epoch = ((len(self.data_dict['train_input']) - args.input_size - args.output_size + 1)
+                      // args.batch // args.device_number * args.device_number)  # 每轮的步数
+        for epoch in range(epoch_base, args.epoch + 1):
+            if args.local_rank == 0:
+                info = f'-----------------------第{epoch}轮-----------------------'
+                if args.print_info:
+                    print('\n' + info)
+                if args.log:
+                    logging.info(info)
+            model.train()
+            train_loss = 0  # 记录损失
+            if args.local_rank == 0:  # tqdm
+                tqdm_show = tqdm.tqdm(total=step_epoch)
+            for index, (series_batch, true_batch, special) in enumerate(self.train_dataloader):
+                series_batch = series_batch.to(args.device, non_blocking=args.latch)
+                true_batch = true_batch.to(args.device, non_blocking=args.latch)
+                if args.amp:
+                    with torch.cuda.amp.autocast():
+                        pred_batch = model(series_batch) if 'special' not in args.model else model(series_batch,
+                                                                                                   special)
+                        loss_batch = self.loss(pred_batch, true_batch)
+                    args.amp.scale(loss_batch).backward()
+                    args.amp.step(self.optimizer)
+                    args.amp.update()
+                    self.optimizer.zero_grad()
+                else:
+                    pred_batch = model(series_batch) if 'special' not in args.model else model(series_batch, special)
+                    loss_batch = self.loss(pred_batch, true_batch)
+                    loss_batch.backward()
+                    self.optimizer.step()
+                    self.optimizer.zero_grad()
+                self.ema.update(model) if args.ema else None  # 调整参数，ema.update_all会自动+1
+                train_loss += loss_batch.item()  # 记录损失
+                self.optimizer = self.optimizer_adjust(self.optimizer)  # 调整学习率
+                if args.local_rank == 0:  # tqdm
+                    tqdm_show.set_postfix({'train_loss': loss_batch.item(),
+                                           'lr': self.optimizer.param_groups[0]['lr']})  # 添加显示
+                    tqdm_show.update(args.device_number)  # 更新进度条
+            # 日志
+            if args.local_rank == 0:
+                train_loss /= index + 1  # 计算平均损失
+                info = f'| 训练 | train_loss:{train_loss:.4f} | lr:{self.optimizer.param_groups[0]["lr"]:.6f} |'
+                if args.print_info:
+                    print(info)
+                if args.log:
+                    logging.info(info)
+            # tqdm
+            if args.local_rank == 0:
+                tqdm_show.close()
+            # 清理显存空间
+            del series_batch, true_batch, pred_batch, loss_batch
+            torch.cuda.empty_cache()
+            # 验证
+            if args.local_rank == 0:  # 分布式时只验证一次
+                val_loss, mae, rmse = self.validation()
+            # 保存
+            if args.local_rank == 0:  # 分布式时只保存一次
+                self.model_dict['model'] = model.module if args.distributed else model
+                self.model_dict['epoch_finished'] = epoch
+                self.model_dict['optimizer_state_dict'] = self.optimizer.state_dict()
+                self.model_dict['ema_update'] = self.ema.update_all if args.ema else self.model_dict['ema_update']
+                self.model_dict['mean_input'] = self.data_dict['mean_input']
+                self.model_dict['mean_output'] = self.data_dict['mean_output']
+                self.model_dict['std_input'] = self.data_dict['std_input']
+                self.model_dict['std_output'] = self.data_dict['std_output']
+                self.model_dict['train_loss'] = train_loss
+                self.model_dict['val_loss'] = val_loss
+                self.model_dict['val_mae'] = mae
+                self.model_dict['val_rmse'] = rmse
+                self.model_dict['mean_special'] = self.data_dict['mean_special']
+                self.model_dict['std_special'] = self.data_dict['std_special']
+                torch.save(self.model_dict, 'last.pt')  # 保存最后一次训练的模型
+                if val_loss < 1 and val_loss < self.model_dict['standard']:
+                    self.model_dict['standard'] = val_loss
+                    torch.save(self.model_dict, args.save_path)  # 保存最佳模型
+                    if args.local_rank == 0:  # 日志
+                        info = (f'| 保存最佳模型:{args.save_path} | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} |'
+                                f' val_rmse:{rmse:.4f} |')
+                        if args.print_info:
+                            print(info)
+                        if args.log:
+                            logging.info(info)
+                # wandb
+                if args.wandb:
+                    args.wandb_run.log({'metric/train_loss': train_loss,
+                                        'metric/val_loss': val_loss,
+                                        'metric/val_mae': mae,
+                                        'metric/val_rmse': rmse})
+            torch.distributed.barrier() if args.distributed else None  # 分布式时每轮训练后让所有GPU进行同步，快的GPU会在此等待
+
+    def validation(self):
+        args = self.args
+        data_len = len(self.data_dict['val_input'])
+        with torch.no_grad():
+            model = self.ema.ema_model if args.ema else self.model_dict['model'].eval()
+            pred = []
+            true = []
+            val_loss = 0
+            tqdm_len = (data_len - args.input_size - args.output_size + 1 - 1) // (args.batch // args.device_number) + 1
+            tqdm_show = tqdm.tqdm(total=tqdm_len)
+            for index, (series_batch, true_batch, special) in enumerate(self.val_dataloader):
+                series_batch = series_batch.to(args.device, non_blocking=args.latch)
+                true_batch = true_batch.to(args.device, non_blocking=args.latch)
+                pred_batch = model(series_batch) if 'special' not in args.model else model(series_batch, special)
+                loss_batch = self.loss(pred_batch, true_batch)
+                val_loss += loss_batch.item()
+                pred.append(pred_batch.cpu())
+                true.append(true_batch.cpu())
+                # tqdm
+                tqdm_show.set_postfix({'val_loss': loss_batch.item()})  # 添加loss显示
+                tqdm_show.update(1)  # 更新进度条
+            # tqdm
+            tqdm_show.close()
+            # 计算指标
+            val_loss /= (index + 1)
+            pred = torch.concat(pred, dim=0)
+            true = torch.concat(true, dim=0)
+            # 计算总相对指标
+            mae, rmse = self.metric(pred, true)
+            # 日志
+            info = f'| 验证 | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_rmse:{rmse:.4f} |'
+            if args.print_info:
+                print(info)
+            if args.log:
+                logging.info(info)
+            # 计算各类别相对指标和真实指标
+            for i in range(pred.shape[1]):
+                column = args.output_column[i]
+                _mae, _rmse = self.metric(pred[:, i], true[:, i])
+                pred[:, i] = pred[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
+                true[:, i] = true[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
+                _mae_true, _rmse_true = self.metric(pred[:, i], true[:, i])
+                info = (f'| 验证 | {column} | mae:{_mae:.4f} | rmse:{_rmse:.4f} | mae_true:{_mae_true:.4f} |'
+                        f' rmse_true:{_rmse_true:.4f} |')
+                if args.print_info:
+                    print(info)
+                if args.log:
+                    logging.info(info)
+        return val_loss, mae.item(), rmse.item()
+
+    @staticmethod
+    def read_column(column_file):  # column处理
+        if os.path.exists(column_file):
+            with open(column_file, encoding='utf-8') as f:
+                column = [_.strip() for _ in f.readlines()]
+        else:
+            column = column_file.split(',')
+        return column
+
+    @staticmethod
+    def metric(pred, true):
+        mae = torch.mean(abs(pred - true))
+        rmse = torch.sqrt(torch.mean(torch.square(pred - true)))
+        return mae, rmse
+
+
+class model_ema:
+    def __init__(self, model, decay=0.9999, tau=2000, update_all=0):
+        self.ema_model = copy.deepcopy(self._get_model(model)).eval()  # FP32 EMA
+        self.update_all = update_all
+        self.decay = lambda x: decay * (1 - math.exp(-x / tau))
+        for p in self.ema_model.parameters():
+            p.requires_grad_(False)
+
+    def update(self, model):
+        with torch.no_grad():
+            self.update_all += 1
+            d = self.decay(self.update_all)
+            state_dict = self._get_model(model).state_dict()
+            for k, v in self.ema_model.state_dict().items():
+                if v.dtype.is_floating_point:
+                    v *= d
+                    v += (1 - d) * state_dict[k].detach()
+
+    def _get_model(self, model):
+        if type(model) in (torch.nn.parallel.DataParallel, torch.nn.parallel.DistributedDataParallel):
+            return model.module
+        else:
+            return model
+
+
+class lr_adjust:
+    def __init__(self, args, step_epoch, epoch_finished):
+        self.lr_start = args.lr_start  # 初始学习率
+        self.lr_end = args.lr_end_ratio * args.lr_start  # 最终学习率
+        self.lr_end_epoch = args.lr_end_epoch  # 最终学习率达到的轮数
+        self.step_all = self.lr_end_epoch * step_epoch  # 总调整步数
+        self.step_finished = epoch_finished * step_epoch  # 已调整步数
+        self.warmup_step = max(5, int(args.warmup_ratio * self.step_all))  # 预热训练步数
+
+    def __call__(self, optimizer):
+        self.step_finished += 1
+        step_now = self.step_finished
+        decay = step_now / self.step_all
+        lr = self.lr_end + (self.lr_start - self.lr_end) * math.cos(math.pi / 2 * decay)
+        if step_now <= self.warmup_step:
+            lr = lr * (0.1 + 0.9 * step_now / self.warmup_step)
+        lr = max(lr, 0.000001)
+        for i in range(len(optimizer.param_groups)):
+            optimizer.param_groups[i]['lr'] = lr
+        return optimizer
+
+
+class mse_decay:
+    '''
+        mse_decay: 使越靠近前面的数值的准确率越重要
+    '''
+
+    def __init__(self, args):
+        self.decay = torch.linspace(1.5, 0.5, args.output_size)
+        self.mse = torch.nn.MSELoss()
+
+    def __call__(self, pred, true):
+        self.decay = self.decay.to(pred.device)
+        pred_decay = pred * self.decay
+        true_decay = true * self.decay
+        loss = self.mse(pred_decay, true_decay)
+        return loss
+
+
+class torch_dataset(torch.utils.data.Dataset):
+    def __init__(self, args, input_data, output_data, special_data):
+        self.model = args.model
+        self.input_size = args.input_size
+        self.output_size = args.output_size
+        self.input_data = input_data
+        self.output_data = output_data
+        self.special_data = special_data
+
+    def __len__(self):
+        return len(self.input_data) - self.input_size - self.output_size + 1
+
+    def __getitem__(self, index):
+        boundary = index + self.input_size
+        series = self.input_data[index:boundary]  # 输入数据
+        series = torch.tensor(series.T, dtype=torch.float32)
+        label = self.output_data[boundary:boundary + self.output_size]  # 输出标签
+        label = torch.tensor(label.T, dtype=torch.float32)
+        # 加入特殊变量
+        special = None
+        if 'special' in self.model:
+            special = self.special_data[boundary]
+            special = torch.tensor(special, dtype=torch.float32)
+        return series, label, special
+
+    def collate_fn(self, getitem_list):  # 自定义__getitem__合成方式
+        series_list = [_[0] for _ in getitem_list]
+        label_list = [_[1] for _ in getitem_list]
+        special_list = [_[2] for _ in getitem_list]
+        series_batch = torch.stack(series_list, dim=0)
+        label_batch = torch.stack(label_list, dim=0)
+        special_batch = torch.stack(special_list, dim=0) if 'special' in self.model else None
+        return series_batch, label_batch, special_batch

@@ -1,6 +1,5 @@
-## pytorch时间序列预测训练框架
+# pytorch时间序列预测训练框架
 >代码兼容性较强，使用的是一些基本的库、基础的函数  
->在argparse中可以选择使用wandb，能在wandb网站中生成可视化的训练过程
 ### 1，环境
 >torch：https://pytorch.org/get-started/previous-versions/
 >```
