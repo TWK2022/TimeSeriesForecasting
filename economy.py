@@ -16,7 +16,7 @@ from block.util import read_column
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|集成|')
 parser.add_argument('--input_column', default='input_column.txt', type=str)
-parser.add_argument('--output_column', default='均价', type=str)
+parser.add_argument('--output_column', default='加权均价', type=str)
 parser.add_argument('--input_size', default=96, type=int)
 parser.add_argument('--output_size', default=24, type=int)
 parser.add_argument('--model', default='tsf', type=str)
@@ -262,7 +262,7 @@ class economy_class:
                 df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
                 input_data = df[input_column].values.astype(np.float32).T
                 input_data = input_data[:, -self.args.input_size:]
-                mean_data = df['均价'].values[-100:]
+                mean_data = df['加权均价'].values[-100:]
                 increase = np.abs(df['涨跌幅'].values)[-1]
                 tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
                 # 推理
