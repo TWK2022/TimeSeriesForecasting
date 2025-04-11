@@ -1,7 +1,6 @@
 import os
 import math
 import copy
-import tqdm
 import torch
 import logging
 import numpy as np
@@ -41,8 +40,8 @@ class train_class:
 
     def model_load(self):
         args = self.args
-        if os.path.exists(args.weight):
-            model_dict = torch.load(args.weight, map_location='cpu')
+        if os.path.exists(args.weight_path):
+            model_dict = torch.load(args.weight_path, map_location='cpu')
             if args.weight_again:
                 model_dict['epoch_finished'] = 0  # 已训练的轮数
                 model_dict['optimizer_state_dict'] = None  # 学习率参数
@@ -177,19 +176,13 @@ class train_class:
         args = self.args
         model = self.model_dict['model']
         epoch_base = self.model_dict['epoch_finished'] + 1  # 新的一轮要+1
-        step_epoch = ((len(self.data_dict['train_input']) - args.input_size - args.output_size + 1)
-                      // args.batch // args.device_number * args.device_number)  # 每轮的步数
         for epoch in range(epoch_base, args.epoch + 1):
             if args.local_rank == 0:
                 info = f'-----------------------epoch:{epoch}-----------------------'
                 if args.print_info:
-                    print('\n' + info)
-                if args.log:
-                    logging.info(info)
+                    print(info)
             model.train()
             train_loss = 0  # 记录损失
-            if args.local_rank == 0:  # tqdm
-                tqdm_show = tqdm.tqdm(total=step_epoch)
             for index, (series_batch, true_batch, special) in enumerate(self.train_dataloader):
                 series_batch = series_batch.to(args.device, non_blocking=args.latch)
                 true_batch = true_batch.to(args.device, non_blocking=args.latch)
@@ -211,21 +204,12 @@ class train_class:
                 self.ema.update(model) if args.ema else None  # 调整参数，ema.update_all会自动+1
                 train_loss += loss_batch.item()  # 记录损失
                 self.optimizer = self.optimizer_adjust(self.optimizer)  # 调整学习率
-                if args.local_rank == 0:  # tqdm
-                    tqdm_show.set_postfix({'train_loss': loss_batch.item(),
-                                           'lr': self.optimizer.param_groups[0]['lr']})  # 添加显示
-                    tqdm_show.update(args.device_number)  # 更新进度条
             # 日志
             if args.local_rank == 0:
                 train_loss /= index + 1  # 计算平均损失
                 info = f'| train | train_loss:{train_loss:.4f} | lr:{self.optimizer.param_groups[0]["lr"]:.6f} |'
                 if args.print_info:
                     print(info)
-                if args.log:
-                    logging.info(info)
-            # tqdm
-            if args.local_rank == 0:
-                tqdm_show.close()
             # 清理显存空间
             del series_batch, true_batch, pred_batch, loss_batch
             torch.cuda.empty_cache()
@@ -248,12 +232,13 @@ class train_class:
                 self.model_dict['val_rmse'] = rmse
                 self.model_dict['mean_special'] = self.data_dict['mean_special']
                 self.model_dict['std_special'] = self.data_dict['std_special']
-                torch.save(self.model_dict, 'last.pt')  # 保存最后一次训练的模型
+                if epoch % args.save_epoch == 0 or epoch == args.epoch:
+                    torch.save(self.model_dict, args.save_path)  # 保存模型
                 if val_loss < 1 and val_loss < self.model_dict['standard']:
                     self.model_dict['standard'] = val_loss
-                    torch.save(self.model_dict, args.save_path)  # 保存最佳模型
+                    torch.save(self.model_dict, args.save_best)  # 保存最佳模型
                     if args.local_rank == 0:  # 日志
-                        info = (f'| best_model:{args.save_path} | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} |'
+                        info = (f'| best_model:{args.save_best} | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} |'
                                 f' val_rmse:{rmse:.4f} |')
                         if args.print_info:
                             print(info)
@@ -269,14 +254,11 @@ class train_class:
 
     def validation(self):
         args = self.args
-        data_len = len(self.data_dict['val_input'])
         with torch.no_grad():
             model = self.ema.ema_model if args.ema else self.model_dict['model'].eval()
             pred = []
             true = []
             val_loss = 0
-            tqdm_len = (data_len - args.input_size - args.output_size + 1 - 1) // (args.batch // args.device_number) + 1
-            tqdm_show = tqdm.tqdm(total=tqdm_len)
             for index, (series_batch, true_batch, special) in enumerate(self.val_dataloader):
                 series_batch = series_batch.to(args.device, non_blocking=args.latch)
                 true_batch = true_batch.to(args.device, non_blocking=args.latch)
@@ -285,11 +267,6 @@ class train_class:
                 val_loss += loss_batch.item()
                 pred.append(pred_batch.cpu())
                 true.append(true_batch.cpu())
-                # tqdm
-                tqdm_show.set_postfix({'val_loss': loss_batch.item()})  # 添加loss显示
-                tqdm_show.update(1)  # 更新进度条
-            # tqdm
-            tqdm_show.close()
             # 计算指标
             val_loss /= (index + 1)
             pred = torch.concat(pred, dim=0)
@@ -313,8 +290,6 @@ class train_class:
                         f' rmse_true:{_rmse_true:.4f} |')
                 if args.print_info:
                     print(info)
-                if args.log:
-                    logging.info(info)
         return val_loss, mae.item(), rmse.item()
 
     @staticmethod

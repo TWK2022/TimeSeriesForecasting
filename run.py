@@ -17,18 +17,20 @@ parser.add_argument('--wandb_project', default='TimeSeriesForecasting', type=str
 parser.add_argument('--data_path', default=r'./dataset/sin_cos.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|输入变量，可传入.txt|')
 parser.add_argument('--output_column', default='mix', type=str, help='|预测变量，可传入.txt|')
+parser.add_argument('--weight_path', default='last.pt', type=str, help='|加载模型，没有模型会创建新模型|')
+parser.add_argument('--weight_again', default=False, type=bool, help='|重置学习率等状态，在weight_path上重新训练|')
+parser.add_argument('--save_epoch', default=10, type=int, help='|每x轮和最后一轮保存模型|')
+parser.add_argument('--save_path', default='last.pt', type=str, help='|保存模型|')
+parser.add_argument('--save_best', default='best.pt', type=str, help='|保存最佳模型|')
 parser.add_argument('--input_size', default=96, type=int, help='|输入长度|')
 parser.add_argument('--output_size', default=24, type=int, help='|输出长度|')
-parser.add_argument('--divide', default=[19, 1], type=list, help='|训练集和验证集划分比例|')
-parser.add_argument('--divide_train', default=0, type=int, help='|验证集不变，训练集：0正常，1使用所有数据，2使用验证数据|')
-parser.add_argument('--z_score', default=0, type=int, help='|归一化时：0使用训练集，1使用所有数据，2使用验证集|')
-parser.add_argument('--weight', default='last.pt', type=str, help='|加载模型，没有模型会创建新模型|')
-parser.add_argument('--weight_again', default=False, type=bool, help='|重置学习率等状态，在weight上重新训练|')
-parser.add_argument('--save_path', default='best.pt', type=str, help='|保存最佳模型，此外每轮还会保存last.pt|')
-parser.add_argument('--model', default='tsf', type=str, help='|模型选择|')
-parser.add_argument('--model_type', default='m', type=str, help='|模型型号|')
-parser.add_argument('--epoch', default=100, type=int, help='|总轮数(包含之前已训练轮数)|')
+parser.add_argument('--epoch', default=100, type=int, help='|总轮数(包含加载模型已训练轮数)|')
 parser.add_argument('--batch', default=64, type=int, help='|批量大小，分布式时为总批量|')
+parser.add_argument('--divide', default=[19, 1], type=list, help='|训练集和验证集划分比例|')
+parser.add_argument('--divide_train', default=0, type=int, help='|训练集数据：0训练集，1所有数据，2验证集|')
+parser.add_argument('--z_score', default=1, type=int, help='|归一化时：0训练集，1所有数据，2验证集|')
+parser.add_argument('--model', default='nlinear', type=str, help='|模型选择|')
+parser.add_argument('--model_type', default='m', type=str, help='|模型型号|')
 parser.add_argument('--loss', default='mse_decay', type=str, help='|损失函数|')
 parser.add_argument('--warmup_ratio', default=0.01, type=float, help='|预热训练步数占总步数比例，最少5步，基准为0.01|')
 parser.add_argument('--lr_start', default=0.0001, type=float, help='|初始学习率，adam算法，批量大时要增大，基准为0.0001|')
@@ -44,9 +46,9 @@ parser.add_argument('--amp', default=False, type=bool, help='|混合float16精�
 parser.add_argument('--distributed', default=False, type=bool, help='|单机多卡分布式训练，batch为总batch|')
 parser.add_argument('--local_rank', default=0, type=int, help='|分布式训练使用命令后会自动传入的参数|')
 args = parser.parse_args()
-args.device = args.device if torch.cuda.is_available() else 'cpu'  # 没有GPU时使用CPU
 args.input_column = train_class.read_column(args.input_column)  # column处理
 args.output_column = train_class.read_column(args.output_column)  # column处理
+args.device = args.device if torch.cuda.is_available() else 'cpu'  # 没有GPU时使用CPU
 args.device_number = max(torch.cuda.device_count(), 1)  # 使用的GPU数，可能为CPU
 # wandb可视化：https://wandb.ai
 if args.wandb and args.local_rank == 0:  # 分布式时只记录一次wandb
@@ -64,13 +66,6 @@ torch.cuda.manual_seed_all(999)  # 为所有GPU设置随机种子
 torch.backends.cudnn.deterministic = True  # 固定每次返回的卷积算法
 torch.backends.cudnn.enabled = True  # cuDNN使用非确定性算法
 torch.backends.cudnn.benchmark = False  # 训练前cuDNN会先搜寻每个卷积层最适合实现它的卷积算法，加速运行；但对于复杂变化的输入数据，可能会有过长的搜寻时间，对于训练比较快的网络建议设为False
-# -------------------------------------------------------------------------------------------------------------------- #
-if args.local_rank == 0:
-    print(f'| args:{args} |') if args.local_rank == 0 else None  # 摘要
-    if os.path.exists(args.weight):
-        print(f'| 加载模型：{args.weight} |')
-    else:
-        print(f'| 创建模型：{args.model} | 型号：{args.model_type} |')
 # -------------------------------------------------------------------------------------------------------------------- #
 if __name__ == '__main__':
     train = train_class(args)
