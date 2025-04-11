@@ -71,7 +71,7 @@ def data_deal(args):
         df['上证指数'] = shangzheng[-len(df):]
         df['上证成交量'] = shangzheng_vol[-len(df):]
         # 均价
-        df['均价'] = (df['开盘价'].values + df['收盘价'].values) / 2
+        df['加权均价'] = 0.4 * df['收盘价'].values + 0.3 * df['最高价'].values + 0.3 * df['最低价'].values
         # 计算指标
         df_count = pd.DataFrame(
             df[['开盘价', '最高价', '最低价', '收盘价', '成交量', '上证指数', '上证成交量']].values,
