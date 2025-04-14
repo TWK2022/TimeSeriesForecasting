@@ -19,15 +19,16 @@ __pycache__
 *.trt
 *.onnx
 # -------------------------------------------------------------------------------------------------------------------- #
-economy/model.yaml
-economy/remove.yaml
-economy/data_screen.yaml
-economy/input_column.txt
-economy/tushare/number.yaml
-economy/tushare/reserve.yaml
+economy/dataset/industry_choice.yaml
+economy/dataset/industry_screen.yaml
+economy/dataset/simulate.yaml
+economy/dataset/predict.yaml
 # -------------------------------------------------------------------------------------------------------------------- #
 !dataset/ETTh1.csv
 !dataset/ETTh2.csv
 !dataset/ETTm1.csv
 !dataset/ETTm2.csv
 !dataset/sin_cos.csv
+!economy/dataset/industry/**
+!economy/predict/input_column.txt
+!economy/predict/output_column.txt
