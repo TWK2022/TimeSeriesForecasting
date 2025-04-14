@@ -187,7 +187,7 @@ class predict_class:
     def feature(self):
         args = self.args
         result_dict = {}
-        for industry in self.industry_screen.keys():
+        for industry in tqdm.tqdm(self.industry_screen.keys()):
             result_dict[industry] = {}
             for name in self.industry_screen[industry].keys():
                 weight_path = f'{args.save_dir}/{name}.pt'
@@ -197,12 +197,12 @@ class predict_class:
                 model_dict['model'] = deploy(model_dict['model'], model_dict['mean_input'], model_dict['mean_output'],
                                              model_dict['std_input'], model_dict['std_output'],
                                              model_dict['mean_special'],
-                                             model_dict['std_special']).eval()
+                                             model_dict['std_special']).eval().to(args.device)
                 # 数据
                 df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
                 input_data = df[args.input_column].values.astype(np.float32).T
                 input_data = input_data[:, -args.input_size:]
-                tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0)
+                tensor = torch.tensor(input_data, dtype=torch.float32).unsqueeze(0).to(args.device)
                 # 预测
                 with torch.no_grad():
                     pred_value = model_dict['model'](tensor)[0][0].cpu().numpy()
