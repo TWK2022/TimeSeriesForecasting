@@ -172,8 +172,10 @@ class predict_class:
                         increase = np.mean(pred_value[0:2] / close_)  # 涨幅
                         if increase > 1:
                             total += 1
+                            total_all += 1
                             if output_[0] > close_ or output_[1] > close_:
                                 correct += 1
+                                correct_all += 1
                 # 记录
                 result_dict[industry][name] = f'{correct / (total + 1e-6):.2f} | 样本{total}'
         result_dict['总计'] = f'{correct_all / (total_all + 1e-6):.2f} | 样本{total_all}'
