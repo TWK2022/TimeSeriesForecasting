@@ -207,7 +207,9 @@ class predict_class:
                 with torch.no_grad():
                     pred_value = model_dict['model'](tensor)[0][0].cpu().numpy()
                 pred_value = pred_value / df['均价'].values[-1]
-                result_dict[industry][name] = round(float(np.mean(pred_value[0:2])), 2)
+                increase = round(float(np.mean(pred_value[0:2])), 2)
+                if increase > 1:
+                    result_dict[industry][name] = increase
         # 保存
         with open(args.predict_save_path, 'w', encoding='utf-8') as f:
             yaml.dump(result_dict, f, allow_unicode=True, sort_keys=False)
