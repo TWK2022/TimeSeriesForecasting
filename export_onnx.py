@@ -16,7 +16,6 @@ args = parser.parse_args()
 args.weight = args.weight.split('.')[0] + '.pt'
 args.save_name = args.weight.split('.')[0] + '.onnx'
 # -------------------------------------------------------------------------------------------------------------------- #
-assert os.path.exists(args.weight), f'! 没有找到模型{args.weight} !'
 if args.float16:
     assert torch.cuda.is_available(), '! cuda不可用，无法使用float16 !'
 

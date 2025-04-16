@@ -24,8 +24,6 @@ args.input_column = train_class.read_column(args.input_column)  # column处理
 args.output_column = train_class.read_column(args.output_column)  # column处理
 args.save_path = 'save_image'
 # -------------------------------------------------------------------------------------------------------------------- #
-assert os.path.exists(args.model_path), f'! model_path不存在:{args.model_path} !'
-assert os.path.exists(args.data_path), f'! data_path不存在:{args.data_path} !'
 if not os.path.exists(args.save_path):
     os.makedirs(args.save_path)
 
