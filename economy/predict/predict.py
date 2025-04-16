@@ -11,9 +11,7 @@ from model.layer import deploy
 from train_class import train_class
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 分布式数据并行训练：
-# python -m torch.distributed.launch --master_port 9999 --nproc_per_node n run.py --distributed True
-# master_port为GPU之间的通讯端口，空闲的即可。n为GPU数量
+# 股票预测
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|股票预测|')
 parser.add_argument('--train_again', default=True, type=bool, help='|继续训练新数据|')
@@ -150,9 +148,7 @@ class predict_class:
                 # 模型
                 model_dict = torch.load(weight_path, map_location='cpu')
                 model_dict['model'] = deploy(model_dict['model'], model_dict['mean_input'], model_dict['mean_output'],
-                                             model_dict['std_input'], model_dict['std_output'],
-                                             model_dict['mean_special'],
-                                             model_dict['std_special']).eval().to(args.device)
+                                             model_dict['std_input'], model_dict['std_output']).eval().to(args.device)
                 # 数据
                 df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
                 input_data = df[args.input_column].values.astype(np.float32).T
@@ -195,9 +191,7 @@ class predict_class:
                 # 模型
                 model_dict = torch.load(weight_path, map_location='cpu')
                 model_dict['model'] = deploy(model_dict['model'], model_dict['mean_input'], model_dict['mean_output'],
-                                             model_dict['std_input'], model_dict['std_output'],
-                                             model_dict['mean_special'],
-                                             model_dict['std_special']).eval().to(args.device)
+                                             model_dict['std_input'], model_dict['std_output']).eval().to(args.device)
                 # 数据
                 df = pd.read_csv(data_path, encoding='utf-8', index_col=0)
                 input_data = df[args.input_column].values.astype(np.float32).T

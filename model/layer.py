@@ -178,24 +178,16 @@ class split_linear(torch.nn.Module):
 
 
 class series_encode(torch.nn.Module):  # 归一化
-    def __init__(self, mean_input, std_input, mean_special=None, std_special=None):
+    def __init__(self, mean_input, std_input):
         super().__init__()
         self.mean_input = torch.tensor(mean_input)
         self.std_input = torch.tensor(std_input)
-        if mean_special is not None:
-            self.mean_special = torch.tensor(mean_special)
-            self.std_special = torch.tensor(std_special)
 
-    def forward(self, x, special=None):
+    def forward(self, x):
         x = x.permute(0, 2, 1)
         x = (x - self.mean_input.type(x.dtype).to(x.device)) / self.std_input.type(x.dtype).to(x.device)
         x = x.permute(0, 2, 1)
-        if special is None:
-            return x
-        else:
-            special = ((special - self.mean_special.type(x.dtype).to(x.device)) / self.std_special.type(x.dtype)
-                       .to(x.device))
-            return x, special
+        return x
 
 
 class series_decode(torch.nn.Module):  # 反归一化
@@ -212,18 +204,13 @@ class series_decode(torch.nn.Module):  # 反归一化
 
 
 class deploy(torch.nn.Module):  # 对输入进行归一化，对输出进行反归一化
-    def __init__(self, model, mean_input, mean_output, std_input, std_output, mean_special=None, std_special=None):
+    def __init__(self, model, mean_input, mean_output, std_input, std_output):
         super().__init__()
-        self.series_encode = series_encode(mean_input, std_input, mean_special, std_special)
+        self.series_encode = series_encode(mean_input, std_input)
         self.model = model
         self.series_decode = series_decode(mean_output, std_output)
 
-    def forward(self, x, special=None):
-        if special is None:
-            x = self.series_encode(x)
-            x = self.model(x)
-        else:
-            x, special = self.series_encode(x, special)
-            x = self.model(x, special)
-        x = self.series_decode(x)
+    def forward(self, x):
+        x = self.series_encode(x)
+        x = self.model(x)
         return x

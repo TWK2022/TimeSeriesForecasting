@@ -116,31 +116,18 @@ class train_class:
             'std_input': std_input,
             'std_output': std_output,
         }
-        # 特殊数据(需要根据情况更改)
-        if 'special' in args.model:
-            data_dict['train_special'] = train_input[:, [1, 2]]
-            data_dict['val_special'] = val_input[:, [1, 2]]
-            data_dict['mean_special'] = mean_input[[1, 2]]
-            data_dict['std_special'] = std_input[[1, 2]]
-        else:
-            data_dict['train_special'] = None
-            data_dict['val_special'] = None
-            data_dict['mean_special'] = None
-            data_dict['std_special'] = None
         return data_dict
 
     def dataloader_load(self):
         args = self.args
-        train_dataset = torch_dataset(args, self.data_dict['train_input'], self.data_dict['train_output'],
-                                      self.data_dict['train_special'])
+        train_dataset = torch_dataset(args, self.data_dict['train_input'], self.data_dict['train_output'])
         train_shuffle = False if args.distributed else True  # 分布式设置sampler后shuffle要为False
         train_sampler = torch.utils.data.distributed.DistributedSampler(train_dataset) if args.distributed else None
         train_dataloader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch, shuffle=train_shuffle,
                                                        drop_last=True, pin_memory=args.latch,
                                                        num_workers=args.num_worker,
                                                        sampler=train_sampler, collate_fn=train_dataset.collate_fn)
-        val_dataset = torch_dataset(args, self.data_dict['val_input'], self.data_dict['val_output'],
-                                    self.data_dict['val_special'])
+        val_dataset = torch_dataset(args, self.data_dict['val_input'], self.data_dict['val_output'])
         val_sampler = None  # 分布式时数据合在主GPU上进行验证
         val_batch = args.batch // args.device_number  # 分布式验证时batch要减少为一个GPU的量
         val_dataloader = torch.utils.data.DataLoader(val_dataset, batch_size=val_batch, shuffle=False,
@@ -157,10 +144,10 @@ class train_class:
         else:
             optimizer = torch.optim.Adam(self.model_dict['model'].parameters(),
                                          lr=args.lr_start, betas=(0.937, 0.999))
-        optimizer.load_state_dict(self.model_dict['optimizer_state_dict']) if self.model_dict[
-            'optimizer_state_dict'] else None
+        if self.model_dict['optimizer_state_dict'] is not None:
+            optimizer.load_state_dict(self.model_dict['optimizer_state_dict'])
         step_epoch = ((len(self.data_dict['train_input']) - args.input_size - args.output_size + 1)
-                      // args.batch // args.device_number * args.device_number)  # 每轮的步数
+                      // args.batch // args.device_number * args.device_number)  # 每轮步数
         optimizer_adjust = lr_adjust(args, step_epoch, self.model_dict['epoch_finished'])  # 学习率调整函数
         optimizer = optimizer_adjust(optimizer)  # 学习率初始化
         return optimizer, optimizer_adjust
@@ -183,21 +170,20 @@ class train_class:
                     print(info)
             model.train()
             train_loss = 0  # 记录损失
-            for index, (series_batch, true_batch, special) in enumerate(self.train_dataloader):
+            for index, (series_batch, label_batch) in enumerate(self.train_dataloader):
                 series_batch = series_batch.to(args.device, non_blocking=args.latch)
-                true_batch = true_batch.to(args.device, non_blocking=args.latch)
+                label_batch = label_batch.to(args.device, non_blocking=args.latch)
                 if args.amp:
                     with torch.cuda.amp.autocast():
-                        pred_batch = model(series_batch) if 'special' not in args.model else model(series_batch,
-                                                                                                   special)
-                        loss_batch = self.loss(pred_batch, true_batch)
+                        pred_batch = model(series_batch)
+                        loss_batch = self.loss(pred_batch, label_batch)
                     args.amp.scale(loss_batch).backward()
                     args.amp.step(self.optimizer)
                     args.amp.update()
                     self.optimizer.zero_grad()
                 else:
-                    pred_batch = model(series_batch) if 'special' not in args.model else model(series_batch, special)
-                    loss_batch = self.loss(pred_batch, true_batch)
+                    pred_batch = model(series_batch)
+                    loss_batch = self.loss(pred_batch, label_batch)
                     loss_batch.backward()
                     self.optimizer.step()
                     self.optimizer.zero_grad()
@@ -211,7 +197,7 @@ class train_class:
                 if args.print_info:
                     print(info)
             # 清理显存空间
-            del series_batch, true_batch, pred_batch, loss_batch
+            del series_batch, label_batch, pred_batch, loss_batch
             torch.cuda.empty_cache()
             # 验证
             if args.local_rank == 0:  # 分布式时只验证一次
@@ -230,8 +216,6 @@ class train_class:
                 self.model_dict['val_loss'] = val_loss
                 self.model_dict['val_mae'] = mae
                 self.model_dict['val_rmse'] = rmse
-                self.model_dict['mean_special'] = self.data_dict['mean_special']
-                self.model_dict['std_special'] = self.data_dict['std_special']
                 if epoch % args.save_epoch == 0 or epoch == args.epoch:
                     torch.save(self.model_dict, args.save_path)  # 保存模型
                 if val_loss < 1 and val_loss < self.model_dict['standard']:
@@ -257,37 +241,36 @@ class train_class:
         with torch.no_grad():
             model = self.ema.ema_model if args.ema else self.model_dict['model'].eval()
             pred = []
-            true = []
+            label = []
             val_loss = 0
-            for index, (series_batch, true_batch, special) in enumerate(self.val_dataloader):
+            for index, (series_batch, label_batch) in enumerate(self.val_dataloader):
                 series_batch = series_batch.to(args.device, non_blocking=args.latch)
-                true_batch = true_batch.to(args.device, non_blocking=args.latch)
-                pred_batch = model(series_batch) if 'special' not in args.model else model(series_batch, special)
-                loss_batch = self.loss(pred_batch, true_batch)
+                label_batch = label_batch.to(args.device, non_blocking=args.latch)
+                pred_batch = model(series_batch)
+                loss_batch = self.loss(pred_batch, label_batch)
                 val_loss += loss_batch.item()
                 pred.append(pred_batch.cpu())
-                true.append(true_batch.cpu())
+                label.append(label_batch.cpu())
             # 计算指标
             val_loss /= (index + 1)
             pred = torch.concat(pred, dim=0)
-            true = torch.concat(true, dim=0)
-            # 计算总相对指标
-            mae, rmse = self.metric(pred, true)
+            label = torch.concat(label, dim=0)
+            mae, rmse = self.metric(pred, label)
+            # 计算各类别相对指标和真实指标
+            for i in range(pred.shape[1]):
+                column = args.output_column[i]
+                _mae, _rmse = self.metric(pred[:, i], label[:, i])
+                pred[:, i] = pred[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
+                label[:, i] = label[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
+                _mae_label, _rmse_label = self.metric(pred[:, i], label[:, i])
+                info = (f'| val | {column} | mae:{_mae:.4f} | rmse:{_rmse:.4f} | mae_label:{_mae_label:.4f} |'
+                        f' rmse_label:{_rmse_label:.4f} |')
+                if args.print_info:
+                    print(info)
             # 日志
             info = f'| val | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_rmse:{rmse:.4f} |'
             if args.print_info:
                 print(info)
-            # 计算各类别相对指标和真实指标
-            for i in range(pred.shape[1]):
-                column = args.output_column[i]
-                _mae, _rmse = self.metric(pred[:, i], true[:, i])
-                pred[:, i] = pred[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
-                true[:, i] = true[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
-                _mae_true, _rmse_true = self.metric(pred[:, i], true[:, i])
-                info = (f'| val | {column} | mae:{_mae:.4f} | rmse:{_rmse:.4f} | mae_true:{_mae_true:.4f} |'
-                        f' rmse_true:{_rmse_true:.4f} |')
-                if args.print_info:
-                    print(info)
         return val_loss, mae.item(), rmse.item()
 
     @staticmethod
@@ -300,9 +283,9 @@ class train_class:
         return column
 
     @staticmethod
-    def metric(pred, true):
-        mae = torch.mean(abs(pred - true))
-        rmse = torch.sqrt(torch.mean(torch.square(pred - true)))
+    def metric(pred, label):
+        mae = torch.mean(abs(pred - label))
+        rmse = torch.sqrt(torch.mean(torch.square(pred - label)))
         return mae, rmse
 
 
@@ -362,22 +345,21 @@ class mse_decay:
         self.decay = torch.linspace(1.5, 0.5, args.output_size)
         self.mse = torch.nn.MSELoss()
 
-    def __call__(self, pred, true):
+    def __call__(self, pred, label):
         self.decay = self.decay.to(pred.device)
         pred_decay = pred * self.decay
-        true_decay = true * self.decay
-        loss = self.mse(pred_decay, true_decay)
+        label_decay = label * self.decay
+        loss = self.mse(pred_decay, label_decay)
         return loss
 
 
 class torch_dataset(torch.utils.data.Dataset):
-    def __init__(self, args, input_data, output_data, special_data):
+    def __init__(self, args, input_data, output_data):
         self.model = args.model
         self.input_size = args.input_size
         self.output_size = args.output_size
         self.input_data = input_data
         self.output_data = output_data
-        self.special_data = special_data
 
     def __len__(self):
         return len(self.input_data) - self.input_size - self.output_size + 1
@@ -388,18 +370,11 @@ class torch_dataset(torch.utils.data.Dataset):
         series = torch.tensor(series.T, dtype=torch.float32)
         label = self.output_data[boundary:boundary + self.output_size]  # 输出标签
         label = torch.tensor(label.T, dtype=torch.float32)
-        # 加入特殊变量
-        special = None
-        if 'special' in self.model:
-            special = self.special_data[boundary]
-            special = torch.tensor(special, dtype=torch.float32)
-        return series, label, special
+        return series, label
 
     def collate_fn(self, getitem_list):  # 自定义__getitem__合成方式
         series_list = [_[0] for _ in getitem_list]
         label_list = [_[1] for _ in getitem_list]
-        special_list = [_[2] for _ in getitem_list]
         series_batch = torch.stack(series_list, dim=0)
         label_batch = torch.stack(label_list, dim=0)
-        special_batch = torch.stack(special_list, dim=0) if 'special' in self.model else None
-        return series_batch, label_batch, special_batch
+        return series_batch, label_batch
