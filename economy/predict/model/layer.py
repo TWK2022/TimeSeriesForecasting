@@ -213,4 +213,5 @@ class deploy(torch.nn.Module):  # 对输入进行归一化，对输出进行反�
     def forward(self, x):
         x = self.series_encode(x)
         x = self.model(x)
+        x = self.series_decode(x)
         return x
