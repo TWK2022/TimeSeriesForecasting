@@ -26,9 +26,9 @@ class train_class:
         self.train_dataloader, self.val_dataloader = self.dataloader_load()  # 数据处理器
         self.optimizer, self.optimizer_adjust = self.optimizer_load()  # 学习率、学习率调整
         self.loss = self.loss_load()  # 损失函数
-        if args.ema:  # 使用平均指数移动(EMA)调整参数
+        if args.local_rank == 0 and args.ema:  # 平均指数移动(EMA)，创建ema模型
             self.ema = model_ema(self.model_dict['model'])
-            self.ema.update_all = self.model_dict['ema_update']
+            self.ema.update_total = self.model_dict['ema_update']
         if args.distributed:  # 分布式初始化
             self.model_dict['model'] = torch.nn.parallel.DistributedDataParallel(self.model_dict['model'],
                                                                                  device_ids=[args.local_rank],
@@ -42,6 +42,8 @@ class train_class:
         args = self.args
         if os.path.exists(args.weight_path):
             model_dict = torch.load(args.weight_path, map_location='cpu')
+            for param in model_dict['model'].parameters():
+                param.requires_grad_(True)  # 打开梯度(保存的ema模型为关闭)
             if args.weight_again:
                 model_dict['epoch_finished'] = 0  # 已训练的轮数
                 model_dict['optimizer_state_dict'] = None  # 学习率参数
@@ -187,7 +189,7 @@ class train_class:
                     loss_batch.backward()
                     self.optimizer.step()
                     self.optimizer.zero_grad()
-                self.ema.update(model) if args.ema else None  # 调整参数，ema.update_all会自动+1
+                self.ema.update(model) if args.local_rank and args.ema else None  # 更新ema模型参数
                 train_loss += loss_batch.item()  # 记录损失
                 self.optimizer = self.optimizer_adjust(self.optimizer)  # 调整学习率
             # 日志
@@ -204,10 +206,11 @@ class train_class:
                 val_loss, mae, rmse = self.validation()
             # 保存
             if args.local_rank == 0:  # 分布式时只保存一次
-                self.model_dict['model'] = model.module if args.distributed else model
+                self.model_dict['model'] = self.ema.ema_model if args.ema else (
+                    model.module if args.distributed else model)
                 self.model_dict['epoch_finished'] = epoch
                 self.model_dict['optimizer_state_dict'] = self.optimizer.state_dict()
-                self.model_dict['ema_update'] = self.ema.update_all if args.ema else self.model_dict['ema_update']
+                self.model_dict['ema_update'] = self.ema.update_total if args.ema else self.model_dict['ema_update']
                 self.model_dict['mean_input'] = self.data_dict['mean_input']
                 self.model_dict['mean_output'] = self.data_dict['mean_output']
                 self.model_dict['std_input'] = self.data_dict['std_input']
@@ -239,7 +242,7 @@ class train_class:
     def validation(self):
         args = self.args
         with torch.no_grad():
-            model = self.ema.ema_model if args.ema else self.model_dict['model'].eval()
+            model = self.ema.ema_model.eval() if args.ema else self.model_dict['model'].eval()
             pred = []
             label = []
             val_loss = 0
@@ -290,17 +293,17 @@ class train_class:
 
 
 class model_ema:
-    def __init__(self, model, decay=0.9999, tau=2000, update_all=0):
+    def __init__(self, model, decay=0.9999, tau=2000, update_total=0):
         self.ema_model = copy.deepcopy(self._get_model(model)).eval()  # FP32 EMA
-        self.update_all = update_all
+        self.update_total = update_total
         self.decay = lambda x: decay * (1 - math.exp(-x / tau))
-        for p in self.ema_model.parameters():
-            p.requires_grad_(False)
+        for param in self.ema_model.parameters():
+            param.requires_grad_(False)  # 关闭梯度
 
     def update(self, model):
         with torch.no_grad():
-            self.update_all += 1
-            d = self.decay(self.update_all)
+            self.update_total += 1
+            d = self.decay(self.update_total)
             state_dict = self._get_model(model).state_dict()
             for k, v in self.ema_model.state_dict().items():
                 if v.dtype.is_floating_point:
