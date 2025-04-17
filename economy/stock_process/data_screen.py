@@ -80,7 +80,7 @@ class data_screen_class:
         # 保存
         with open(self.save_path, 'w', encoding='utf-8') as f:
             yaml.dump(result_dict, f, allow_unicode=True, sort_keys=False)
-        print('| 保存结果：self.save_path |')
+        print(f'| 保存结果：{self.save_path} |')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #
