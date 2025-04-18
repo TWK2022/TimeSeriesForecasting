@@ -41,7 +41,7 @@ class train_class:
     def model_load(self):
         args = self.args
         if os.path.exists(args.weight_path):
-            model_dict = torch.load(args.weight_path, map_location='cpu')
+            model_dict = torch.load(args.weight_path, map_location='cpu', weights_only=False)
             for param in model_dict['model'].parameters():
                 param.requires_grad_(True)  # 打开梯度(保存的ema模型为关闭)
             if args.weight_again:
