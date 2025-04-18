@@ -38,8 +38,8 @@ parser.add_argument('--output_size', default=2, type=int, help='|输出长度|')
 parser.add_argument('--epoch', default=100, type=int, help='|总轮数(包含加载模型已训练轮数)|')
 parser.add_argument('--batch', default=64, type=int, help='|批量大小，分布式时为总批量|')
 parser.add_argument('--divide', default=[19, 1], type=list, help='|训练集和验证集划分比例|')
-parser.add_argument('--divide_train', default=1, type=int, help='|训练集数据：0训练集，1所有数据，2验证集|')
-parser.add_argument('--z_score', default=1, type=int, help='|归一化时：0训练集，1所有数据，2验证集|')
+parser.add_argument('--divide_train', default=1, type=int, help='|训练集数据:0训练集，1所有数据，2验证集|')
+parser.add_argument('--z_score', default=1, type=int, help='|归一化时:0训练集，1所有数据，2验证集|')
 parser.add_argument('--model', default='nlinear', type=str, help='|模型选择|')
 parser.add_argument('--model_type', default='l', type=str, help='|模型型号|')
 parser.add_argument('--loss', default='mse_decay', type=str, help='|损失函数|')
@@ -75,7 +75,7 @@ args.device_number = max(torch.cuda.device_count(), 1)  # 使用的GPU数，可�
 if not os.path.exists(args.save_dir):
     os.makedirs(args.save_dir)
 
-# wandb可视化：https://wandb.ai
+# wandb可视化: https://wandb.ai
 if args.wandb and args.local_rank == 0:  # 分布式时只记录一次wandb
     args.wandb_run = wandb.init(project=args.wandb_project, name='train', config=args)
 # 混合float16精度训练
@@ -164,7 +164,7 @@ class predict_class:
                         close_ = close[index + args.input_size - 1]  # 前1天收盘价
                         tensor = torch.tensor(input_, dtype=torch.float32).unsqueeze(0).to(self.args.device)
                         pred_value = model_dict['model'](tensor)[0][0].cpu().numpy()
-                        # 回测策略：预测上涨时，计算第1-2天任意1天上涨的概率
+                        # 回测策略: 预测上涨时，计算第1-2天任意1天上涨的概率
                         increase = np.mean(pred_value[0:2] / close_)  # 涨幅
                         if increase > 1:
                             total += 1
@@ -178,7 +178,7 @@ class predict_class:
         # 保存
         with open(args.simulate_save_path, 'w', encoding='utf-8') as f:
             yaml.dump(result_dict, f, allow_unicode=True, sort_keys=False)
-        print(f'| 保存结果：{args.simulate_save_path} |')
+        print(f'| 保存结果: {args.simulate_save_path} |')
 
     def feature(self):
         args = self.args
@@ -207,7 +207,7 @@ class predict_class:
         # 保存
         with open(args.predict_save_path, 'w', encoding='utf-8') as f:
             yaml.dump(result_dict, f, allow_unicode=True, sort_keys=False)
-        print(f'| 保存结果：{args.predict_save_path} |')
+        print(f'| 保存结果: {args.predict_save_path} |')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #

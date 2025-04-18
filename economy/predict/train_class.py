@@ -37,6 +37,7 @@ class train_class:
             log_path = os.path.dirname(__file__) + '/log.log'
             logging.basicConfig(filename=log_path, level=logging.INFO,
                                 format='%(asctime)s | %(levelname)s | %(message)s')
+            logging.info('-------------------- log --------------------')
 
     def model_load(self):
         args = self.args
@@ -262,17 +263,17 @@ class train_class:
             # 计算各类别相对指标和真实指标
             for i in range(pred.shape[1]):
                 column = args.output_column[i]
-                _mae, _rmse = self.metric(pred[:, i], label[:, i])
+                mae_, rmse_ = self.metric(pred[:, i], label[:, i])
                 pred[:, i] = pred[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
                 label[:, i] = label[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
-                _mae_label, _rmse_label = self.metric(pred[:, i], label[:, i])
-                info = (f'| val | {column} | mae:{_mae:.4f} | rmse:{_rmse:.4f} | mae_label:{_mae_label:.4f} |'
-                        f' rmse_label:{_rmse_label:.4f} |')
+                true_mae, true_rmse = self.metric(pred[:, i], label[:, i])
+                info = (f'| val | {column} | mae:{mae_:.4f} | rmse:{rmse_:.4f} | true_mae:{true_mae:.4f} |'
+                        f' true_rmse:{true_rmse:.4f} |')
                 if args.print_info:
                     print(info)
             # 日志
-            info = f'| val | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_rmse:{rmse:.4f} |'
             if args.print_info:
+                info = f'| val | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_rmse:{rmse:.4f} |'
                 print(info)
         return val_loss, mae.item(), rmse.item()
 

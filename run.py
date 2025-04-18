@@ -1,11 +1,10 @@
-import os
 import wandb
 import torch
 import argparse
 from train_class import train_class
 
 # -------------------------------------------------------------------------------------------------------------------- #
-# 分布式数据并行训练：
+# 分布式数据并行训练:
 # python -m torch.distributed.launch --master_port 9999 --nproc_per_node n run.py --distributed True
 # master_port为GPU之间的通讯端口，空闲的即可。n为GPU数量
 # -------------------------------------------------------------------------------------------------------------------- #
@@ -27,8 +26,8 @@ parser.add_argument('--output_size', default=24, type=int, help='|输出长度|'
 parser.add_argument('--epoch', default=100, type=int, help='|总轮数(包含加载模型已训练轮数)|')
 parser.add_argument('--batch', default=64, type=int, help='|批量大小，分布式时为总批量|')
 parser.add_argument('--divide', default=[19, 1], type=list, help='|训练集和验证集划分比例|')
-parser.add_argument('--divide_train', default=0, type=int, help='|训练集数据：0训练集，1所有数据，2验证集|')
-parser.add_argument('--z_score', default=1, type=int, help='|归一化时：0训练集，1所有数据，2验证集|')
+parser.add_argument('--divide_train', default=0, type=int, help='|训练集数据:0训练集，1所有数据，2验证集|')
+parser.add_argument('--z_score', default=1, type=int, help='|归一化时:0训练集，1所有数据，2验证集|')
 parser.add_argument('--model', default='nlinear', type=str, help='|模型选择|')
 parser.add_argument('--model_type', default='m', type=str, help='|模型型号|')
 parser.add_argument('--loss', default='mse_decay', type=str, help='|损失函数|')
@@ -50,7 +49,7 @@ args.input_column = train_class.read_column(args.input_column)  # column处理
 args.output_column = train_class.read_column(args.output_column)  # column处理
 args.device = args.device if torch.cuda.is_available() else 'cpu'  # 没有GPU时使用CPU
 args.device_number = max(torch.cuda.device_count(), 1)  # 使用的GPU数，可能为CPU
-# wandb可视化：https://wandb.ai
+# wandb可视化: https://wandb.ai
 if args.wandb and args.local_rank == 0:  # 分布式时只记录一次wandb
     args.wandb_run = wandb.init(project=args.wandb_project, name='train', config=args)
 # 混合float16精度训练
