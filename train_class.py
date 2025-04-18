@@ -189,7 +189,7 @@ class train_class:
                     loss_batch.backward()
                     self.optimizer.step()
                     self.optimizer.zero_grad()
-                self.ema.update(model) if args.local_rank and args.ema else None  # 更新ema模型参数
+                self.ema.update(model) if args.local_rank == 0 and args.ema else None  # 更新ema模型参数
                 train_loss += loss_batch.item()  # 记录损失
                 self.optimizer = self.optimizer_adjust(self.optimizer)  # 调整学习率
             # 日志
