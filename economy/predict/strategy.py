@@ -3,10 +3,6 @@ import pandas as pd
 
 
 class strategy_class:
-    '''
-        release: 放量
-    '''
-
     def __init__(self):
         path_dir = os.path.dirname(os.path.dirname(__file__)) + '/dataset/stock_add'
         name_list = os.listdir(path_dir)

@@ -46,7 +46,7 @@ class data_screen_class:
             for name in self.industry_choice[industry].keys():
                 path = self.data_dir + f'/{name}_add.csv'
                 if not os.path.exists(path):
-                    print(f'! 文件不存在：{path} !')
+                    print(f'! 文件不存在:{path} !')
                     continue
                 df = pd.read_csv(path, index_col=0)
                 close = df['收盘价'].values
@@ -57,11 +57,11 @@ class data_screen_class:
                 mean_value = df['均价']
                 # 检查是否存在nan值
                 if np.isnan(df.values).any():
-                    print(f'! 存在nan值：{path} !')
+                    print(f'! 存在nan值:{path} !')
                     continue
                 # 上市日期删选
                 if len(df) < 200:
-                    print(f'! 文件数据太少：{path} !')
+                    print(f'! 文件数据太少:{path} !')
                     continue
                 # 股价筛选
                 if close[-1] < self.close_min or close[-1] > self.close_max:
@@ -80,7 +80,7 @@ class data_screen_class:
         # 保存
         with open(self.save_path, 'w', encoding='utf-8') as f:
             yaml.dump(result_dict, f, allow_unicode=True, sort_keys=False)
-        print(f'| 保存结果：{self.save_path} |')
+        print(f'| 保存结果:{self.save_path} |')
 
 
 # -------------------------------------------------------------------------------------------------------------------- #

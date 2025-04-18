@@ -39,12 +39,12 @@ class data_add_class:
         for name in tqdm.tqdm(self.stock_dict.keys()):
             path = f'{self.data_dir}/{name}.csv'
             if not os.path.exists(path):
-                print(f'! 文件不存在：{path} !')
+                print(f'! 文件不存在:{path} !')
                 continue
             df = pd.read_csv(path, index_col=0)
             # 数据太少舍弃
             if len(df) < 200:
-                print(f'! 数据太少舍弃：{name} !')
+                print(f'! 数据太少舍弃:{name} !')
                 continue
             # 上证指数
             df['上证指数'] = shangzheng[-len(df):]

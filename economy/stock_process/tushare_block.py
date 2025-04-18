@@ -28,9 +28,9 @@ if not os.path.exists(args_default.save_dir):
 # -------------------------------------------------------------------------------------------------------------------- #
 class tushare_block_class:
     '''
-        stock_classification：获取同花顺中股票的分类
-        stock_performance：获取股票的业绩预报
-        data_get：获取股票的日线数据
+        stock_classification: 获取同花顺中股票的分类
+        stock_performance: 获取股票的业绩预报
+        data_get: 获取股票的日线数据
     '''
 
     def __init__(self, args=args_default):
@@ -138,7 +138,7 @@ class tushare_block_class:
         df = pd.DataFrame(df.values[:, 1:3], columns=['上证指数', '上证成交量'],
                           index=df['trade_date'].values).sort_index()
         df.to_csv(f'{self.save_dir}/上证指数.csv', index=True, header=True)
-        print(f'| 补充数据: {self.save_dir}/上证指数.csv |')
+        print(f'| 补充数据:{self.save_dir}/上证指数.csv |')
         self.end_time = df.index[-1]
         # 股票数据
         record_time = 0

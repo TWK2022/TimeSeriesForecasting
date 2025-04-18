@@ -7,7 +7,7 @@ import pandas as pd
 # 筛选出某个行业的股票
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|选择股票|')
-parser.add_argument('--industry', default='共封装光学,军工,医药,国产操作系统,存储芯片,机器人概念,电力,社区团购,粮食概念,跨境支付,跨境电商',
+parser.add_argument('--industry', default='军工,医药,国产操作系统,存储芯片,机器人概念,旅游概念,电力,社区团购,粮食概念,跨境支付,跨境电商',
                     type=str, help='|选择行业，如"A,B,C"|')
 parser.add_argument('--stock_path', default='dataset/stock_all.yaml', type=str, help='|股票列表|')
 parser.add_argument('--data_dir', default='dataset/industry', type=str, help='|行业csv文件|')
