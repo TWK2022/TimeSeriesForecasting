@@ -18,7 +18,7 @@ parser.add_argument('--data_path', default='dataset/sin_cos.csv', type=str, help
 parser.add_argument('--input_column', default='sin,cos', type=str, help='|输入变量，可传入.txt|')
 parser.add_argument('--output_column', default='mix', type=str, help='|预测变量，可传入.txt|')
 parser.add_argument('--weight_path', default='last.pt', type=str, help='|加载模型，没有模型会创建新模型|')
-parser.add_argument('--weight_again', default=False, type=bool, help='|重置学习率等状态，在weight_path上重新训练|')
+parser.add_argument('--weight_again', default=True, type=bool, help='|重置学习率等状态，在weight_path上重新训练|')
 parser.add_argument('--save_epoch', default=10, type=int, help='|每x轮和最后一轮保存模型|')
 parser.add_argument('--save_path', default='last.pt', type=str, help='|保存模型|')
 parser.add_argument('--save_best', default='best.pt', type=str, help='|保存最佳模型|')
