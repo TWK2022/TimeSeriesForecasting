@@ -146,7 +146,7 @@ class predict_class:
                 weight_path = f'{args.save_dir}/{name}.pt'
                 data_path = f'{args.data_dir}/{name}_add.csv'
                 # 模型
-                model_dict = torch.load(weight_path, map_location='cpu')
+                model_dict = torch.load(weight_path, map_location='cpu', weights_only=False)
                 model_dict['model'] = deploy(model_dict['model'], model_dict['mean_input'], model_dict['mean_output'],
                                              model_dict['std_input'], model_dict['std_output']).eval().to(args.device)
                 # 数据
@@ -189,7 +189,7 @@ class predict_class:
                 weight_path = f'{args.save_dir}/{name}.pt'
                 data_path = f'{args.data_dir}/{name}_add.csv'
                 # 模型
-                model_dict = torch.load(weight_path, map_location='cpu')
+                model_dict = torch.load(weight_path, map_location='cpu', weights_only=False)
                 model_dict['model'] = deploy(model_dict['model'], model_dict['mean_input'], model_dict['mean_output'],
                                              model_dict['std_input'], model_dict['std_output']).eval().to(args.device)
                 # 数据
