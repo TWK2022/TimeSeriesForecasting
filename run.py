@@ -41,7 +41,7 @@ parser.add_argument('--device', default='cuda', type=str, help='|设备|')
 parser.add_argument('--latch', default=True, type=bool, help='|模型和数据是否为锁存|')
 parser.add_argument('--num_worker', default=0, type=int, help='|CPU处理数据进程数，0为一个主进程，一般为0、2、4、8|')
 parser.add_argument('--ema', default=True, type=bool, help='|平均指数移动(EMA)调整参数|')
-parser.add_argument('--amp', default=False, type=bool, help='|混合float16精度训练，CPU时不可用|')
+parser.add_argument('--amp', default=True, type=bool, help='|混合float16精度训练，CPU时不可用|')
 parser.add_argument('--distributed', default=False, type=bool, help='|单机多卡分布式训练，batch为总batch|')
 parser.add_argument('--local_rank', default=0, type=int, help='|分布式训练使用命令后会自动传入的参数|')
 args = parser.parse_args()
@@ -49,16 +49,15 @@ args.input_column = train_class.read_column(args.input_column)  # column处理
 args.output_column = train_class.read_column(args.output_column)  # column处理
 args.device = args.device if torch.cuda.is_available() else 'cpu'  # 没有GPU时使用CPU
 args.device_number = max(torch.cuda.device_count(), 1)  # 使用的GPU数，可能为CPU
-# wandb可视化: https://wandb.ai
-if args.wandb and args.local_rank == 0:  # 分布式时只记录一次wandb
-    args.wandb_run = wandb.init(project=args.wandb_project, name='train', config=args)
 # 混合float16精度训练
-if args.amp:
-    args.amp = torch.cuda.amp.GradScaler()
+args.amp = torch.cuda.amp.GradScaler() if args.amp and args.device != 'cpu' else False
 # 分布式训练
 if args.distributed:
     torch.distributed.init_process_group(backend='nccl')
     args.device = torch.device('cuda', args.local_rank)
+# wandb可视化: https://wandb.ai
+if args.wandb and args.local_rank == 0:  # 分布式时只记录一次wandb
+    args.wandb_run = wandb.init(project=args.wandb_project, name='train', config=args)
 # 设置
 torch.manual_seed(999)  # 为CPU设置随机种子
 torch.cuda.manual_seed_all(999)  # 为所有GPU设置随机种子

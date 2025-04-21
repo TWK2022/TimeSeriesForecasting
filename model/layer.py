@@ -184,9 +184,7 @@ class series_encode(torch.nn.Module):  # 归一化
         self.std_input = torch.tensor(std_input)
 
     def forward(self, x):
-        x = x.permute(0, 2, 1)
         x = (x - self.mean_input.type(x.dtype).to(x.device)) / self.std_input.type(x.dtype).to(x.device)
-        x = x.permute(0, 2, 1)
         return x
 
 
@@ -197,9 +195,7 @@ class series_decode(torch.nn.Module):  # 反归一化
         self.std_output = torch.tensor(std_output)
 
     def forward(self, x):
-        x = x.permute(0, 2, 1)
         x = x * self.std_output.type(x.dtype).to(x.device) + self.mean_output.type(x.dtype).to(x.device)
-        x = x.permute(0, 2, 1)
         return x
 
 
@@ -213,4 +209,5 @@ class deploy(torch.nn.Module):  # 对输入进行归一化，对输出进行反�
     def forward(self, x):
         x = self.series_encode(x)
         x = self.model(x)
+        x = self.series_decode(x)
         return x

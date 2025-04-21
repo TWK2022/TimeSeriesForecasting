@@ -32,6 +32,41 @@ class data_add_class:
             for key in industry_choice[industry].keys():
                 self.stock_dict[key] = industry_choice[industry][key]
 
+    @staticmethod
+    def fix(data, decimal=2):  # 修复数据中的nan值
+        judge_list = np.isnan(data)
+        if judge_list.any():  # 存在nan值
+            index_list = np.arange(1, len(data))[judge_list[1:]]
+            index_max = len(judge_list) - 1
+            for index in index_list:
+                index_next = index + 1
+                record = 2
+                while index_next < index_max and np.isnan(data[index_next]):  # 下一个值也为空
+                    index_next += 1
+                    record += 1
+                if index == index_max or index_next == index_max:  # 最后一天空缺
+                    data[index] = data[index - 1]
+                    continue
+                data[index] = data[index - 1] + (data[index_next] - data[index - 1]) / record
+                data[index] = round(data[index], decimal)
+        return data
+
+    @staticmethod
+    def add_zero(data):  # 补充0值
+        judge_list = np.isnan(data)
+        if judge_list.any():  # 存在nan值
+            index_list = np.arange(len(data))[judge_list]
+            data[index_list] = 0
+        return data
+
+    @staticmethod
+    def reciprocal(data, numerator):  # 求导数
+        judge_list = np.where(data == 0, False, True)
+        index_list = np.arange(len(data))[judge_list]
+        data[index_list] = numerator / data[index_list]
+        data = np.round(data, 6)
+        return data
+
     def data_add(self):
         df = pd.read_csv(f'{os.path.dirname(self.data_dir)}/上证指数.csv')
         shangzheng = df['上证指数'].values
@@ -160,41 +195,6 @@ class data_add_class:
             df = df[20:]
             # 保存
             df.to_csv(f'{self.save_dir}/{name}_add.csv', header=True, index=True)
-
-    @staticmethod
-    def fix(data, decimal=2):  # 修复数据中的nan值
-        judge_list = np.isnan(data)
-        if judge_list.any():  # 存在nan值
-            index_list = np.arange(1, len(data))[judge_list[1:]]
-            index_max = len(judge_list) - 1
-            for index in index_list:
-                index_next = index + 1
-                record = 2
-                while index_next < index_max and np.isnan(data[index_next]):  # 下一个值也为空
-                    index_next += 1
-                    record += 1
-                if index == index_max or index_next == index_max:  # 最后一天空缺
-                    data[index] = data[index - 1]
-                    continue
-                data[index] = data[index - 1] + (data[index_next] - data[index - 1]) / record
-                data[index] = round(data[index], decimal)
-        return data
-
-    @staticmethod
-    def add_zero(data):  # 补充0值
-        judge_list = np.isnan(data)
-        if judge_list.any():  # 存在nan值
-            index_list = np.arange(len(data))[judge_list]
-            data[index_list] = 0
-        return data
-
-    @staticmethod
-    def reciprocal(data, numerator):  # 求导数
-        judge_list = np.where(data == 0, False, True)
-        index_list = np.arange(len(data))[judge_list]
-        data[index_list] = numerator / data[index_list]
-        data = np.round(data, 6)
-        return data
 
 
 # -------------------------------------------------------------------------------------------------------------------- #

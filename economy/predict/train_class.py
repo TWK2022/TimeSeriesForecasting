@@ -39,6 +39,21 @@ class train_class:
                                 format='%(asctime)s | %(levelname)s | %(message)s')
             logging.info('-------------------- log --------------------')
 
+    @staticmethod
+    def read_column(column_file):  # column处理
+        if os.path.exists(column_file):
+            with open(column_file, encoding='utf-8') as f:
+                column = [_.strip() for _ in f.readlines()]
+        else:
+            column = column_file.split(',')
+        return column
+
+    @staticmethod
+    def metric(pred, label):
+        mae = torch.mean(abs(pred - label))
+        rmse = torch.sqrt(torch.mean(torch.square(pred - label)))
+        return mae, rmse
+
     def model_load(self):
         args = self.args
         if os.path.exists(args.weight_path):
@@ -72,7 +87,7 @@ class train_class:
         input_data = np.array(df[args.input_column]).astype(np.float32)
         output_data = np.array(df[args.output_column]).astype(np.float32)
         # 划分数据
-        add = args.input_size + args.output_size - 1  # 输入数据后面的补足
+        add = args.input_len + args.output_len - 1  # 输入数据后面的补足
         data_len = len(df) - add  # 输入数据的真实数量
         boundary = int(data_len * args.divide[0] / (args.divide[0] + args.divide[1]))  # 数据划分
         if args.divide_train == 1:  # 使用所有数据训练
@@ -84,7 +99,6 @@ class train_class:
         else:  # 使用训练集训练
             train_input = input_data[0:boundary + add]  # 训练数据
             train_output = output_data[0:boundary + add]  # 训练标签
-        assert len(train_input) >= args.input_size + args.output_size  # 训练集不满足一个batch
         val_input = input_data[boundary:len(df)].copy()  # 验证数据
         val_output = output_data[boundary:len(df)].copy()  # 验证标签
         # 周期
@@ -149,7 +163,7 @@ class train_class:
                                          lr=args.lr_start, betas=(0.937, 0.999))
         if self.model_dict['optimizer_state_dict'] is not None:
             optimizer.load_state_dict(self.model_dict['optimizer_state_dict'])
-        step_epoch = ((len(self.data_dict['train_input']) - args.input_size - args.output_size + 1)
+        step_epoch = ((len(self.data_dict['train_input']) - args.input_len - args.output_len + 1)
                       // args.batch // args.device_number * args.device_number)  # 每轮步数
         optimizer_adjust = lr_adjust(args, step_epoch, self.model_dict['epoch_finished'])  # 学习率调整函数
         optimizer = optimizer_adjust(optimizer)  # 学习率初始化
@@ -261,7 +275,7 @@ class train_class:
             label = torch.concat(label, dim=0)
             mae, rmse = self.metric(pred, label)
             # 计算各类别相对指标和真实指标
-            for i in range(pred.shape[1]):
+            for i in range(len(args.output_column)):
                 column = args.output_column[i]
                 mae_, rmse_ = self.metric(pred[:, i], label[:, i])
                 pred[:, i] = pred[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
@@ -276,21 +290,6 @@ class train_class:
                 info = f'| val | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_rmse:{rmse:.4f} |'
                 print(info)
         return val_loss, mae.item(), rmse.item()
-
-    @staticmethod
-    def read_column(column_file):  # column处理
-        if os.path.exists(column_file):
-            with open(column_file, encoding='utf-8') as f:
-                column = [_.strip() for _ in f.readlines()]
-        else:
-            column = column_file.split(',')
-        return column
-
-    @staticmethod
-    def metric(pred, label):
-        mae = torch.mean(abs(pred - label))
-        rmse = torch.sqrt(torch.mean(torch.square(pred - label)))
-        return mae, rmse
 
 
 class model_ema:
@@ -346,11 +345,11 @@ class mse_decay:
     '''
 
     def __init__(self, args):
-        self.decay = torch.linspace(1.5, 0.5, args.output_size)
+        self.decay = torch.linspace(1.5, 0.5, args.output_len).unsqueeze(1).to(args.device)
         self.mse = torch.nn.MSELoss()
 
     def __call__(self, pred, label):
-        self.decay = self.decay.to(pred.device)
+        self.decay = self.decay
         pred_decay = pred * self.decay
         label_decay = label * self.decay
         loss = self.mse(pred_decay, label_decay)
@@ -360,20 +359,20 @@ class mse_decay:
 class torch_dataset(torch.utils.data.Dataset):
     def __init__(self, args, input_data, output_data):
         self.model = args.model
-        self.input_size = args.input_size
-        self.output_size = args.output_size
+        self.input_len = args.input_len
+        self.output_len = args.output_len
         self.input_data = input_data
         self.output_data = output_data
 
     def __len__(self):
-        return len(self.input_data) - self.input_size - self.output_size + 1
+        return len(self.input_data) - self.input_len - self.output_len + 1
 
     def __getitem__(self, index):
-        boundary = index + self.input_size
+        boundary = index + self.input_len
         series = self.input_data[index:boundary]  # 输入数据
-        series = torch.tensor(series.T, dtype=torch.float32)
-        label = self.output_data[boundary:boundary + self.output_size]  # 输出标签
-        label = torch.tensor(label.T, dtype=torch.float32)
+        series = torch.tensor(series, dtype=torch.float32)
+        label = self.output_data[boundary:boundary + self.output_len]  # 输出标签
+        label = torch.tensor(label, dtype=torch.float32)
         return series, label
 
     def collate_fn(self, getitem_list):  # 自定义__getitem__合成方式
