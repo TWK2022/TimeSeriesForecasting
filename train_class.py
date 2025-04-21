@@ -39,6 +39,21 @@ class train_class:
                                 format='%(asctime)s | %(levelname)s | %(message)s')
             logging.info('-------------------- log --------------------')
 
+    @staticmethod
+    def read_column(column_file):  # column处理
+        if os.path.exists(column_file):
+            with open(column_file, encoding='utf-8') as f:
+                column = [_.strip() for _ in f.readlines()]
+        else:
+            column = column_file.split(',')
+        return column
+
+    @staticmethod
+    def metric(pred, label):
+        mae = torch.mean(abs(pred - label))
+        rmse = torch.sqrt(torch.mean(torch.square(pred - label)))
+        return mae, rmse
+
     def model_load(self):
         args = self.args
         if os.path.exists(args.weight_path):
@@ -275,21 +290,6 @@ class train_class:
                 info = f'| val | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_rmse:{rmse:.4f} |'
                 print(info)
         return val_loss, mae.item(), rmse.item()
-
-    @staticmethod
-    def read_column(column_file):  # column处理
-        if os.path.exists(column_file):
-            with open(column_file, encoding='utf-8') as f:
-                column = [_.strip() for _ in f.readlines()]
-        else:
-            column = column_file.split(',')
-        return column
-
-    @staticmethod
-    def metric(pred, label):
-        mae = torch.mean(abs(pred - label))
-        rmse = torch.sqrt(torch.mean(torch.square(pred - label)))
-        return mae, rmse
 
 
 class model_ema:
