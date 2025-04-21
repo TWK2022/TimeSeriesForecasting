@@ -28,7 +28,7 @@ parser.add_argument('--batch', default=64, type=int, help='|批量大小，分�
 parser.add_argument('--divide', default=[19, 1], type=list, help='|训练集和验证集划分比例|')
 parser.add_argument('--divide_train', default=0, type=int, help='|训练集数据:0训练集，1所有数据，2验证集|')
 parser.add_argument('--z_score', default=1, type=int, help='|归一化时:0训练集，1所有数据，2验证集|')
-parser.add_argument('--model', default='lstm', type=str, help='|模型选择|')
+parser.add_argument('--model', default='linear', type=str, help='|模型选择|')
 parser.add_argument('--model_type', default='m', type=str, help='|模型型号|')
 parser.add_argument('--loss', default='mse_decay', type=str, help='|损失函数|')
 parser.add_argument('--warmup_ratio', default=0.01, type=float, help='|预热训练步数占总步数比例，最少5步，基准为0.01|')
