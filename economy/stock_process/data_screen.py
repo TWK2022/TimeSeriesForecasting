@@ -11,7 +11,7 @@ import pandas as pd
 parser = argparse.ArgumentParser(description='|筛选有上升潜力的股票|')
 parser.add_argument('--industry_choice', default='dataset/industry_choice.yaml', type=str, help='|待筛选股票|')
 parser.add_argument('--data_dir', default='dataset/stock_add', type=str, help='|股票数据|')
-parser.add_argument('--save_path', default='dataset/industry_screen.yaml', type=str, help='|保存位置|')
+parser.add_argument('--save_path', default='dataset/data_screen.yaml', type=str, help='|保存位置|')
 parser.add_argument('--close_min', default=3, type=float, help='|价格>close_min|')
 parser.add_argument('--close_max', default=100, type=float, help='|价格<close_max|')
 parser.add_argument('--market_value_min', default=50, type=float, help='|总市值(亿)>market_value_min|')

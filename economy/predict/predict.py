@@ -15,7 +15,7 @@ from train_class import train_class
 # -------------------------------------------------------------------------------------------------------------------- #
 parser = argparse.ArgumentParser(description='|股票预测|')
 parser.add_argument('--train_again', default=True, type=bool, help='|继续训练新数据|')
-parser.add_argument('--industry_screen', default='dataset/industry_screen.yaml', type=str, help='|筛选数据|')
+parser.add_argument('--data_screen', default='dataset/data_screen.yaml', type=str, help='|筛选数据|')
 parser.add_argument('--data_dir', default='dataset/stock_add', type=str, help='|股票数据|')
 parser.add_argument('--save_dir', default='predict/weight', type=str, help='|保存模型|')
 parser.add_argument('--simulate_save_path', default='dataset/simulate.yaml', type=str, help='|保存结果|')
@@ -57,7 +57,7 @@ parser.add_argument('--distributed', default=False, type=bool, help='|单机多�
 parser.add_argument('--local_rank', default=0, type=int, help='|分布式训练使用命令后会自动传入的参数|')
 args = parser.parse_args()
 project_dir = os.path.dirname(os.path.dirname(__file__))
-args.industry_screen = project_dir + '/' + args.industry_screen
+args.data_screen = project_dir + '/' + args.data_screen
 args.simulate_save_path = project_dir + '/' + args.simulate_save_path
 args.predict_save_path = project_dir + '/' + args.predict_save_path
 args.data_dir = project_dir + '/' + args.data_dir
@@ -99,12 +99,12 @@ class predict_class:
         self.lr_start_default = args.lr_start
         self.lr_end_epoch_default = args.lr_end_epoch
         self.simulate_dict = {}  # 记录验证结果
-        with open(args.industry_screen, 'r', encoding='utf-8') as f:
-            self.industry_screen = yaml.load(f, Loader=yaml.SafeLoader)
+        with open(args.data_screen, 'r', encoding='utf-8') as f:
+            self.data_screen = yaml.load(f, Loader=yaml.SafeLoader)
         self.stock_all = {}
-        for industry in self.industry_screen:
-            for name in self.industry_screen[industry].keys():
-                self.stock_all[name] = self.industry_screen[industry][name]
+        for industry in self.data_screen:
+            for name in self.data_screen[industry].keys():
+                self.stock_all[name] = self.data_screen[industry][name]
 
     def predict(self):
         self.train()
@@ -138,10 +138,10 @@ class predict_class:
         result_dict = {}
         total_all = 0  # 总次数
         correct_all = 0  # 正确次数
-        for industry in tqdm.tqdm(self.industry_screen.keys()):
+        for industry in tqdm.tqdm(self.data_screen.keys()):
             result_dict[industry] = {}
             self.simulate_dict[industry] = {}
-            for name in self.industry_screen[industry].keys():
+            for name in self.data_screen[industry].keys():
                 weight_path = f'{args.save_dir}/{name}.pt'
                 data_path = f'{args.data_dir}/{name}_add.csv'
                 # 模型
@@ -183,10 +183,10 @@ class predict_class:
     def feature(self):
         args = self.args
         result_dict = {}
-        for industry in tqdm.tqdm(self.industry_screen.keys()):
+        for industry in tqdm.tqdm(self.data_screen.keys()):
             result_dict[industry] = {}
-            for name in self.industry_screen[industry].keys():
-                if self.simulate_dict[industry][name] < 0.55:  # 正确率太低舍弃
+            for name in self.data_screen[industry].keys():
+                if self.simulate_dict[industry][name] < 0.60:  # 正确率太低舍弃
                     continue
                 weight_path = f'{args.save_dir}/{name}.pt'
                 data_path = f'{args.data_dir}/{name}_add.csv'

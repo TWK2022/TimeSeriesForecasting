@@ -19,8 +19,14 @@ __pycache__
 *.trt
 *.onnx
 # -------------------------------------------------------------------------------------------------------------------- #
-!dataset/ETTh1.csv
-!dataset/ETTh2.csv
-!dataset/ETTm1.csv
-!dataset/ETTm2.csv
-!dataset/sin_cos.csv
+dataset/industry_choice.yaml
+dataset/data_screen.yaml
+dataset/simulate.yaml
+dataset/predict.yaml
+# -------------------------------------------------------------------------------------------------------------------- #
+!ocr/ocr_model/**
+!dataset/industry/**
+!auto_gui/match_image/**
+!ocr/image/demo.png
+!predict/input_column.txt
+!predict/output_column.txt
