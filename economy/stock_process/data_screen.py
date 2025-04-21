@@ -73,7 +73,7 @@ class data_screen_class:
                 if np.max(change[-5:]) < self.change:
                     continue
                 # 日线筛选
-                if self.date_line and (mean_value[-1] > close_5[-1] and mean_value[-1] > close_10[-1]):
+                if self.date_line and (mean_value[-1] > 1.08 * close_5[-1] and mean_value[-1] > 1.08 * close_10[-1]):
                     continue
                 # 记录
                 result_dict[industry][name] = self.industry_choice[industry][name]
