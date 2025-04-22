@@ -1,4 +1,3 @@
-# 单变量自标签
 import torch
 from model.layer import split_linear
 
