@@ -1,5 +1,4 @@
 # 根据itransformer改编:https://github.com/thuml/iTransformer
-# 多变量异标签
 import torch
 from model.layer import multihead_attention, split_linear
 
@@ -34,7 +33,7 @@ class itransformer(torch.nn.Module):
         output_len = args.output_len
         input_dim = len(args.input_column)
         output_dim = len(args.output_column)
-        n_dict = {'s': 128, 'm': 256, 'l': 512}
+        n_dict = {'s': 32, 'm': 64, 'l': 128}
         feature = n_dict[args.model_type]
         head = 8
         # 网络结构
