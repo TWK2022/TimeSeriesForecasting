@@ -181,10 +181,9 @@ class train_class:
         model = self.model_dict['model']
         epoch_base = self.model_dict['epoch_finished'] + 1  # 新的一轮要+1
         for epoch in range(epoch_base, args.epoch + 1):
-            if args.local_rank == 0:
+            if args.local_rank == 0 and args.print_info:
                 info = f'-----------------------epoch:{epoch}-----------------------'
-                if args.print_info:
-                    print(info)
+                print(info)
             model.train()
             train_loss = 0  # 记录损失
             for index, (series_batch, label_batch) in enumerate(self.train_dataloader):
@@ -207,22 +206,20 @@ class train_class:
                 self.ema.update(model) if args.local_rank == 0 and args.ema else None  # 更新ema模型参数
                 train_loss += loss_batch.item()  # 记录损失
                 self.optimizer = self.optimizer_adjust(self.optimizer)  # 调整学习率
+            # 计算平均损失
+            train_loss /= index + 1
             # 日志
-            if args.local_rank == 0:
-                train_loss /= index + 1  # 计算平均损失
+            if args.local_rank == 0 and args.print_info:
                 info = f'| train | train_loss:{train_loss:.4f} | lr:{self.optimizer.param_groups[0]["lr"]:.6f} |'
-                if args.print_info:
-                    print(info)
+                print(info)
             # 清理显存空间
             del series_batch, label_batch, pred_batch, loss_batch
             torch.cuda.empty_cache()
-            # 验证
-            if args.local_rank == 0:  # 分布式时只验证一次
-                val_loss, mae, rmse = self.validation()
-            # 保存
-            if args.local_rank == 0:  # 分布式时只保存一次
-                self.model_dict['model'] = self.ema.ema_model if args.ema else (
-                    model.module if args.distributed else model)
+            # 验证和保存
+            if args.local_rank == 0:
+                val_loss, mae, rmse = self.validation()  # 验证
+                self.model_dict['model'] = model.module if args.distributed else model
+                self.model_dict['model'] = self.ema.ema_model if args.ema else self.model_dict['model']
                 self.model_dict['epoch_finished'] = epoch
                 self.model_dict['optimizer_state_dict'] = self.optimizer.state_dict()
                 self.model_dict['ema_update'] = self.ema.update_total if args.ema else self.model_dict['ema_update']
@@ -234,24 +231,21 @@ class train_class:
                 self.model_dict['val_loss'] = val_loss
                 self.model_dict['val_mae'] = mae
                 self.model_dict['val_rmse'] = rmse
-                if epoch % args.save_epoch == 0 or epoch == args.epoch:
-                    torch.save(self.model_dict, args.save_path)  # 保存模型
-                if val_loss < 1 and val_loss < self.model_dict['standard']:
+                if epoch % args.save_epoch == 0 or epoch == args.epoch:  # 保存模型
+                    torch.save(self.model_dict, args.save_path)
+                if val_loss < 1 and val_loss < self.model_dict['standard']:  # 保存最佳模型
                     self.model_dict['standard'] = val_loss
-                    torch.save(self.model_dict, args.save_best)  # 保存最佳模型
-                    if args.local_rank == 0:  # 日志
-                        info = (f'| best_model | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} |'
-                                f' val_rmse:{rmse:.4f} | {args.save_best} |')
-                        if args.print_info:
-                            print(info)
-                        if args.log:
-                            logging.info(info)
+                    torch.save(self.model_dict, args.save_best)
+                    # 日志
+                    info = (f'| best_model | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} |'
+                            f' val_rmse:{rmse:.4f} | {args.save_best} |')
+                    print(info) if args.print_info else None
+                    logging.info(info) if args.log else None
                 # wandb
-                if args.wandb:
-                    args.wandb_run.log({'metric/train_loss': train_loss,
-                                        'metric/val_loss': val_loss,
-                                        'metric/val_mae': mae,
-                                        'metric/val_rmse': rmse})
+                args.wandb_run.log({'metric/train_loss': train_loss,
+                                    'metric/val_loss': val_loss,
+                                    'metric/val_mae': mae,
+                                    'metric/val_rmse': rmse}) if args.wandb else None
             torch.distributed.barrier() if args.distributed else None  # 分布式时每轮训练后让所有GPU进行同步，快的GPU会在此等待
 
     def validation(self):
@@ -275,16 +269,14 @@ class train_class:
             label = torch.concat(label, dim=0)
             mae, rmse = self.metric(pred, label)
             # 计算各类别相对指标和真实指标
-            for i in range(len(args.output_column)):
-                column = args.output_column[i]
+            for i, column in enumerate(args.output_column):
                 mae_, rmse_ = self.metric(pred[:, i], label[:, i])
                 pred[:, i] = pred[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
                 label[:, i] = label[:, i] * self.data_dict['std_output'][i] + self.data_dict['mean_output'][i]
                 true_mae, true_rmse = self.metric(pred[:, i], label[:, i])
                 info = (f'| val | {column} | mae:{mae_:.4f} | rmse:{rmse_:.4f} | true_mae:{true_mae:.4f} |'
                         f' true_rmse:{true_rmse:.4f} |')
-                if args.print_info:
-                    print(info)
+                print(info) if args.print_info else None
             # 日志
             if args.print_info:
                 info = f'| val | all | val_loss:{val_loss:.4f} | val_mae:{mae:.4f} | val_rmse:{rmse:.4f} |'
