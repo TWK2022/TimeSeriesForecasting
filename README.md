@@ -1,35 +1,29 @@
 # pytorch时间序列预测训练框架
->代码兼容性较强，使用的是一些基本的库、基础的函数  
 ### 1，环境
->torch：https://pytorch.org/get-started/previous-versions/
+>torch: https://pytorch.org/get-started/previous-versions/
 >```
 >pip install tqdm wandb -i https://pypi.tuna.tsinghua.edu.cn/simple
+>pip install onnx onnxsim onnxruntime -i https://pypi.tuna.tsinghua.edu.cn/simple
 >```
 ### 2，数据格式
 >参考dataset中的样例
 ### 3，run.py
->模型训练时运行该文件，argparse中有对每个参数的说明
-### 4，predict_pt.py
->使用训练好的pt模型预测
+>模型训练，argparse中有每个参数的说明
+### 4，predict.py
+>模型预测
 ### 5，export_onnx.py
->将pt模型导出为onnx模型
+>onnx模型导出
 ### 6，predict_onnx.py
->使用导出的onnx模型预测
-### 7，export_trt_record
->文档中有onnx模型导出为tensort模型的详细说明
-### 8，predict_trt.py
->使用导出的trt模型预测
+>onnx模型预测
 ### 其他
->学习笔记：https://github.com/TWK2022/notebook
+>github链接: https://github.com/TWK2022/TimeSeriesForecasting  
+>学习笔记: https://github.com/TWK2022/notebook  
+>邮箱: 1024565378@qq.com
 ***
 ### ETTh1.csv
-|    模型(m)     | input_column | output_column | input_size | output_size | divide | train_mse_decay | val_mse |
-|:------------:|:------------:|:-------------:|:----------:|:-----------:|:------:|:---------------:|:-------:|
-|     tsf      |     all      |      all      |     96     |     24      |  19:1  |      0.188      |  0.268  |
-| itransformer |     all      |      all      |     96     |     24      |  19:1  |      0.219      |  0.260  |
-|   nlinear    |     all      |      all      |     96     |     24      |  19:1  |      0.228      |  0.255  |
-|     lstm     |     all      |      all      |     96     |     24      |  19:1  |      0.241      |  0.260  |
-|    linear    |     all      |      all      |     96     |     24      |  19:1  |      0.247      |  0.267  |
-|  pathformer  |     all      |      all      |     96     |     24      |  19:1  |      0.229      |  0.275  |
-| crossformer  |     all      |      all      |     96     |     24      |  19:1  |      0.258      |  0.278  |
-| diffusion_ts |     all      |      all      |     96     |     24      |  19:1  |      0.212      |  0.330  |
+|    模型(m)     | input_column | output_column | input_size | output_size | divide | train_mse | val_mse |
+|:------------:|:------------:|:-------------:|:----------:|:-----------:|:------:|:---------:|:-------:|
+|     tsf      |     all      |      all      |     96     |     24      |  19:1  |   0.223   |  0.262  |
+|     lstm     |     all      |      all      |     96     |     24      |  19:1  |   0.258   |  0.270  |
+|    linear    |     all      |      all      |     96     |     24      |  19:1  |   0.228   |  0.259  |
+| itransformer |     all      |      all      |     96     |     24      |  19:1  |   0.234   |  0.260  |
