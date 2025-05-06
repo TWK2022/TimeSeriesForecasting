@@ -23,7 +23,6 @@ parser.add_argument('--predict_save_path', default='dataset/predict.yaml', type=
 parser.add_argument('--log', default=False, type=bool, help='|日志|')
 parser.add_argument('--print_info', default=False, type=bool, help='|打印信息|')
 parser.add_argument('--wandb', default=False, type=bool, help='|wandb可视化|')
-parser.add_argument('--wandb_project', default='TimeSeriesForecasting', type=str, help='|wandb项目名|')
 parser.add_argument('--data_path', default='', type=str, help='|数据位置|')
 parser.add_argument('--input_len', default=8, type=int, help='|输入时间长度|')
 parser.add_argument('--output_len', default=2, type=int, help='|输出时间长度|')
@@ -79,7 +78,7 @@ if args.distributed:
     args.device = torch.device('cuda', args.local_rank)
 # wandb可视化: https://wandb.ai
 if args.wandb and args.local_rank == 0:  # 分布式时只记录一次wandb
-    args.wandb_run = wandb.init(project=args.wandb_project, name='train', config=args)
+    args.wandb_run = wandb.init(project='TimeSeriesForecasting', name='train', config=args)
 if not os.path.exists(args.save_dir):
     os.makedirs(args.save_dir)
 # 设置
