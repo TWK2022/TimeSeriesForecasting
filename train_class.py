@@ -33,7 +33,7 @@ class train_class:
             self.model_dict['model'] = torch.nn.parallel.DistributedDataParallel(self.model_dict['model'],
                                                                                  device_ids=[args.local_rank],
                                                                                  output_device=args.local_rank)
-        if args.log:  # 日志
+        if args.local_rank == 0 and args.log:  # 日志
             log_path = os.path.dirname(__file__) + '/log.log'
             logging.basicConfig(filename=log_path, level=logging.INFO,
                                 format='%(asctime)s | %(levelname)s | %(message)s')
