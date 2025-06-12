@@ -9,7 +9,6 @@ parser = argparse.ArgumentParser(description='|模型转为onnx|')
 parser.add_argument('--weight', default='best.pt', type=str, help='|模型位置|')
 parser.add_argument('--input_len', default=96, type=int, help='|输入时间长度|')
 parser.add_argument('--input_column_num', default=7, type=int, help='|输入变量数量|')
-parser.add_argument('--batch', default=1, type=int, help='|输入图片批量，0为动态|')
 parser.add_argument('--sim', default=True, type=bool, help='|使用onnxsim压缩简化模型|')
 parser.add_argument('--device', default='cuda', type=str, help='|设备|')
 parser.add_argument('--float16', default=True, type=bool, help='|数据类型|')
@@ -28,7 +27,7 @@ def export_onnx(args=args):
     input_one = torch.rand(1, args.input_len, args.input_column_num,
                            dtype=torch.float16 if args.float16 else torch.float32).to(args.device)
     torch.onnx.export(model, input_one, args.save_path, input_names=['input'], output_names=['output'],
-                      dynamic_axes={'input': {args.batch: 'batch_size'}, 'output': {args.batch: 'batch_size'}})
+                      dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}})
     print(f'| onnx模型转换成功:{args.save_path} |')
     if args.sim:
         model_onnx = onnx.load(args.save_path)
