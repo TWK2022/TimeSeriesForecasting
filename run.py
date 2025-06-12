@@ -12,7 +12,6 @@ parser = argparse.ArgumentParser(description='|时间序列预测|')
 parser.add_argument('--log', default=True, type=bool, help='|日志|')
 parser.add_argument('--print_info', default=True, type=bool, help='|打印信息|')
 parser.add_argument('--wandb', default=False, type=bool, help='|wandb可视化|')
-parser.add_argument('--wandb_project', default='TimeSeriesForecasting', type=str, help='|wandb项目名|')
 parser.add_argument('--data_path', default='dataset/ETTh1.csv', type=str, help='|数据位置|')
 parser.add_argument('--input_len', default=96, type=int, help='|输入时间长度|')
 parser.add_argument('--output_len', default=24, type=int, help='|输出时间长度|')
@@ -57,7 +56,7 @@ if args.distributed:
     args.device = torch.device('cuda', args.local_rank)
 # wandb可视化: https://wandb.ai
 if args.wandb and args.local_rank == 0:  # 分布式时只记录一次wandb
-    args.wandb_run = wandb.init(project=args.wandb_project, name='train', config=args)
+    args.wandb_run = wandb.init(project='TimeSeriesForecasting', name='train', config=args)
 # 设置
 torch.manual_seed(999)  # 为CPU设置随机种子
 torch.cuda.manual_seed_all(999)  # 为所有GPU设置随机种子
