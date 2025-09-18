@@ -22,7 +22,7 @@ parser.add_argument('--weight_again', default=True, type=bool, help='|重置学�
 parser.add_argument('--save_epoch', default=10, type=int, help='|每x轮和最后一轮保存模型|')
 parser.add_argument('--save_path', default='last.pt', type=str, help='|保存模型|')
 parser.add_argument('--save_best', default='best.pt', type=str, help='|保存最佳模型|')
-parser.add_argument('--epoch', default=100, type=int, help='|总轮数(包含加载模型已训练轮数)|')
+parser.add_argument('--epoch', default=0, type=int, help='|训练总轮数(包含之前已训练轮数)，0为自动|')
 parser.add_argument('--batch', default=64, type=int, help='|批量大小，分布式时为总批量|')
 parser.add_argument('--divide', default=[19, 1], type=list, help='|训练集和验证集划分比例|')
 parser.add_argument('--divide_train', default=0, type=int, help='|训练集数据:0训练集，1所有数据，2验证集|')

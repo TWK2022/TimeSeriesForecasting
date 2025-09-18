@@ -23,6 +23,9 @@ class train_class:
         self.model_dict = self.model_load()  # 模型
         self.model_dict['model'] = self.model_dict['model'].to(args.device, non_blocking=args.latch)  # 设备
         self.data_dict = self.data_load()  # 数据
+        if self.args.epoch == 0:
+            self.args.epoch = max(int(2e6 // len(self.data_dict['train_input'])), 3)
+            print(f'| INFO | 训练总轮数: {self.args.epoch}')
         self.train_dataloader, self.val_dataloader = self.dataloader_load()  # 数据处理器
         self.optimizer, self.optimizer_adjust = self.optimizer_load()  # 学习率、学习率调整
         self.loss = self.loss_load()  # 损失函数
@@ -204,7 +207,7 @@ class train_class:
                     self.optimizer.step()
                     self.optimizer.zero_grad()
                 self.ema.update(model) if args.local_rank == 0 and args.ema else None  # 更新ema模型参数
-                train_loss += loss_batch.item()  # 记录损失
+                train_loss += np.sqrt(loss_batch.item())  # 记录损失
                 self.optimizer = self.optimizer_adjust(self.optimizer)  # 调整学习率
             # 计算平均损失
             train_loss /= index + 1
@@ -260,7 +263,7 @@ class train_class:
                 label_batch = label_batch.to(args.device, non_blocking=args.latch)
                 pred_batch = model(series_batch)
                 loss_batch = self.loss(pred_batch, label_batch)
-                val_loss += loss_batch.item()
+                val_loss += np.sqrt(loss_batch.item())
                 pred.append(pred_batch.cpu())
                 label.append(label_batch.cpu())
             # 计算指标
