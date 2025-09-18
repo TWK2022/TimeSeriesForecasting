@@ -31,7 +31,7 @@ parser.add_argument('--model', default='linear', type=str, help='|模型选择|'
 parser.add_argument('--model_type', default='m', type=str, help='|模型型号|')
 parser.add_argument('--loss', default='mse_decay', type=str, help='|损失函数|')
 parser.add_argument('--warmup_ratio', default=0.01, type=float, help='|预热训练步数占总步数比例，最少5步，基准为0.01|')
-parser.add_argument('--lr_start', default=1e-4, type=float, help='|初始学习率，adam算法，批量大时要增大，基准为1e-4|')
+parser.add_argument('--lr_start', default=1e-3, type=float, help='|初始学习率，adam算法，批量大时要增大，基准为1e-3|')
 parser.add_argument('--lr_end_ratio', default=0.01, type=float, help='|最终学习率=lr_end_ratio*lr_start，基准为0.01|')
 parser.add_argument('--regularization', default='L2', type=str, help='|正则化，有L2、None|')
 parser.add_argument('--r_value', default=0.0005, type=float, help='|正则化权重，可从0.0001开始增加直到最佳值|')
