@@ -2,8 +2,8 @@
 ### 1，环境
 >torch: https://pytorch.org/get-started/previous-versions/
 >```
->pip install tqdm wandb -i https://pypi.tuna.tsinghua.edu.cn/simple
->pip install onnx onnxsim onnxruntime -i https://pypi.tuna.tsinghua.edu.cn/simple
+>pip install pandas xlrd tqdm wandb -i https://pypi.tuna.tsinghua.edu.cn/simple
+>pip install onnx onnxruntime -i https://pypi.tuna.tsinghua.edu.cn/simple
 >```
 ### 2，数据格式
 >参考dataset中的样例

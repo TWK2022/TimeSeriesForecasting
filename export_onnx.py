@@ -1,6 +1,5 @@
 import onnx
 import torch
-import onnxsim
 import argparse
 from model.layer import deploy
 
@@ -30,6 +29,7 @@ def export_onnx(args=args):
                       dynamic_axes={'input': {0: 'batch_size'}, 'output': {0: 'batch_size'}})
     print(f'| onnx模型转换成功:{args.save_path} |')
     if args.sim:
+        import onnxsim
         model_onnx = onnx.load(args.save_path)
         model_simplify, check = onnxsim.simplify(model_onnx)
         onnx.save(model_simplify, args.save_path)

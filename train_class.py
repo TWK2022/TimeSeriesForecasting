@@ -80,10 +80,10 @@ class train_class:
     def data_load(self):
         args = self.args
         # 读取数据
-        try:
-            df = pd.read_csv(args.data_path, encoding='utf-8', index_col=0)
-        except:
-            df = pd.read_csv(args.data_path, encoding='gbk', index_col=0)
+        if os.path.splitext(args.data_path)[1] == '.csv':  # csv格式
+            df = pd.read_csv(args.data_path, index_col=0)
+        else:  # xls和xlsx格式
+            df = pd.read_excel(args.data_path, index_col=0)
         input_data = np.array(df[args.input_column]).astype(np.float32)
         output_data = np.array(df[args.output_column]).astype(np.float32)
         # 划分数据
