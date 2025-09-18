@@ -313,7 +313,7 @@ class lr_adjust:
     def __init__(self, args, step_epoch, epoch_finished):
         self.lr_start = args.lr_start  # 初始学习率
         self.lr_end = args.lr_end_ratio * args.lr_start  # 最终学习率
-        self.lr_end_epoch = args.lr_end_epoch  # 最终学习率达到的轮数
+        self.lr_end_epoch = args.epoch  # 最终学习率达到的轮数
         self.step_all = self.lr_end_epoch * step_epoch  # 总调整步数
         self.step_finished = epoch_finished * step_epoch  # 已调整步数
         self.warmup_step = max(5, int(args.warmup_ratio * self.step_all))  # 预热训练步数
